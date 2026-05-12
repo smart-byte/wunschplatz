@@ -4,6 +4,42 @@ import { Slider } from '@/components/ui/slider';
 import { useSolverConfigStore } from '@/store/useSolverConfigStore';
 import { defaultSolverConfig } from '@/types';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
+
+type InfoBadgeProps = { children: React.ReactNode };
+
+function InfoBadge({ children }: InfoBadgeProps) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex text-muted-foreground hover:text-foreground"
+          aria-label="Info"
+        >
+          <Info className="size-3.5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent className="max-w-xs text-xs leading-relaxed">
+        {children}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+const priorityInfo = [
+  'Punkte, die ein Schüler beiträgt, wenn er sein 1. Wunschprojekt bekommt. Höher = der Solver bevorzugt diese Zuweisung stärker.',
+  'Punkte für 2. Wunsch. Sollte kleiner als Prio 1 sein, sonst sind Prio 1 und 2 gleichwertig.',
+  'Punkte für 3. Wunsch.',
+  'Punkte für 4. Wunsch.',
+  'Punkte für 5. Wunsch. Sollte ≥ 0 bleiben, sonst wird Prio 5 schlechter als gar keine Zuweisung.',
+];
 
 export function SolverConfigForm() {
   const config = useSolverConfigStore((s) => s.config);
@@ -17,61 +53,100 @@ export function SolverConfigForm() {
   }
 
   return (
-    <div className="space-y-6 border rounded-lg p-6 bg-card">
-      <div>
-        <h2 className="text-lg font-semibold mb-1">Prio-Gewichtungen</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Höher = stärker bevorzugt. Solver maximiert Summe gewichteter Zuweisungen.
-        </p>
-        <div className="space-y-3">
-          {config.priorityWeights.map((w, i) => (
-            <div key={i} className="flex items-center gap-4">
-              <Label className="w-20">Prio {i + 1}</Label>
-              <Slider
-                value={[w]}
-                min={0}
-                max={20}
-                step={1}
-                onValueChange={(v) => updateWeight(i, v[0])}
-                className="flex-1"
-              />
-              <span className="w-12 text-right tabular-nums">{w}</span>
+    <TooltipProvider delayDuration={150}>
+      <div className="space-y-6 border rounded-lg p-6 bg-card">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <h2 className="text-lg font-semibold">Prio-Gewichtungen</h2>
+            <InfoBadge>
+              Punkte pro Prio-Rang. Der Solver maximiert die Summe der vergebenen
+              Punkte über alle Schüler. Höher = Solver versucht stärker, Schüler in dieses
+              Wunschprojekt zu bekommen. Standard: 10 / 6 / 3 / 2 / 1.
+            </InfoBadge>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Höher = stärker bevorzugt. Solver maximiert Summe gewichteter Zuweisungen.
+          </p>
+          <div className="space-y-3">
+            {config.priorityWeights.map((w, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <div className="flex items-center gap-1 w-24">
+                  <Label>Prio {i + 1}</Label>
+                  <InfoBadge>{priorityInfo[i]}</InfoBadge>
+                </div>
+                <Slider
+                  value={[w]}
+                  min={0}
+                  max={20}
+                  step={1}
+                  onValueChange={(v) => updateWeight(i, v[0])}
+                  className="flex-1"
+                />
+                <span className="w-12 text-right tabular-nums">{w}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="grid gap-1.5">
+            <div className="flex items-center gap-1">
+              <Label htmlFor="unmatched">Unverteilt-Strafe</Label>
+              <InfoBadge>
+                Straf-Punkte, wenn ein Schüler <strong>überhaupt nicht</strong> verteilt
+                wird (kein Projekt zugewiesen). Sehr hoher Wert (Standard 1000) sorgt
+                dafür, dass der Solver alle Schüler unterbringt, solange noch ein
+                jahrgangskompatibles Projekt freie Plätze hat. Reduzieren nur, wenn du
+                Schüler bewusst unverteilt lassen willst.
+              </InfoBadge>
             </div>
-          ))}
+            <Input
+              id="unmatched"
+              type="number"
+              value={config.unmatchedPenalty}
+              onChange={(e) => setConfig({ ...config, unmatchedPenalty: parseInt(e.target.value, 10) || 0 })}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <div className="flex items-center gap-1">
+              <Label htmlFor="overTarget">Über-Soll-Strafe</Label>
+              <InfoBadge>
+                Straf-Punkte für jeden Schüler, der ein Projekt <strong>über
+                seine Soll-Kapazität</strong> hinaus füllt (bis zur Max-Kapazität).
+                Niedrige Werte (Standard 2) bedeuten "weiches Soll" — Projekte werden
+                gleichmäßig auf Soll-Niveau gefüllt, bevor irgendwo überfüllt wird.
+                Höher = Solver bleibt strikter beim Soll.
+              </InfoBadge>
+            </div>
+            <Input
+              id="overTarget"
+              type="number"
+              value={config.overTargetPenalty}
+              onChange={(e) => setConfig({ ...config, overTargetPenalty: parseInt(e.target.value, 10) || 0 })}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <div className="flex items-center gap-1">
+              <Label htmlFor="notInTop5">Nicht-in-Top5-Strafe</Label>
+              <InfoBadge>
+                Straf-Punkte, wenn ein Schüler in ein Projekt kommt, das <strong>nicht
+                in seinen Top 5 Wünschen</strong> stand (passiert nur, wenn alle 5 Wünsche
+                voll sind). Standard 50: viel besser als unverteilt (1000), aber deutlich
+                schlechter als jeder Top-5-Platz. Höher = Solver lässt eher Plätze leer
+                als Schüler in fremdes Projekt zu stecken.
+              </InfoBadge>
+            </div>
+            <Input
+              id="notInTop5"
+              type="number"
+              value={config.notInTop5Penalty}
+              onChange={(e) => setConfig({ ...config, notInTop5Penalty: parseInt(e.target.value, 10) || 0 })}
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="grid gap-1.5">
-          <Label htmlFor="unmatched">Unverteilt-Strafe</Label>
-          <Input
-            id="unmatched"
-            type="number"
-            value={config.unmatchedPenalty}
-            onChange={(e) => setConfig({ ...config, unmatchedPenalty: parseInt(e.target.value, 10) || 0 })}
-          />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="overTarget">Über-Soll-Strafe</Label>
-          <Input
-            id="overTarget"
-            type="number"
-            value={config.overTargetPenalty}
-            onChange={(e) => setConfig({ ...config, overTargetPenalty: parseInt(e.target.value, 10) || 0 })}
-          />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="notInTop5">Nicht-in-Top5-Strafe</Label>
-          <Input
-            id="notInTop5"
-            type="number"
-            value={config.notInTop5Penalty}
-            onChange={(e) => setConfig({ ...config, notInTop5Penalty: parseInt(e.target.value, 10) || 0 })}
-          />
-        </div>
+        <Button variant="ghost" onClick={reset}>Auf Default ({defaultSolverConfig.priorityWeights.join(', ')}) zurücksetzen</Button>
       </div>
-
-      <Button variant="ghost" onClick={reset}>Auf Default ({defaultSolverConfig.priorityWeights.join(', ')}) zurücksetzen</Button>
-    </div>
+    </TooltipProvider>
   );
 }
