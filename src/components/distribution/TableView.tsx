@@ -89,7 +89,7 @@ export function TableView() {
                   <TableCell className="font-medium">{r.student.lastName}, {r.student.firstName}</TableCell>
                   <TableCell>{r.student.className}</TableCell>
                   <TableCell>{r.student.grade}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {r.student.priorities.map((id) => projects.find((p) => p.id === id)?.name ?? '?').join(', ')}
                   </TableCell>
                   <TableCell>
