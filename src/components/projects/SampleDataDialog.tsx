@@ -16,10 +16,18 @@ import {
 import { toast } from 'sonner';
 import { Sparkles } from 'lucide-react';
 
+const MIN_PROJECTS = 1;
+const MIN_STUDENTS = 1;
+const MAX_STUDENTS = 5000;
+
+function clamp(n: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, n));
+}
+
 export function SampleDataDialog() {
   const [open, setOpen] = useState(false);
-  const [projectCount, setProjectCount] = useState(10);
-  const [studentCount, setStudentCount] = useState(200);
+  const [projectCount, setProjectCount] = useState('10');
+  const [studentCount, setStudentCount] = useState('200');
   const setProjects = useProjectsStore((s) => s.setProjects);
   const setStudents = useStudentsStore((s) => s.setStudents);
   const clearAssignments = useAssignmentsStore((s) => s.clear);
@@ -28,14 +36,32 @@ export function SampleDataDialog() {
   const existingStudents = useStudentsStore((s) => s.students.length);
   const willReplace = existingProjects > 0 || existingStudents > 0;
 
+  function parseClamped(raw: string, min: number, max: number, fallback: number): number {
+    const n = parseInt(raw, 10);
+    if (isNaN(n)) return fallback;
+    return clamp(n, min, max);
+  }
+
   function handleGenerate() {
-    const projects = generateSampleProjects(projectCount);
-    const students = generateSampleStudents(studentCount, projects);
+    const pCount = parseClamped(projectCount, MIN_PROJECTS, MAX_SAMPLE_PROJECTS, 10);
+    const sCount = parseClamped(studentCount, MIN_STUDENTS, MAX_STUDENTS, 200);
+    const projects = generateSampleProjects(pCount);
+    const students = generateSampleStudents(sCount, projects);
     setProjects(projects);
     setStudents(students);
     clearAssignments();
     toast.success(`${projects.length} Projekte und ${students.length} Schüler generiert`);
     setOpen(false);
+  }
+
+  function commitProjectCount() {
+    const n = parseClamped(projectCount, MIN_PROJECTS, MAX_SAMPLE_PROJECTS, 10);
+    setProjectCount(String(n));
+  }
+
+  function commitStudentCount() {
+    const n = parseClamped(studentCount, MIN_STUDENTS, MAX_STUDENTS, 200);
+    setStudentCount(String(n));
   }
 
   return (
@@ -61,10 +87,11 @@ export function SampleDataDialog() {
               <Input
                 id="projectCount"
                 type="number"
-                min={1}
+                min={MIN_PROJECTS}
                 max={MAX_SAMPLE_PROJECTS}
                 value={projectCount}
-                onChange={(e) => setProjectCount(parseInt(e.target.value, 10) || 1)}
+                onChange={(e) => setProjectCount(e.target.value)}
+                onBlur={commitProjectCount}
               />
               <p className="text-xs text-muted-foreground">Max. {MAX_SAMPLE_PROJECTS}</p>
             </div>
@@ -73,10 +100,11 @@ export function SampleDataDialog() {
               <Input
                 id="studentCount"
                 type="number"
-                min={1}
-                max={5000}
+                min={MIN_STUDENTS}
+                max={MAX_STUDENTS}
                 value={studentCount}
-                onChange={(e) => setStudentCount(parseInt(e.target.value, 10) || 1)}
+                onChange={(e) => setStudentCount(e.target.value)}
+                onBlur={commitStudentCount}
               />
             </div>
           </div>
