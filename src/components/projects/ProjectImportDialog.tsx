@@ -103,12 +103,14 @@ export function ProjectImportDialog({ open: externalOpen, onOpenChange, external
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <Upload className="size-4 mr-2" />
-          Excel importieren
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button variant="outline">
+            <Upload className="size-4 mr-2" />
+            Excel importieren
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
