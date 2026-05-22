@@ -1,32 +1,61 @@
 import { useRef, useState } from 'react';
 import { read, utils } from 'xlsx';
+import type { WorkBook } from 'xlsx';
 import { Button } from '@/components/ui/button';
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { parseStudentRows, type ParseResult } from '@/excel/importStudents';
+import { HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function ImportDialog() {
   const [open, setOpen] = useState(false);
   const [result, setResult] = useState<ParseResult | null>(null);
   const [fileName, setFileName] = useState('');
+  const [workbook, setWorkbook] = useState<WorkBook | null>(null);
+  const [sheetName, setSheetName] = useState<string>('');
   const fileRef = useRef<HTMLInputElement>(null);
   const projects = useProjectsStore((s) => s.projects);
   const setStudents = useStudentsStore((s) => s.setStudents);
   const clearAssignments = useAssignmentsStore((s) => s.clear);
 
+  function parseSheet(wb: WorkBook, name: string) {
+    const sheet = wb.Sheets[name];
+    const rows = utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
+    const parsed = parseStudentRows(rows as unknown[][], projects);
+    setResult(parsed);
+  }
+
   async function handleFile(file: File) {
     setFileName(file.name);
     const buf = await file.arrayBuffer();
     const wb = read(buf);
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
-    const parsed = parseStudentRows(rows as unknown[][], projects);
-    setResult(parsed);
+    setWorkbook(wb);
+    const firstSheet = wb.SheetNames[0] ?? '';
+    setSheetName(firstSheet);
+    if (firstSheet) parseSheet(wb, firstSheet);
+  }
+
+  function handleSheetChange(name: string) {
+    setSheetName(name);
+    if (workbook) parseSheet(workbook, name);
+  }
+
+  function reset() {
+    setResult(null);
+    setFileName('');
+    setWorkbook(null);
+    setSheetName('');
   }
 
   function handleConfirm() {
@@ -39,18 +68,23 @@ export function ImportDialog() {
     clearAssignments();
     toast.success(`${withIds.length} Schüler importiert`);
     setOpen(false);
-    setResult(null);
-    setFileName('');
+    reset();
   }
 
+  const sheetNames = workbook?.SheetNames ?? [];
+  const showSheetPicker = sheetNames.length > 1;
+
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setResult(null); setFileName(''); } }}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
       <DialogTrigger asChild>
         <Button>Excel importieren</Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Schüler aus Excel importieren</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            Schüler aus Excel importieren
+            <ImportHelp />
+          </DialogTitle>
         </DialogHeader>
         <div className="grid gap-4">
           <div>
@@ -66,6 +100,26 @@ export function ImportDialog() {
             />
             {fileName && <p className="text-sm mt-2">Datei: {fileName}</p>}
           </div>
+
+          {showSheetPicker && (
+            <div className="grid gap-1.5">
+              <label className="text-sm font-medium">
+                Mappe wählen ({sheetNames.length} verfügbar)
+              </label>
+              <Select value={sheetName} onValueChange={handleSheetChange}>
+                <SelectTrigger className="w-72"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {sheetNames.map((n) => (
+                    <SelectItem key={n} value={n}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Datei enthält mehrere Mappen. Wähle die mit den Schülerdaten.
+              </p>
+            </div>
+          )}
+
           {projects.length === 0 && (
             <p className="text-sm text-destructive">
               Noch keine Projekte angelegt. Lege erst Projekte an, sonst können Prioritäten nicht zugeordnet werden.
@@ -73,7 +127,7 @@ export function ImportDialog() {
           )}
           {result && result.missingColumns.length > 0 && (
             <div className="text-sm text-destructive">
-              <p>Pflichtspalten fehlen im Excel:</p>
+              <p>Pflichtspalten fehlen{showSheetPicker ? ' in dieser Mappe' : ' im Excel'}:</p>
               <ul className="list-disc pl-5">
                 {result.missingColumns.map((c) => <li key={c}>{c}</li>)}
               </ul>
@@ -112,5 +166,69 @@ export function ImportDialog() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ImportHelp() {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex text-muted-foreground hover:text-foreground"
+          title="Excel-Format anzeigen"
+          aria-label="Hilfe"
+        >
+          <HelpCircle className="size-4" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[28rem] max-h-[70vh] overflow-y-auto p-4 text-xs">
+        <div className="space-y-3">
+          <div>
+            <div className="font-medium text-sm">Excel-Format für Schüler-Import</div>
+            <p className="text-muted-foreground mt-1">
+              Erste Zeile = Spaltenüberschriften. Reihenfolge egal, Erkennung case-insensitiv.
+            </p>
+          </div>
+
+          <div>
+            <div className="font-medium mb-1">Pflichtspalten</div>
+            <table className="w-full">
+              <thead>
+                <tr className="text-muted-foreground">
+                  <th className="text-left font-normal">Spalte</th>
+                  <th className="text-left font-normal">Akzeptierte Namen</th>
+                </tr>
+              </thead>
+              <tbody className="font-mono text-[11px]">
+                <tr><td className="pr-2 align-top">Vorname</td><td>Vorname · First Name · FirstName</td></tr>
+                <tr><td className="pr-2 align-top">Nachname</td><td>Nachname · Last Name · LastName · Name</td></tr>
+                <tr><td className="pr-2 align-top">Klasse</td><td>Klasse · Class</td></tr>
+                <tr><td className="pr-2 align-top">Jahrgang</td><td>Jahrgang · Grade · Stufe · Jahrgangsstufe</td></tr>
+                <tr><td className="pr-2 align-top">Prio 1-5</td><td>Prio1, Prio 1, Priorität 1, Priority 1 …</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div>
+            <div className="font-medium mb-1">Beispiel</div>
+            <pre className="rounded border bg-muted/50 p-2 text-[10px] leading-relaxed overflow-x-auto">{`Vorname  | Nachname  | Klasse | Jahrgang | Prio1   | Prio2 | Prio3 | Prio4   | Prio5
+Anna     | Müller    | 7a     | 7        | Schach  | Yoga  | Comic | Theater | Kochen
+Ben      | Schmidt   | 7b     | 7        | Theater | Yoga  | Comic | Schach  | Kochen`}</pre>
+          </div>
+
+          <div>
+            <div className="font-medium mb-1">Regeln</div>
+            <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+              <li>Jahrgang muss eine Zahl zwischen 5 und 13 sein.</li>
+              <li>Prio-Werte müssen exakt den Projektnamen aus dem Reiter „Projekte" entsprechen (case-insensitiv).</li>
+              <li>Prios untereinander müssen verschieden sein.</li>
+              <li>Leere Prio-Zellen sind OK (≤5 Prios möglich).</li>
+              <li>Mehrere Mappen → Auswahl-Dropdown erscheint.</li>
+            </ul>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }
