@@ -31,9 +31,10 @@ export default function StudentsPage() {
               Alle löschen
             </Button>
           )}
+          <ImportDialog />
           <StudentFormDialog
             trigger={
-              <Button variant="outline">
+              <Button>
                 <Plus className="size-4 mr-2" />
                 Neuer Schüler
               </Button>
@@ -43,7 +44,6 @@ export default function StudentsPage() {
               toast.success(`Schüler "${data.firstName} ${data.lastName}" angelegt`);
             }}
           />
-          <ImportDialog />
         </div>
       </div>
       <StudentsTable />
