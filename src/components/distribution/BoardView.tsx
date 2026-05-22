@@ -79,6 +79,7 @@ export function BoardView() {
             key={p.id}
             project={p}
             allProjects={projects}
+            allRows={rows}
             students={(byProject.get(p.id) ?? [])
               .filter((r) => r.assignment)
               .map((r) => ({ student: r.student, assignment: r.assignment! }))}
