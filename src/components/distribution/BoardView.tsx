@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   DndContext, PointerSensor, useDroppable, useSensor, useSensors,
   type DragEndEvent,
@@ -9,38 +9,23 @@ import { useStudentsStore } from '@/store/useStudentsStore';
 import { ProjectCard } from './ProjectCard';
 import { StudentChip } from './StudentChip';
 import { StudentFormDialog } from '@/components/students/StudentFormDialog';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
-import { ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Project, Student } from '@/types';
+import type { BoardSortKey } from './boardSort';
 
 const UNASSIGNED_ID = '__unassigned__';
-const SORT_STORAGE_KEY = 'distribution.boardSort';
-
-type SortKey = 'popularity' | 'name' | 'load' | 'utilization' | 'grade';
 
 function compareStr(a: string, b: string): number {
   return a.localeCompare(b, 'de', { sensitivity: 'base', numeric: true });
 }
 
-export function BoardView() {
+type Props = { sortKey: BoardSortKey };
+
+export function BoardView({ sortKey }: Props) {
   const { rows, projects } = useDistributionData();
   const updateAssignment = useAssignmentsStore((s) => s.updateAssignment);
   const updateStudent = useStudentsStore((s) => s.updateStudent);
   const [editing, setEditing] = useState<Student | null>(null);
-
-  const [sortKey, setSortKey] = useState<SortKey>(() => {
-    if (typeof window === 'undefined') return 'popularity';
-    const stored = window.localStorage.getItem(SORT_STORAGE_KEY);
-    return (stored === 'popularity' || stored === 'name' || stored === 'load' || stored === 'utilization' || stored === 'grade')
-      ? stored
-      : 'popularity';
-  });
-  useEffect(() => {
-    try { window.localStorage.setItem(SORT_STORAGE_KEY, sortKey); } catch { /* ignore */ }
-  }, [sortKey]);
 
   // Distance constraint allows clicks (under 5px movement) without triggering drag.
   const sensors = useSensors(
@@ -135,20 +120,6 @@ export function BoardView() {
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="flex items-center gap-2 mb-3">
-        <ArrowUpDown className="size-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">Sortieren:</span>
-        <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
-          <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="popularity">Beliebtheit (Score)</SelectItem>
-            <SelectItem value="name">Name (A-Z)</SelectItem>
-            <SelectItem value="load">Belegung (absteigend)</SelectItem>
-            <SelectItem value="utilization">Auslastung % (absteigend)</SelectItem>
-            <SelectItem value="grade">Jahrgang (aufsteigend)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {sortedProjects.map((p) => (
           <ProjectCard
