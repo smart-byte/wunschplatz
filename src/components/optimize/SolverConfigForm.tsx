@@ -145,6 +145,36 @@ export function SolverConfigForm() {
           </div>
         </div>
 
+        <div className="border-t pt-4">
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-sm font-semibold">Gruppen-Kohäsion</h3>
+            <InfoBadge>
+              Bonus-Punkte für jedes zusätzliche Mitglied einer Gruppe im
+              <strong> gleichen Projekt</strong>. Höher = der Solver gibt mehr
+              Prio-Punkte auf, um Gruppen zusammenzuhalten. Bei <strong>0</strong>
+              werden Gruppen wie Einzel-Schüler behandelt.
+              <br /><br />
+              <span className="font-medium">Faustregel:</span> Gruppe akzeptiert
+              Prio-Rang k wenn <code>bonus × (n−1) ≥ (10−w[k]) × n</code>
+              (n = Subgruppen-Größe, w = Prio-Gewichtungen). Standard 8 hält
+              Gruppen bei Prio 1-2 zusammen, lässt sie ab Prio 3+ eher splitten.
+            </InfoBadge>
+          </div>
+          <div className="flex items-center gap-4">
+            <Label htmlFor="groupCohesion" className="w-32">Cohesion-Bonus</Label>
+            <Slider
+              id="groupCohesion"
+              value={[config.groupCohesionBonus]}
+              min={0}
+              max={30}
+              step={1}
+              onValueChange={(v) => setConfig({ ...config, groupCohesionBonus: v[0] })}
+              className="flex-1"
+            />
+            <span className="w-12 text-right tabular-nums">{config.groupCohesionBonus}</span>
+          </div>
+        </div>
+
         <Button variant="ghost" onClick={reset}>Auf Default ({defaultSolverConfig.priorityWeights.join(', ')}) zurücksetzen</Button>
       </div>
     </TooltipProvider>

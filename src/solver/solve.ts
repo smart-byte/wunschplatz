@@ -14,7 +14,7 @@ export function solveAssignments(
   config: SolverConfig,
 ): SolveResult {
   // Stage 1: greedy group pre-assignment
-  const pre = preassignGroups(students, projects);
+  const pre = preassignGroups(students, projects, config);
 
   // Stage 2: MCMF on remaining students with reduced project capacities
   const adjustedProjects: Project[] = projects.map((p) => {

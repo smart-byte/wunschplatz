@@ -29,6 +29,7 @@ export type SolverConfig = {
   unmatchedPenalty: number;
   overTargetPenalty: number;
   notInTop5Penalty: number;
+  groupCohesionBonus: number;
 };
 
 export const defaultSolverConfig: SolverConfig = {
@@ -36,6 +37,7 @@ export const defaultSolverConfig: SolverConfig = {
   unmatchedPenalty: 1000,
   overTargetPenalty: 2,
   notInTop5Penalty: 50,
+  groupCohesionBonus: 8,
 };
 
 export type SolverStats = {
