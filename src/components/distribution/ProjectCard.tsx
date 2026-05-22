@@ -80,56 +80,17 @@ export function ProjectCard({ project, students, allProjects, allRows, onStudent
         </div>
         <TooltipProvider delayDuration={150}>
           <div className="shrink-0 flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span
-                  className="inline-flex items-center gap-0.5 px-1.5 py-1 rounded border bg-background text-xs tabular-nums"
-                  aria-label={`${count} von ${project.maxCapacity} zugewiesen`}
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 px-1.5 py-1 rounded border bg-background text-xs tabular-nums hover:bg-muted"
+                  title="Beliebtheits-Score anzeigen"
                 >
-                  <Users className="size-3.5 text-muted-foreground" />
-                  <span className="font-medium">{count}<span className="text-muted-foreground">/{project.maxCapacity}</span></span>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent className="text-xs">
-                {count} von {project.maxCapacity} zugewiesen (Max-Kapazität)
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span
-                  className="inline-flex items-center gap-0.5 px-1.5 py-1 rounded border bg-background text-xs tabular-nums"
-                  aria-label={`Soll ${project.targetCapacity}`}
-                >
-                  <Target className="size-3.5 text-muted-foreground" />
-                  <span className="font-medium">{project.targetCapacity}</span>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent className="text-xs">
-                Soll-Kapazität: {project.targetCapacity}
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </TooltipProvider>
-      </div>
-      <div className="h-1.5 bg-muted rounded overflow-hidden">
-        <div className={cn('h-full transition-all', barColor)} style={{ width: `${Math.min(100, (count / project.maxCapacity) * 100)}%` }} />
-      </div>
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-xs text-muted-foreground/60 tabular-nums">
-          {Math.round(pctTarget * 100)}% Soll
-        </span>
-        <div className="flex items-center gap-1">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className="inline-flex items-center gap-1 px-1.5 py-1 rounded border bg-background text-xs tabular-nums hover:bg-muted"
-                title="Beliebtheits-Score anzeigen"
-              >
-                <Star className="size-3.5 text-amber-500 fill-amber-500" />
-                <span className="font-medium">{popularityScore}</span>
-              </button>
-            </PopoverTrigger>
+                  <Heart className="size-3.5 text-rose-500 fill-rose-500" />
+                  <span className="font-medium">{popularityScore}</span>
+                </button>
+              </PopoverTrigger>
             <PopoverContent align="end" className="w-80 max-h-[70vh] overflow-y-auto p-3 text-xs">
               <div className="font-medium text-sm">Beliebtheits-Score</div>
               <p className="text-muted-foreground mt-0.5">
@@ -199,7 +160,7 @@ export function ProjectCard({ project, students, allProjects, allRows, onStudent
                 className="inline-flex items-center gap-1 px-1.5 py-1 rounded border bg-background text-xs hover:bg-muted"
                 title="Wer hat dieses Projekt gewählt?"
               >
-                <Heart className="size-3.5 text-rose-500 fill-rose-500" />
+                <Star className="size-3.5 text-amber-500 fill-amber-500" />
                 <span className="tabular-nums font-medium">{totalInterested}</span>
               </button>
             </PopoverTrigger>
@@ -255,7 +216,42 @@ export function ProjectCard({ project, students, allProjects, allRows, onStudent
             </div>
           </PopoverContent>
           </Popover>
-        </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className="inline-flex items-center gap-1 px-1.5 py-1 rounded border bg-background text-xs tabular-nums"
+                  aria-label={`${count} von ${project.maxCapacity} zugewiesen`}
+                >
+                  <Users className="size-3.5 text-muted-foreground" />
+                  <span className="font-medium">{count}<span className="text-muted-foreground">/{project.maxCapacity}</span></span>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs">
+                {count} von {project.maxCapacity} zugewiesen (Max-Kapazität)
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className="inline-flex items-center gap-1 px-1.5 py-1 rounded border bg-background text-xs tabular-nums"
+                  aria-label={`Soll ${project.targetCapacity}`}
+                >
+                  <Target className="size-3.5 text-muted-foreground" />
+                  <span className="font-medium">{project.targetCapacity}</span>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs">
+                Soll-Kapazität: {project.targetCapacity}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </TooltipProvider>
+      </div>
+      <div className="h-1.5 bg-muted rounded overflow-hidden">
+        <div className={cn('h-full transition-all', barColor)} style={{ width: `${Math.min(100, (count / project.maxCapacity) * 100)}%` }} />
+      </div>
+      <div className="text-xs text-muted-foreground/60 tabular-nums">
+        {Math.round(pctTarget * 100)}% Soll
       </div>
       <div className="flex flex-wrap gap-1 min-h-[40px]">
         {students.map(({ student, assignment }) => (
