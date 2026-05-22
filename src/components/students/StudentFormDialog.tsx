@@ -15,18 +15,26 @@ import { Users } from 'lucide-react';
 import type { Student } from '@/types';
 
 type Props = {
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
   initial?: Student;
   onSave: (data: Omit<Student, 'id'>) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const NONE = '__none__';
 
-export function StudentFormDialog({ trigger, initial, onSave }: Props) {
+export function StudentFormDialog({ trigger, initial, onSave, open: externalOpen, onOpenChange }: Props) {
   const projects = useProjectsStore((s) => s.projects);
   const allStudents = useStudentsStore((s) => s.students);
   const groupColors = useStudentsStore((s) => s.groupColors);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = externalOpen !== undefined;
+  const open = isControlled ? externalOpen : internalOpen;
+  const setOpen = (v: boolean) => {
+    if (isControlled) onOpenChange?.(v);
+    else setInternalOpen(v);
+  };
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [className, setClassName] = useState('');
@@ -88,7 +96,7 @@ export function StudentFormDialog({ trigger, initial, onSave }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{initial ? 'Schüler bearbeiten' : 'Neuer Schüler'}</DialogTitle>

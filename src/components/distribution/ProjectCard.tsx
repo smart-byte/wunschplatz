@@ -6,9 +6,11 @@ import type { Project, Student, Assignment } from '@/types';
 type Props = {
   project: Project;
   students: { student: Student; assignment: Assignment }[];
+  allProjects: Project[];
+  onStudentClick?: (student: Student) => void;
 };
 
-export function ProjectCard({ project, students }: Props) {
+export function ProjectCard({ project, students, allProjects, onStudentClick }: Props) {
   const { isOver, setNodeRef } = useDroppable({ id: project.id });
   const count = students.length;
   const pctTarget = project.targetCapacity > 0 ? Math.min(count / project.targetCapacity, 1) : 0;
@@ -42,7 +44,13 @@ export function ProjectCard({ project, students }: Props) {
       </div>
       <div className="flex flex-wrap gap-1 min-h-[40px]">
         {students.map(({ student, assignment }) => (
-          <StudentChip key={student.id} student={student} assignment={assignment} />
+          <StudentChip
+            key={student.id}
+            student={student}
+            assignment={assignment}
+            projects={allProjects}
+            onClick={() => onStudentClick?.(student)}
+          />
         ))}
       </div>
     </div>

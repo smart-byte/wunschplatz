@@ -6,14 +6,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { useDistributionData } from '@/hooks/useDistributionData';
 import { useAssignmentsStore } from '@/store/useAssignmentsStore';
+import { useStudentsStore } from '@/store/useStudentsStore';
 import { toast } from 'sonner';
-import { Badge } from '@/components/ui/badge';
+import { AssignmentBadge } from './AssignmentBadge';
+import { StudentFormDialog } from '@/components/students/StudentFormDialog';
+import type { Student } from '@/types';
 
 export function TableView() {
   const { rows, projects } = useDistributionData();
   const updateAssignment = useAssignmentsStore((s) => s.updateAssignment);
+  const clearAssignments = useAssignmentsStore((s) => s.clear);
+  const updateStudent = useStudentsStore((s) => s.updateStudent);
   const [filter, setFilter] = useState<'all' | 'unassigned' | 'notInTop5' | 'manual'>('all');
   const [search, setSearch] = useState('');
+  const [editing, setEditing] = useState<Student | null>(null);
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
@@ -90,7 +96,15 @@ export function TableView() {
               const incompatible = projects.filter((p) => !p.grades.includes(r.student.grade));
               return (
                 <TableRow key={r.student.id} className={r.assignment?.manuallyEdited ? 'bg-muted/30' : ''}>
-                  <TableCell className="font-medium">{r.student.lastName}, {r.student.firstName}</TableCell>
+                  <TableCell className="font-medium">
+                    <button
+                      type="button"
+                      className="text-left hover:underline"
+                      onClick={() => setEditing(r.student)}
+                    >
+                      {r.student.lastName}, {r.student.firstName}
+                    </button>
+                  </TableCell>
                   <TableCell>{r.student.className}</TableCell>
                   <TableCell>{r.student.grade}</TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
@@ -119,13 +133,7 @@ export function TableView() {
                     </Select>
                   </TableCell>
                   <TableCell>
-                    {r.assignment?.priorityRank ? (
-                      <Badge variant="secondary">Prio {r.assignment.priorityRank}</Badge>
-                    ) : r.assignment?.projectId === null ? (
-                      <Badge variant="destructive">—</Badge>
-                    ) : (
-                      <Badge variant="outline">außer</Badge>
-                    )}
+                    <AssignmentBadge student={r.student} assignment={r.assignment} projects={projects} />
                   </TableCell>
                 </TableRow>
               );
@@ -133,6 +141,19 @@ export function TableView() {
           </TableBody>
         </Table>
       </div>
+
+      <StudentFormDialog
+        open={!!editing}
+        onOpenChange={(o) => !o && setEditing(null)}
+        initial={editing ?? undefined}
+        onSave={(data) => {
+          if (!editing) return;
+          updateStudent(editing.id, data);
+          clearAssignments();
+          toast.success('Schüler aktualisiert — Verteilung muss neu berechnet werden');
+          setEditing(null);
+        }}
+      />
     </div>
   );
 }

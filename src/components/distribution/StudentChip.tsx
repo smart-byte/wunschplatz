@@ -1,11 +1,16 @@
 import { useDraggable } from '@dnd-kit/core';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { Student, Assignment } from '@/types';
+import type { Student, Assignment, Project } from '@/types';
+import { AssignmentBadge } from './AssignmentBadge';
 
-type Props = { student: Student; assignment: Assignment | null };
+type Props = {
+  student: Student;
+  assignment: Assignment | null;
+  projects: Project[];
+  onClick?: () => void;
+};
 
-export function StudentChip({ student, assignment }: Props) {
+export function StudentChip({ student, assignment, projects, onClick }: Props) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: student.id,
   });
@@ -20,21 +25,16 @@ export function StudentChip({ student, assignment }: Props) {
       style={style}
       {...listeners}
       {...attributes}
+      onClick={onClick}
       className={cn(
-        'flex items-center gap-2 px-2 py-1 rounded border bg-background text-xs cursor-grab',
+        'flex items-center gap-2 px-2 py-1 rounded border bg-background text-xs cursor-pointer',
         isDragging && 'opacity-50',
         assignment?.manuallyEdited && 'border-dashed',
       )}
     >
       <span className="truncate max-w-[120px]">{student.lastName}, {student.firstName.charAt(0)}.</span>
       <span className="text-muted-foreground">{student.className}</span>
-      {assignment?.priorityRank ? (
-        <Badge variant="secondary" className="text-[10px] py-0 px-1">P{assignment.priorityRank}</Badge>
-      ) : assignment?.projectId === null ? (
-        <Badge variant="destructive" className="text-[10px] py-0 px-1">—</Badge>
-      ) : (
-        <Badge variant="outline" className="text-[10px] py-0 px-1">außer</Badge>
-      )}
+      <AssignmentBadge student={student} assignment={assignment} projects={projects} size="xs" />
     </div>
   );
 }
