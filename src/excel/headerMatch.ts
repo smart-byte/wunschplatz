@@ -1,4 +1,4 @@
-export type ColumnRole = 'firstName' | 'lastName' | 'className' | 'grade' | 'priorities';
+export type ColumnRole = 'firstName' | 'lastName' | 'className' | 'grade' | 'priorities' | 'group';
 
 export type ColumnMap = {
   firstName: number;
@@ -6,6 +6,7 @@ export type ColumnMap = {
   className: number;
   grade: number;
   priorities: [number, number, number, number, number];
+  group: number;
   missingRequired: () => ColumnRole[];
 };
 
@@ -14,6 +15,7 @@ const patterns: Record<Exclude<ColumnRole, 'priorities'>, RegExp[]> = {
   lastName: [/^nachname$/i, /^last\s*name$/i, /^lastname$/i, /^name$/i],
   className: [/^klasse$/i, /^class$/i],
   grade: [/^jahrgang$/i, /^grade$/i, /^stufe$/i, /^jahrgangsstufe$/i],
+  group: [/^gruppe$/i, /^group$/i],
 };
 
 function normalize(s: string): string {
@@ -43,6 +45,7 @@ export function detectColumns(headers: string[]): ColumnMap {
   const lastName = findColumn(headers, patterns.lastName);
   const className = findColumn(headers, patterns.className);
   const grade = findColumn(headers, patterns.grade);
+  const group = findColumn(headers, patterns.group);
   const priorities: [number, number, number, number, number] = [
     findPriority(headers, 1),
     findPriority(headers, 2),
@@ -56,6 +59,7 @@ export function detectColumns(headers: string[]): ColumnMap {
     className,
     grade,
     priorities,
+    group,
     missingRequired() {
       const missing: ColumnRole[] = [];
       if (firstName === -1) missing.push('firstName');

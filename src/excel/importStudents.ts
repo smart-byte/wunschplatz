@@ -1,3 +1,4 @@
+import { v4 as uuid } from 'uuid';
 import { detectColumns, type ColumnRole } from './headerMatch';
 import type { Project, Student } from '@/types';
 
@@ -7,6 +8,21 @@ export type ParseResult = {
   errors: ParseError[];
   missingColumns: ColumnRole[];
 };
+
+type Pending = {
+  firstName: string;
+  lastName: string;
+  className: string;
+  grade: number;
+  priorities: string[];
+  groupKey: string | null;
+  rowIndex: number;
+};
+
+function priosEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((v, i) => v === b[i]);
+}
 
 export function parseStudentRows(rows: unknown[][], projects: Project[]): ParseResult {
   if (rows.length === 0) {
@@ -22,8 +38,8 @@ export function parseStudentRows(rows: unknown[][], projects: Project[]): ParseR
   const projectByName = new Map<string, string>();
   for (const p of projects) projectByName.set(p.name.toLowerCase().trim(), p.id);
 
-  const students: Omit<Student, 'id'>[] = [];
   const errors: ParseError[] = [];
+  const pending: Pending[] = [];
 
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r];
@@ -47,7 +63,6 @@ export function parseStudentRows(rows: unknown[][], projects: Project[]): ParseR
       const colIdx = cols.priorities[k];
       if (colIdx === -1) continue;
       const name = String(row[colIdx] ?? '').trim();
-      // Treat empty cells, dashes (-, –, —), and similar placeholders as "no choice".
       if (!name || /^[-–—]+$/.test(name)) continue;
       const id = projectByName.get(name.toLowerCase());
       if (!id) {
@@ -65,7 +80,60 @@ export function parseStudentRows(rows: unknown[][], projects: Project[]): ParseR
 
     if (priorityError && priorities.length === 0) continue;
 
-    students.push({ firstName, lastName, className, grade, priorities });
+    // Group column (optional). Empty or dash → ungrouped.
+    let groupKey: string | null = null;
+    if (cols.group !== -1) {
+      const raw = String(row[cols.group] ?? '').trim();
+      if (raw && !/^[-–—]+$/.test(raw)) groupKey = raw;
+    }
+
+    pending.push({ firstName, lastName, className, grade, priorities, groupKey, rowIndex: r });
+  }
+
+  // Group resolution: map raw groupKey → uuid, sync priorities to first member,
+  // collapse singletons to ungrouped.
+  const membersByKey = new Map<string, Pending[]>();
+  for (const p of pending) {
+    if (!p.groupKey) continue;
+    if (!membersByKey.has(p.groupKey)) membersByKey.set(p.groupKey, []);
+    membersByKey.get(p.groupKey)!.push(p);
+  }
+  const groupIdByKey = new Map<string, string>();
+  for (const [key, members] of membersByKey) {
+    if (members.length >= 2) groupIdByKey.set(key, uuid());
+  }
+
+  const students: Omit<Student, 'id'>[] = [];
+  for (const p of pending) {
+    const groupId = p.groupKey ? groupIdByKey.get(p.groupKey) : undefined;
+    if (groupId) {
+      const members = membersByKey.get(p.groupKey!)!;
+      const template = members[0];
+      const sharedPriorities = template.priorities;
+      if (p !== template && !priosEqual(p.priorities, sharedPriorities)) {
+        errors.push({
+          rowIndex: p.rowIndex,
+          message: `Gruppe "${p.groupKey}": Prios weichen ab — übernommen von ${template.firstName} ${template.lastName}`,
+        });
+      }
+      students.push({
+        firstName: p.firstName,
+        lastName: p.lastName,
+        className: p.className,
+        grade: p.grade,
+        priorities: sharedPriorities,
+        groupId,
+      });
+    } else {
+      // Singleton group (only one member) or no group key → ungrouped.
+      students.push({
+        firstName: p.firstName,
+        lastName: p.lastName,
+        className: p.className,
+        grade: p.grade,
+        priorities: p.priorities,
+      });
+    }
   }
 
   return { students, errors, missingColumns: [] };

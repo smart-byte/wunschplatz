@@ -85,4 +85,40 @@ describe('parseStudentRows', () => {
     expect(result.students[0].priorities).toEqual(['a', 'b']);
     expect(result.errors).toHaveLength(0);
   });
+
+  it('groups students sharing the same Gruppe value', () => {
+    const rows = [
+      ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Gruppe', 'Prio1'],
+      ['Anna', 'Müller', '7a', '7', '1', 'Alpha'],
+      ['Ben', 'Schmidt', '7b', '7', '1', 'Alpha'],
+      ['Carla', 'Weber', '7a', '7', '-', 'Beta'],
+    ];
+    const result = parseStudentRows(rows, projects);
+    expect(result.students).toHaveLength(3);
+    expect(result.students[0].groupId).toBeDefined();
+    expect(result.students[0].groupId).toBe(result.students[1].groupId);
+    expect(result.students[2].groupId).toBeUndefined();
+  });
+
+  it('singletons in Gruppe column are treated as ungrouped', () => {
+    const rows = [
+      ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Gruppe', 'Prio1'],
+      ['Anna', 'Müller', '7a', '7', '5', 'Alpha'],
+    ];
+    const result = parseStudentRows(rows, projects);
+    expect(result.students).toHaveLength(1);
+    expect(result.students[0].groupId).toBeUndefined();
+  });
+
+  it('syncs group priorities to first member and warns on mismatch', () => {
+    const rows = [
+      ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Gruppe', 'Prio1', 'Prio2'],
+      ['Anna', 'Müller', '7a', '7', '1', 'Alpha', 'Beta'],
+      ['Ben', 'Schmidt', '7b', '7', '1', 'Gamma', 'Delta'],
+    ];
+    const result = parseStudentRows(rows, projects);
+    expect(result.students[0].priorities).toEqual(['a', 'b']);
+    expect(result.students[1].priorities).toEqual(['a', 'b']);
+    expect(result.errors.some((e) => /Prios weichen ab/i.test(e.message))).toBe(true);
+  });
 });

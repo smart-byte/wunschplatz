@@ -15,6 +15,7 @@ import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { parseStudentRows, type ParseResult } from '@/excel/importStudents';
+import { pickFreeColorKey } from '@/lib/groups';
 import { HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -27,6 +28,7 @@ export function ImportDialog() {
   const fileRef = useRef<HTMLInputElement>(null);
   const projects = useProjectsStore((s) => s.projects);
   const setStudents = useStudentsStore((s) => s.setStudents);
+  const setGroupColor = useStudentsStore((s) => s.setGroupColor);
   const clearAssignments = useAssignmentsStore((s) => s.clear);
 
   function parseSheet(wb: WorkBook, name: string) {
@@ -65,8 +67,17 @@ export function ImportDialog() {
       id: crypto.randomUUID(),
     }));
     setStudents(withIds);
+    // Assign a free palette color to each imported group.
+    const groupIds = [...new Set(withIds.map((s) => s.groupId).filter((g): g is string => !!g))];
+    const usedKeys: string[] = [];
+    for (const gid of groupIds) {
+      const key = pickFreeColorKey(gid, usedKeys);
+      setGroupColor(gid, key);
+      usedKeys.push(key);
+    }
     clearAssignments();
-    toast.success(`${withIds.length} Schüler importiert`);
+    const groupSuffix = groupIds.length > 0 ? ` (inkl. ${groupIds.length} Gruppe${groupIds.length === 1 ? '' : 'n'})` : '';
+    toast.success(`${withIds.length} Schüler importiert${groupSuffix}`);
     setOpen(false);
     reset();
   }
@@ -225,10 +236,24 @@ function ImportHelpContent() {
       </div>
 
       <div>
+        <div className="font-medium mb-1">Optionale Spalten</div>
+        <table className="w-full">
+          <tbody className="font-mono text-[11px]">
+            <tr><td className="pr-2 align-top">Gruppe</td><td>Gruppe · Group</td></tr>
+          </tbody>
+        </table>
+        <p className="text-muted-foreground mt-1">
+          Schüler mit gleichem Wert in der „Gruppe"-Spalte bilden eine Gruppe.
+          „-" oder leer = keine Gruppe. Prios werden auf den ersten Gruppen-Schüler synchronisiert.
+        </p>
+      </div>
+
+      <div>
         <div className="font-medium mb-1">Beispiel</div>
-        <pre className="rounded border bg-background p-2 text-[10px] leading-relaxed overflow-x-auto">{`Vorname  | Nachname  | Klasse | Jahrgang | Prio1   | Prio2 | Prio3 | Prio4   | Prio5
-Anna     | Müller    | 7a     | 7        | Schach  | Yoga  | Comic | Theater | Kochen
-Ben      | Schmidt   | 7b     | 7        | Theater | Yoga  | Comic | Schach  | Kochen`}</pre>
+        <pre className="rounded border bg-background p-2 text-[10px] leading-relaxed overflow-x-auto">{`Vorname  | Nachname  | Klasse | Jahrgang | Gruppe | Prio1   | Prio2 | Prio3 | Prio4   | Prio5
+Anna     | Müller    | 7a     | 7        | 1      | Schach  | Yoga  | Comic | Theater | Kochen
+Ben      | Schmidt   | 7b     | 7        | 1      | Schach  | Yoga  | Comic | Theater | Kochen
+Carla    | Weber     | 7a     | 7        | -      | Theater | Yoga  | Comic | Schach  | Kochen`}</pre>
       </div>
 
       <div>
@@ -238,6 +263,7 @@ Ben      | Schmidt   | 7b     | 7        | Theater | Yoga  | Comic | Schach  | K
           <li>Prio-Werte müssen exakt den Projektnamen aus dem Reiter „Projekte" entsprechen (case-insensitiv).</li>
           <li>Prios untereinander müssen verschieden sein.</li>
           <li>Leere Prio-Zellen sind OK (≤5 Prios möglich). Auch „-", „–" oder „—" gilt als leer.</li>
+          <li>Gruppe mit nur einem Mitglied wird als Einzel-Schüler behandelt.</li>
           <li>Mehrere Mappen → Auswahl-Dropdown erscheint.</li>
         </ul>
       </div>
