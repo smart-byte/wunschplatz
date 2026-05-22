@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -6,11 +6,33 @@ import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { StudentFormDialog } from './StudentFormDialog';
-import { Pencil, Trash2, Users, UserMinus } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Trash2, Users, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { getGroupColor } from '@/lib/groups';
 import { MAX_GROUP_SIZE } from '@/types';
+import type { Student } from '@/types';
 import { cn } from '@/lib/utils';
+
+type SortKey = 'name' | 'className' | 'grade' | 'group' | 'prio1' | 'prio2' | 'prio3' | 'prio4' | 'prio5';
+type SortDir = 'asc' | 'desc';
+
+function compareStrings(a: string, b: string): number {
+  return a.localeCompare(b, 'de', { sensitivity: 'base', numeric: true });
+}
+
+function sortValue(s: Student, key: SortKey, projectName: (id: string) => string): string | number {
+  switch (key) {
+    case 'name': return `${s.lastName} ${s.firstName}`;
+    case 'className': return s.className;
+    case 'grade': return s.grade;
+    case 'group': return s.groupId ?? '';
+    case 'prio1': return s.priorities[0] ? projectName(s.priorities[0]) : '';
+    case 'prio2': return s.priorities[1] ? projectName(s.priorities[1]) : '';
+    case 'prio3': return s.priorities[2] ? projectName(s.priorities[2]) : '';
+    case 'prio4': return s.priorities[3] ? projectName(s.priorities[3]) : '';
+    case 'prio5': return s.priorities[4] ? projectName(s.priorities[4]) : '';
+  }
+}
 
 export function StudentsTable() {
   const students = useStudentsStore((s) => s.students);
@@ -23,6 +45,34 @@ export function StudentsTable() {
   const projectName = (id: string) => projects.find((p) => p.id === id)?.name ?? '?';
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [sortKey, setSortKey] = useState<SortKey>('name');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+  function handleSort(key: SortKey) {
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('asc');
+    }
+  }
+
+  const sortedStudents = useMemo(() => {
+    const copy = [...students];
+    copy.sort((a, b) => {
+      const va = sortValue(a, sortKey, projectName);
+      const vb = sortValue(b, sortKey, projectName);
+      let cmp: number;
+      if (typeof va === 'number' && typeof vb === 'number') {
+        cmp = va - vb;
+      } else {
+        cmp = compareStrings(String(va), String(vb));
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return copy;
+    // projectName depends on `projects` already in deps via students reference; include explicitly:
+  }, [students, sortKey, sortDir, projects]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function toggle(id: string) {
     const next = new Set(selected);
@@ -88,20 +138,20 @@ export function StudentsTable() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[40px]"></TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Klasse</TableHead>
-              <TableHead>Jg.</TableHead>
-              <TableHead>Gruppe</TableHead>
-              <TableHead>Prio 1</TableHead>
-              <TableHead>Prio 2</TableHead>
-              <TableHead>Prio 3</TableHead>
-              <TableHead>Prio 4</TableHead>
-              <TableHead>Prio 5</TableHead>
+              <SortHead label="Name" col="name" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
+              <SortHead label="Klasse" col="className" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
+              <SortHead label="Jg." col="grade" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
+              <SortHead label="Gruppe" col="group" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
+              <SortHead label="Prio 1" col="prio1" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
+              <SortHead label="Prio 2" col="prio2" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
+              <SortHead label="Prio 3" col="prio3" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
+              <SortHead label="Prio 4" col="prio4" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
+              <SortHead label="Prio 5" col="prio5" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
               <TableHead className="w-[120px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {students.map((s) => {
+            {sortedStudents.map((s) => {
               const color = s.groupId ? getGroupColor(s.groupId) : null;
               return (
                 <TableRow
@@ -177,5 +227,33 @@ export function StudentsTable() {
         </Table>
       </div>
     </div>
+  );
+}
+
+type SortHeadProps = {
+  label: string;
+  col: SortKey;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onClick: (key: SortKey) => void;
+};
+
+function SortHead({ label, col, sortKey, sortDir, onClick }: SortHeadProps) {
+  const active = sortKey === col;
+  const Icon = !active ? ArrowUpDown : sortDir === 'asc' ? ArrowUp : ArrowDown;
+  return (
+    <TableHead>
+      <button
+        type="button"
+        className={cn(
+          'inline-flex items-center gap-1 hover:text-foreground',
+          active ? 'text-foreground font-medium' : 'text-muted-foreground',
+        )}
+        onClick={() => onClick(col)}
+      >
+        {label}
+        <Icon className="size-3" />
+      </button>
+    </TableHead>
   );
 }
