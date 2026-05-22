@@ -12,9 +12,9 @@ import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { StudentFormDialog } from './StudentFormDialog';
-import { ArrowDown, ArrowUp, ArrowUpDown, Check, Pencil, Trash2, Users, UserMinus } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, Pencil, Pipette, Trash2, Users, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
-import { getGroupColor, PALETTE } from '@/lib/groups';
+import { getGroupColor, PALETTE, isHex } from '@/lib/groups';
 import type { Student } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -187,10 +187,18 @@ export function StudentsTable() {
           <TableBody>
             {sortedStudents.map((s) => {
               const color = s.groupId ? getGroupColor(s.groupId, groupColors) : null;
+              const rowStyle =
+                color?.kind === 'custom'
+                  ? { borderLeftColor: color.hex }
+                  : undefined;
               return (
                 <TableRow
                   key={s.id}
-                  className={cn(color && 'border-l-4', color?.ring.replace('ring-', 'border-l-'))}
+                  className={cn(
+                    color && 'border-l-4',
+                    color?.kind === 'palette' && color.borderClass,
+                  )}
+                  style={rowStyle}
                 >
                   <TableCell>
                     <Checkbox
@@ -203,44 +211,12 @@ export function StudentsTable() {
                   <TableCell>{s.grade}</TableCell>
                   <TableCell>
                     {s.groupId && color ? (
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <button
-                            type="button"
-                            className={cn(
-                              'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs hover:opacity-80',
-                              color.bg, color.text,
-                            )}
-                            title="Farbe ändern"
-                          >
-                            <Users className="size-3" />
-                            {color.label}
-                          </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-2">
-                          <div className="text-xs text-muted-foreground mb-2 px-1">Gruppen-Farbe wählen</div>
-                          <div className="grid grid-cols-4 gap-1">
-                            {PALETTE.map((c, i) => {
-                              const active = groupColors[s.groupId!] === i;
-                              return (
-                                <button
-                                  key={i}
-                                  type="button"
-                                  className={cn(
-                                    'relative size-8 rounded flex items-center justify-center',
-                                    c.swatch,
-                                    active && 'ring-2 ring-offset-2 ring-foreground',
-                                  )}
-                                  title={c.label}
-                                  onClick={() => setGroupColor(s.groupId!, i)}
-                                >
-                                  {active && <Check className="size-4 text-white drop-shadow" />}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                      <GroupColorBadge
+                        groupId={s.groupId}
+                        currentKey={groupColors[s.groupId] ?? color.key}
+                        color={color}
+                        onPick={(k) => setGroupColor(s.groupId!, k)}
+                      />
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
@@ -374,5 +350,79 @@ function SortHead({ label, col, sortKey, sortDir, onClick }: SortHeadProps) {
         <Icon className="size-3" />
       </button>
     </TableHead>
+  );
+}
+
+type GroupColorBadgeProps = {
+  groupId: string;
+  currentKey: string;
+  color: ReturnType<typeof getGroupColor>;
+  onPick: (key: string) => void;
+};
+
+function GroupColorBadge({ currentKey, color, onPick }: GroupColorBadgeProps) {
+  const badgeStyle =
+    color.kind === 'custom'
+      ? { backgroundColor: color.hex + '33', color: color.hex }
+      : undefined;
+  const badgeClass =
+    color.kind === 'palette'
+      ? cn(color.bgClass, color.textClass)
+      : '';
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs hover:opacity-80',
+            badgeClass,
+          )}
+          style={badgeStyle}
+          title="Farbe ändern"
+        >
+          <Users className="size-3" />
+          {color.label}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-2">
+        <div className="text-xs text-muted-foreground mb-2 px-1">Gruppen-Farbe wählen</div>
+        <div className="grid grid-cols-8 gap-1">
+          {PALETTE.map((c) => {
+            const active = currentKey === c.key;
+            return (
+              <button
+                key={c.key}
+                type="button"
+                className={cn(
+                  'relative size-7 rounded flex items-center justify-center',
+                  c.swatch,
+                  active && 'ring-2 ring-offset-2 ring-foreground',
+                )}
+                title={c.label}
+                onClick={() => onPick(c.key)}
+              >
+                {active && <Check className="size-3.5 text-white drop-shadow" />}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-3 border-t pt-2 flex items-center gap-2">
+          <label className="text-xs text-muted-foreground inline-flex items-center gap-1 cursor-pointer">
+            <Pipette className="size-3.5" />
+            Eigene Farbe
+          </label>
+          <input
+            type="color"
+            value={isHex(currentKey) ? currentKey : '#888888'}
+            onChange={(e) => onPick(e.target.value)}
+            className="h-7 w-12 cursor-pointer border rounded"
+          />
+          {isHex(currentKey) && (
+            <span className="text-xs font-mono text-muted-foreground">{currentKey.toUpperCase()}</span>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

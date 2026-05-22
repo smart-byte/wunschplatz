@@ -95,7 +95,18 @@ export function StudentFormDialog({ trigger, initial, onSave }: Props) {
         </DialogHeader>
         <div className="grid gap-4">
           {initial?.groupId && groupColor && (
-            <div className={`flex items-start gap-2 rounded-md border p-3 ${groupColor.bg} ${groupColor.text}`}>
+            <div
+              className={
+                groupColor.kind === 'palette'
+                  ? `flex items-start gap-2 rounded-md border p-3 ${groupColor.bgClass} ${groupColor.textClass}`
+                  : 'flex items-start gap-2 rounded-md border p-3'
+              }
+              style={
+                groupColor.kind === 'custom'
+                  ? { backgroundColor: groupColor.hex + '33', color: groupColor.hex }
+                  : undefined
+              }
+            >
               <Users className="size-4 mt-0.5 shrink-0" />
               <div className="text-sm">
                 <p className="font-medium">In Gruppe ({groupColor.label})</p>

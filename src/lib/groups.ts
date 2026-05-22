@@ -1,19 +1,34 @@
 import type { Student } from '@/types';
 
-// Tailwind-friendly palette. Indexed; Tailwind safelist in tailwind.config.js
-// must keep all utility classes used here visible to the JIT.
+// Built-in palette. Tailwind safelist uses a pattern matching these color names
+// so all `bg-X-100`, `bg-X-400`, `text-X-700`, `border-l-X-400` variants ship.
 export const PALETTE = [
-  { ring: 'ring-rose-400', text: 'text-rose-700', bg: 'bg-rose-100', swatch: 'bg-rose-400', label: 'Rose' },
-  { ring: 'ring-amber-400', text: 'text-amber-700', bg: 'bg-amber-100', swatch: 'bg-amber-400', label: 'Amber' },
-  { ring: 'ring-lime-400', text: 'text-lime-700', bg: 'bg-lime-100', swatch: 'bg-lime-400', label: 'Lime' },
-  { ring: 'ring-emerald-400', text: 'text-emerald-700', bg: 'bg-emerald-100', swatch: 'bg-emerald-400', label: 'Emerald' },
-  { ring: 'ring-cyan-400', text: 'text-cyan-700', bg: 'bg-cyan-100', swatch: 'bg-cyan-400', label: 'Cyan' },
-  { ring: 'ring-blue-400', text: 'text-blue-700', bg: 'bg-blue-100', swatch: 'bg-blue-400', label: 'Blue' },
-  { ring: 'ring-violet-400', text: 'text-violet-700', bg: 'bg-violet-100', swatch: 'bg-violet-400', label: 'Violet' },
-  { ring: 'ring-fuchsia-400', text: 'text-fuchsia-700', bg: 'bg-fuchsia-100', swatch: 'bg-fuchsia-400', label: 'Fuchsia' },
+  { key: 'rose',     bg: 'bg-rose-100',     text: 'text-rose-700',     swatch: 'bg-rose-400',     border: 'border-l-rose-400',     ring: 'ring-rose-400',     label: 'Rose' },
+  { key: 'pink',     bg: 'bg-pink-100',     text: 'text-pink-700',     swatch: 'bg-pink-400',     border: 'border-l-pink-400',     ring: 'ring-pink-400',     label: 'Pink' },
+  { key: 'fuchsia',  bg: 'bg-fuchsia-100',  text: 'text-fuchsia-700',  swatch: 'bg-fuchsia-400',  border: 'border-l-fuchsia-400',  ring: 'ring-fuchsia-400',  label: 'Fuchsia' },
+  { key: 'purple',   bg: 'bg-purple-100',   text: 'text-purple-700',   swatch: 'bg-purple-400',   border: 'border-l-purple-400',   ring: 'ring-purple-400',   label: 'Purple' },
+  { key: 'violet',   bg: 'bg-violet-100',   text: 'text-violet-700',   swatch: 'bg-violet-400',   border: 'border-l-violet-400',   ring: 'ring-violet-400',   label: 'Violet' },
+  { key: 'indigo',   bg: 'bg-indigo-100',   text: 'text-indigo-700',   swatch: 'bg-indigo-400',   border: 'border-l-indigo-400',   ring: 'ring-indigo-400',   label: 'Indigo' },
+  { key: 'blue',     bg: 'bg-blue-100',     text: 'text-blue-700',     swatch: 'bg-blue-400',     border: 'border-l-blue-400',     ring: 'ring-blue-400',     label: 'Blue' },
+  { key: 'sky',      bg: 'bg-sky-100',      text: 'text-sky-700',      swatch: 'bg-sky-400',      border: 'border-l-sky-400',      ring: 'ring-sky-400',      label: 'Sky' },
+  { key: 'cyan',     bg: 'bg-cyan-100',     text: 'text-cyan-700',     swatch: 'bg-cyan-400',     border: 'border-l-cyan-400',     ring: 'ring-cyan-400',     label: 'Cyan' },
+  { key: 'teal',     bg: 'bg-teal-100',     text: 'text-teal-700',     swatch: 'bg-teal-400',     border: 'border-l-teal-400',     ring: 'ring-teal-400',     label: 'Teal' },
+  { key: 'emerald',  bg: 'bg-emerald-100',  text: 'text-emerald-700',  swatch: 'bg-emerald-400',  border: 'border-l-emerald-400',  ring: 'ring-emerald-400',  label: 'Emerald' },
+  { key: 'green',    bg: 'bg-green-100',    text: 'text-green-700',    swatch: 'bg-green-400',    border: 'border-l-green-400',    ring: 'ring-green-400',    label: 'Green' },
+  { key: 'lime',     bg: 'bg-lime-100',     text: 'text-lime-700',     swatch: 'bg-lime-400',     border: 'border-l-lime-400',     ring: 'ring-lime-400',     label: 'Lime' },
+  { key: 'yellow',   bg: 'bg-yellow-100',   text: 'text-yellow-700',   swatch: 'bg-yellow-400',   border: 'border-l-yellow-400',   ring: 'ring-yellow-400',   label: 'Yellow' },
+  { key: 'amber',    bg: 'bg-amber-100',    text: 'text-amber-700',    swatch: 'bg-amber-400',    border: 'border-l-amber-400',    ring: 'ring-amber-400',    label: 'Amber' },
+  { key: 'orange',   bg: 'bg-orange-100',   text: 'text-orange-700',   swatch: 'bg-orange-400',   border: 'border-l-orange-400',   ring: 'ring-orange-400',   label: 'Orange' },
 ];
 
-export const PALETTE_SIZE = PALETTE.length;
+export type PaletteEntry = (typeof PALETTE)[number];
+
+export const PALETTE_KEYS = PALETTE.map((p) => p.key);
+export const PALETTE_BY_KEY: Record<string, PaletteEntry> = Object.fromEntries(
+  PALETTE.map((p) => [p.key, p]),
+);
+
+const HEX_RE = /^#[0-9a-f]{6}$/i;
 
 function hashString(s: string): number {
   let h = 0;
@@ -24,35 +39,93 @@ function hashString(s: string): number {
   return Math.abs(h);
 }
 
-export function colorForIndex(idx: number) {
-  const safe = ((idx % PALETTE_SIZE) + PALETTE_SIZE) % PALETTE_SIZE;
-  return PALETTE[safe];
+export function isHex(value: string): boolean {
+  return HEX_RE.test(value);
+}
+
+function isLightHex(hex: string): boolean {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 0xff;
+  const g = (n >> 8) & 0xff;
+  const b = n & 0xff;
+  return r * 0.299 + g * 0.587 + b * 0.114 > 160;
 }
 
 /**
- * Resolve a group's color. If a paletteIndex is recorded in `colorMap`, use
- * that. Otherwise fall back to hashing the groupId (legacy / unassigned).
+ * Unified group color descriptor. Either a built-in Tailwind palette entry,
+ * or a custom hex with inline-style hints (no Tailwind class for the color).
  */
-export function getGroupColor(groupId: string, colorMap?: Record<string, number>) {
-  if (colorMap && colorMap[groupId] !== undefined) {
-    return colorForIndex(colorMap[groupId]);
+export type GroupStyle =
+  | {
+      kind: 'palette';
+      key: string;
+      label: string;
+      bgClass: string;
+      textClass: string;
+      swatchClass: string;
+      borderClass: string;
+      ringClass: string;
+    }
+  | {
+      kind: 'custom';
+      key: string;          // the hex string
+      label: string;        // e.g. "#a1b2c3"
+      hex: string;
+      textHex: string;      // contrasting text color
+    };
+
+export function resolveColor(key: string): GroupStyle {
+  if (isHex(key)) {
+    return {
+      kind: 'custom',
+      key,
+      label: key.toUpperCase(),
+      hex: key,
+      textHex: isLightHex(key) ? '#000000' : '#ffffff',
+    };
   }
-  return colorForIndex(hashString(groupId));
+  const entry = PALETTE_BY_KEY[key] ?? PALETTE[0];
+  return {
+    kind: 'palette',
+    key: entry.key,
+    label: entry.label,
+    bgClass: entry.bg,
+    textClass: entry.text,
+    swatchClass: entry.swatch,
+    borderClass: entry.border,
+    ringClass: entry.ring,
+  };
+}
+
+/** Stable hash-based fallback when all palette keys are taken. */
+function fallbackKey(groupId: string): string {
+  return PALETTE_KEYS[hashString(groupId) % PALETTE_KEYS.length];
 }
 
 /**
- * Pick the next palette index not yet used by other groups. Falls back to
- * `hashString(newGroupId)` once all PALETTE_SIZE slots are taken.
+ * Resolve a group's color from the color map. Falls back to hashing the
+ * groupId against the built-in palette if no entry exists (legacy data).
  */
-export function pickFreeColorIndex(
+export function getGroupColor(groupId: string, colorMap?: Record<string, string>): GroupStyle {
+  const raw = colorMap?.[groupId];
+  if (raw) return resolveColor(raw);
+  return resolveColor(fallbackKey(groupId));
+}
+
+/**
+ * Pick the next palette key not yet used by other groups. Falls back to
+ * hash-based key once all PALETTE_KEYS are taken. Custom hex values in the
+ * used set are simply ignored when checking palette occupancy.
+ */
+export function pickFreeColorKey(
   newGroupId: string,
-  usedIndices: Iterable<number>,
-): number {
-  const used = new Set(usedIndices);
-  for (let i = 0; i < PALETTE_SIZE; i++) {
-    if (!used.has(i)) return i;
+  usedKeys: Iterable<string>,
+): string {
+  const used = new Set([...usedKeys].filter((k) => !isHex(k)));
+  for (const k of PALETTE_KEYS) {
+    if (!used.has(k)) return k;
   }
-  return hashString(newGroupId) % PALETTE_SIZE;
+  return fallbackKey(newGroupId);
 }
 
 export function getGroupMembers(students: Student[], groupId: string): Student[] {

@@ -3,11 +3,11 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuid } from 'uuid';
 import type { Student } from '@/types';
 import { createIdbStorage } from './persist';
-import { pickFreeColorIndex } from '@/lib/groups';
+import { pickFreeColorKey, PALETTE_KEYS } from '@/lib/groups';
 
 type State = {
   students: Student[];
-  groupColors: Record<string, number>; // groupId → palette index
+  groupColors: Record<string, string>; // groupId → palette key or hex (#rrggbb)
   addStudent: (data: Omit<Student, 'id'>) => void;
   addStudents: (data: Omit<Student, 'id'>[]) => void;
   updateStudent: (id: string, data: Partial<Omit<Student, 'id'>>) => void;
@@ -19,7 +19,7 @@ type State = {
   addToGroup: (studentId: string, groupId: string) => { ok: true } | { ok: false; error: string };
   removeFromGroup: (studentId: string) => void;
   syncGroupPriorities: (groupId: string, priorities: string[]) => void;
-  setGroupColor: (groupId: string, paletteIndex: number) => void;
+  setGroupColor: (groupId: string, colorKey: string) => void;
 };
 
 function activeGroupIds(students: Student[]): Set<string> {
@@ -29,13 +29,13 @@ function activeGroupIds(students: Student[]): Set<string> {
 }
 
 function cleanupColors(
-  colors: Record<string, number>,
+  colors: Record<string, string>,
   students: Student[],
-): Record<string, number> {
+): Record<string, string> {
   const active = activeGroupIds(students);
-  const next: Record<string, number> = {};
-  for (const [gid, idx] of Object.entries(colors)) {
-    if (active.has(gid)) next[gid] = idx;
+  const next: Record<string, string> = {};
+  for (const [gid, v] of Object.entries(colors)) {
+    if (active.has(gid)) next[gid] = v;
   }
   return next;
 }
@@ -100,15 +100,15 @@ export const useStudentsStore = create<State>()(
         }
         const groupId = uuid();
         const sharedPriorities = template.priorities;
-        const usedIndices = Object.values(state.groupColors);
-        const colorIndex = pickFreeColorIndex(groupId, usedIndices);
+        const usedKeys = Object.values(state.groupColors);
+        const colorKey = pickFreeColorKey(groupId, usedKeys);
         set((s) => ({
           students: s.students.map((st) =>
             studentIds.includes(st.id)
               ? { ...st, groupId, priorities: sharedPriorities }
               : st,
           ),
-          groupColors: { ...s.groupColors, [groupId]: colorIndex },
+          groupColors: { ...s.groupColors, [groupId]: colorKey },
         }));
         return { ok: true as const, groupId };
       },
@@ -151,13 +151,31 @@ export const useStudentsStore = create<State>()(
         ),
       })),
 
-      setGroupColor: (groupId, paletteIndex) => set((s) => ({
-        groupColors: { ...s.groupColors, [groupId]: paletteIndex },
+      setGroupColor: (groupId, colorKey) => set((s) => ({
+        groupColors: { ...s.groupColors, [groupId]: colorKey },
       })),
     }),
     {
       name: 'students',
+      version: 2,
       storage: createJSONStorage(() => createIdbStorage('students')),
+      // v1 stored groupColors as Record<string, number> (palette indices).
+      // v2 stores Record<string, string> (palette key or hex).
+      migrate: (persisted, version) => {
+        const p = (persisted ?? {}) as Partial<State> & { groupColors?: Record<string, unknown> };
+        if (version < 2 && p.groupColors) {
+          const next: Record<string, string> = {};
+          for (const [gid, v] of Object.entries(p.groupColors)) {
+            if (typeof v === 'number') {
+              next[gid] = PALETTE_KEYS[((v % PALETTE_KEYS.length) + PALETTE_KEYS.length) % PALETTE_KEYS.length];
+            } else if (typeof v === 'string') {
+              next[gid] = v;
+            }
+          }
+          return { ...p, groupColors: next } as unknown as State;
+        }
+        return p as unknown as State;
+      },
     },
   ),
 );
