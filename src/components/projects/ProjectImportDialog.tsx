@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { read, utils } from 'xlsx';
 import type { WorkBook } from 'xlsx';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,20 @@ import { parseProjectRows, type ProjectParseResult } from '@/excel/importProject
 import { HelpCircle, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
-export function ProjectImportDialog() {
-  const [open, setOpen] = useState(false);
+type Props = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  externalFile?: File | null;
+};
+
+export function ProjectImportDialog({ open: externalOpen, onOpenChange, externalFile }: Props = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = externalOpen !== undefined;
+  const open = isControlled ? externalOpen : internalOpen;
+  const setOpen = (v: boolean) => {
+    if (isControlled) onOpenChange?.(v);
+    else setInternalOpen(v);
+  };
   const [result, setResult] = useState<ProjectParseResult | null>(null);
   const [fileName, setFileName] = useState('');
   const [workbook, setWorkbook] = useState<WorkBook | null>(null);
@@ -46,6 +58,13 @@ export function ProjectImportDialog() {
     setSheetName(firstSheet);
     if (firstSheet) parseSheet(wb, firstSheet);
   }
+
+  useEffect(() => {
+    if (open && externalFile) {
+      void handleFile(externalFile);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, externalFile]);
 
   function handleSheetChange(name: string) {
     setSheetName(name);

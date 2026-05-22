@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { read, utils } from 'xlsx';
 import type { WorkBook } from 'xlsx';
 import { Button } from '@/components/ui/button';
@@ -19,8 +19,20 @@ import { pickFreeColorKey } from '@/lib/groups';
 import { HelpCircle, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
-export function ImportDialog() {
-  const [open, setOpen] = useState(false);
+type ImportDialogProps = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  externalFile?: File | null;
+};
+
+export function ImportDialog({ open: externalOpen, onOpenChange, externalFile }: ImportDialogProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = externalOpen !== undefined;
+  const open = isControlled ? externalOpen : internalOpen;
+  const setOpen = (v: boolean) => {
+    if (isControlled) onOpenChange?.(v);
+    else setInternalOpen(v);
+  };
   const [result, setResult] = useState<ParseResult | null>(null);
   const [fileName, setFileName] = useState('');
   const [workbook, setWorkbook] = useState<WorkBook | null>(null);
@@ -47,6 +59,15 @@ export function ImportDialog() {
     setSheetName(firstSheet);
     if (firstSheet) parseSheet(wb, firstSheet);
   }
+
+  // When an external file is provided (e.g. dropped on the page),
+  // auto-load it as soon as the dialog opens.
+  useEffect(() => {
+    if (open && externalFile) {
+      void handleFile(externalFile);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, externalFile]);
 
   function handleSheetChange(name: string) {
     setSheetName(name);
