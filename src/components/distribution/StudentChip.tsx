@@ -34,7 +34,13 @@ export function StudentChip({ student, assignment, projects, onClick }: Props) {
     >
       <span className="truncate max-w-[120px]">{student.lastName}, {student.firstName.charAt(0)}.</span>
       <span className="text-muted-foreground">{student.className}</span>
-      <AssignmentBadge student={student} assignment={assignment} projects={projects} size="xs" />
+      <AssignmentBadge
+        student={student}
+        assignment={assignment}
+        projects={projects}
+        size="xs"
+        disableTooltip={isDragging}
+      />
     </div>
   );
 }

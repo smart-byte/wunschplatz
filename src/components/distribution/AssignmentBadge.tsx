@@ -9,9 +9,13 @@ type Props = {
   assignment: Assignment | null;
   projects: Project[];
   size?: 'sm' | 'xs';
+  /** When true, the tooltip is suppressed (used while parent is dragging). */
+  disableTooltip?: boolean;
 };
 
-export function AssignmentBadge({ student, assignment, projects, size = 'sm' }: Props) {
+export function AssignmentBadge({
+  student, assignment, projects, size = 'sm', disableTooltip = false,
+}: Props) {
   const projectName = (id: string) => projects.find((p) => p.id === id)?.name ?? '?';
   const prios = student.priorities;
 
@@ -39,9 +43,13 @@ export function AssignmentBadge({ student, assignment, projects, size = 'sm' }: 
 
   const sizeClass = size === 'xs' ? 'text-[10px] py-0 px-1' : '';
 
+  if (disableTooltip) {
+    return <Badge variant={variant} className={sizeClass}>{label}</Badge>;
+  }
+
   return (
     <TooltipProvider delayDuration={150}>
-      <Tooltip>
+      <Tooltip open={disableTooltip ? false : undefined}>
         <TooltipTrigger asChild>
           <Badge variant={variant} className={sizeClass}>{label}</Badge>
         </TooltipTrigger>
