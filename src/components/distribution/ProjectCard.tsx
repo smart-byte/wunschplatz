@@ -42,6 +42,11 @@ export function ProjectCard({ project, students, allProjects, allRows, onStudent
   }, [allRows, project.id]);
 
   const totalInterested = interestedByRank.reduce((s, arr) => s + arr.length, 0);
+  // Popularity score: prio 1 = 5 pts, prio 2 = 4 pts, ..., prio 5 = 1 pt.
+  const popularityScore = interestedByRank.reduce(
+    (s, arr, i) => s + arr.length * (5 - i),
+    0,
+  );
 
   return (
     <div
@@ -64,17 +69,25 @@ export function ProjectCard({ project, students, allProjects, allRows, onStudent
             {Math.round(pctTarget * 100)}% Soll
           </div>
         </div>
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="shrink-0 inline-flex items-center gap-1 px-1.5 py-1 rounded border bg-background text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
-              title="Interessenten anzeigen"
-            >
-              <Users className="size-3.5" />
-              <span className="tabular-nums">{totalInterested}</span>
-            </button>
-          </PopoverTrigger>
+        <div className="shrink-0 flex items-center gap-1">
+          <span
+            className="inline-flex items-center gap-0.5 px-1.5 py-1 rounded border bg-background text-xs tabular-nums"
+            title={`Beliebtheits-Score: ${popularityScore} (Prio 1 = 5 Pkt, Prio 2 = 4, …, Prio 5 = 1)`}
+          >
+            <span className="text-muted-foreground">★</span>
+            <span className="font-medium">{popularityScore}</span>
+          </span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 px-1.5 py-1 rounded border bg-background text-xs text-muted-foreground hover:text-foreground hover:bg-muted"
+                title="Interessenten anzeigen"
+              >
+                <Users className="size-3.5" />
+                <span className="tabular-nums">{totalInterested}</span>
+              </button>
+            </PopoverTrigger>
           <PopoverContent align="end" className="w-80 max-h-[60vh] overflow-y-auto p-3">
             <div className="text-sm font-medium mb-1">Wer hat „{project.name}" gewählt?</div>
             <div className="text-xs text-muted-foreground mb-3">
@@ -126,7 +139,8 @@ export function ProjectCard({ project, students, allProjects, allRows, onStudent
               })}
             </div>
           </PopoverContent>
-        </Popover>
+          </Popover>
+        </div>
       </div>
       <div className="flex flex-wrap gap-1 min-h-[40px]">
         {students.map(({ student, assignment }) => (
