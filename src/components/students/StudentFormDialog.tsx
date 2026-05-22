@@ -72,10 +72,6 @@ export function StudentFormDialog({ trigger, initial, onSave, open: externalOpen
       setError('Prioritäten müssen unterschiedlich sein.');
       return;
     }
-    if (cleaned.length === 0) {
-      setError('Mindestens eine Priorität wählen.');
-      return;
-    }
     onSave({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
