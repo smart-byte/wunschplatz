@@ -1,3 +1,4 @@
+import { writeFile } from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { ProjectFormDialog } from '@/components/projects/ProjectFormDialog';
 import { ProjectImportDialog } from '@/components/projects/ProjectImportDialog';
@@ -5,14 +6,23 @@ import { ProjectsTable } from '@/components/projects/ProjectsTable';
 import { SampleDataDialog } from '@/components/projects/SampleDataDialog';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useAssignmentsStore } from '@/store/useAssignmentsStore';
+import { buildProjectsWorkbook } from '@/excel/exportProjects';
 import { toast } from 'sonner';
-import { Plus } from 'lucide-react';
+import { Download, Plus } from 'lucide-react';
 
 export default function ProjectsPage() {
   const projects = useProjectsStore((s) => s.projects);
   const addProject = useProjectsStore((s) => s.addProject);
   const setProjects = useProjectsStore((s) => s.setProjects);
   const clearAssignments = useAssignmentsStore((s) => s.clear);
+
+  function handleExport() {
+    const wb = buildProjectsWorkbook(projects);
+    const date = new Date().toISOString().slice(0, 10);
+    writeFile(wb, `projekte-${date}.xlsx`);
+    toast.success('Excel-Export gestartet');
+  }
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -30,6 +40,12 @@ export default function ProjectsPage() {
               }}
             >
               Alle löschen
+            </Button>
+          )}
+          {projects.length > 0 && (
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="size-4 mr-2" />
+              Excel exportieren
             </Button>
           )}
           <SampleDataDialog />
