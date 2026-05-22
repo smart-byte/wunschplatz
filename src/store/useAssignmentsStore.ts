@@ -2,7 +2,30 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuid } from 'uuid';
 import type { Assignment, Distribution, SolverRun } from '@/types';
+import { defaultSolverConfig } from '@/types';
 import { createIdbStorage } from './persist';
+
+function emptyRun(): SolverRun {
+  return {
+    timestamp: Date.now(),
+    config: defaultSolverConfig,
+    score: 0,
+    stats: {
+      totalStudents: 0,
+      assignedByPriority: [0, 0, 0, 0, 0],
+      notInTop5: 0,
+      unassigned: 0,
+    },
+  };
+}
+
+function pickManualName(existing: Distribution[]): string {
+  const taken = new Set(existing.map((d) => d.name));
+  if (!taken.has('Manuelle Verteilung')) return 'Manuelle Verteilung';
+  let n = 2;
+  while (taken.has(`Manuelle Verteilung ${n}`)) n++;
+  return `Manuelle Verteilung ${n}`;
+}
 
 type State = {
   distributions: Distribution[];
@@ -84,24 +107,33 @@ export const useAssignmentsStore = create<State>()(
       setActive: (id) => set({ activeId: id }),
 
       updateAssignment: (studentId, projectId, priorityRank) => set((s) => {
-        if (!s.activeId) return { distributions: s.distributions };
-        return {
-          distributions: s.distributions.map((d) => {
-            if (d.id !== s.activeId) return d;
-            const exists = d.assignments.some((a) => a.studentId === studentId);
-            const nextAssignments = exists
-              ? d.assignments.map((a) =>
-                  a.studentId === studentId
-                    ? { ...a, projectId, priorityRank, manuallyEdited: true }
-                    : a,
-                )
-              : [
-                  ...d.assignments,
-                  { studentId, projectId, priorityRank, manuallyEdited: true },
-                ];
-            return { ...d, assignments: nextAssignments, updatedAt: Date.now() };
-          }),
-        };
+        let distributions = s.distributions;
+        let activeId = s.activeId;
+        // No active distribution yet → create an empty "manual" one and use it.
+        if (!activeId) {
+          const id = uuid();
+          const now = Date.now();
+          const manual: Distribution = {
+            id,
+            name: pickManualName(distributions),
+            createdAt: now,
+            updatedAt: now,
+            assignments: [],
+            run: emptyRun(),
+          };
+          distributions = [...distributions, manual];
+          activeId = id;
+        }
+        const newAssignment: Assignment = { studentId, projectId, priorityRank, manuallyEdited: true };
+        const next = distributions.map((d) => {
+          if (d.id !== activeId) return d;
+          const exists = d.assignments.some((a) => a.studentId === studentId);
+          const nextAssignments = exists
+            ? d.assignments.map((a) => (a.studentId === studentId ? newAssignment : a))
+            : [...d.assignments, newAssignment];
+          return { ...d, assignments: nextAssignments, updatedAt: Date.now() };
+        });
+        return { distributions: next, activeId };
       }),
 
       clear: () => set({ distributions: [], activeId: null }),

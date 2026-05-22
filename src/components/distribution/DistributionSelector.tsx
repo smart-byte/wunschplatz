@@ -44,13 +44,14 @@ export function DistributionSelector() {
 
   if (distributions.length === 0) {
     return (
-      <div className="border rounded-lg p-4 bg-card flex items-center justify-between">
+      <div className="border rounded-lg p-4 bg-card flex items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">
-          Noch keine Verteilung berechnet. Wechsle zur Optimierungs-Seite, um eine zu erstellen.
+          Noch keine Verteilung. Starte die Optimierung oder weise Schüler unten manuell zu —
+          beim ersten Klick wird automatisch eine neue Verteilung angelegt.
         </p>
         <Button onClick={() => navigate('/optimize')}>
           <Plus className="size-4 mr-2" />
-          Neue Verteilung
+          Optimierung starten
         </Button>
       </div>
     );
