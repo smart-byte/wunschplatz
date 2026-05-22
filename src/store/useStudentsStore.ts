@@ -3,9 +3,11 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuid } from 'uuid';
 import type { Student } from '@/types';
 import { createIdbStorage } from './persist';
+import { pickFreeColorIndex } from '@/lib/groups';
 
 type State = {
   students: Student[];
+  groupColors: Record<string, number>; // groupId → palette index
   addStudent: (data: Omit<Student, 'id'>) => void;
   addStudents: (data: Omit<Student, 'id'>[]) => void;
   updateStudent: (id: string, data: Partial<Omit<Student, 'id'>>) => void;
@@ -17,12 +19,32 @@ type State = {
   addToGroup: (studentId: string, groupId: string) => { ok: true } | { ok: false; error: string };
   removeFromGroup: (studentId: string) => void;
   syncGroupPriorities: (groupId: string, priorities: string[]) => void;
+  setGroupColor: (groupId: string, paletteIndex: number) => void;
 };
+
+function activeGroupIds(students: Student[]): Set<string> {
+  const ids = new Set<string>();
+  for (const s of students) if (s.groupId) ids.add(s.groupId);
+  return ids;
+}
+
+function cleanupColors(
+  colors: Record<string, number>,
+  students: Student[],
+): Record<string, number> {
+  const active = activeGroupIds(students);
+  const next: Record<string, number> = {};
+  for (const [gid, idx] of Object.entries(colors)) {
+    if (active.has(gid)) next[gid] = idx;
+  }
+  return next;
+}
 
 export const useStudentsStore = create<State>()(
   persist(
     (set, get) => ({
       students: [],
+      groupColors: {},
       addStudent: (data) => set((s) => ({
         students: [...s.students, { ...data, id: uuid() }],
       })),
@@ -30,7 +52,6 @@ export const useStudentsStore = create<State>()(
         students: [...s.students, ...datas.map((d) => ({ ...d, id: uuid() }))],
       })),
       updateStudent: (id, data) => set((s) => {
-        // If priorities change and student is in a group, sync siblings.
         const target = s.students.find((st) => st.id === id);
         if (!target) return { students: s.students };
         const next = s.students.map((st) => st.id === id ? { ...st, ...data } : st);
@@ -47,22 +68,22 @@ export const useStudentsStore = create<State>()(
       }),
       removeStudent: (id) => set((s) => {
         const target = s.students.find((st) => st.id === id);
-        const filtered = s.students.filter((st) => st.id !== id);
-        // If removed student was in a group and only 1 sibling remains, dissolve group.
+        let filtered = s.students.filter((st) => st.id !== id);
         if (target?.groupId) {
           const remaining = filtered.filter((st) => st.groupId === target.groupId);
           if (remaining.length < 2) {
-            return {
-              students: filtered.map((st) =>
-                st.groupId === target.groupId ? { ...st, groupId: undefined } : st,
-              ),
-            };
+            filtered = filtered.map((st) =>
+              st.groupId === target.groupId ? { ...st, groupId: undefined } : st,
+            );
           }
         }
-        return { students: filtered };
+        return { students: filtered, groupColors: cleanupColors(s.groupColors, filtered) };
       }),
-      removeAll: () => set({ students: [] }),
-      setStudents: (students) => set({ students }),
+      removeAll: () => set({ students: [], groupColors: {} }),
+      setStudents: (students) => set((s) => ({
+        students,
+        groupColors: cleanupColors(s.groupColors, students),
+      })),
 
       createGroup: (studentIds, templateStudentId) => {
         const state = get();
@@ -79,12 +100,15 @@ export const useStudentsStore = create<State>()(
         }
         const groupId = uuid();
         const sharedPriorities = template.priorities;
+        const usedIndices = Object.values(state.groupColors);
+        const colorIndex = pickFreeColorIndex(groupId, usedIndices);
         set((s) => ({
           students: s.students.map((st) =>
             studentIds.includes(st.id)
               ? { ...st, groupId, priorities: sharedPriorities }
               : st,
           ),
+          groupColors: { ...s.groupColors, [groupId]: colorIndex },
         }));
         return { ok: true as const, groupId };
       },
@@ -109,25 +133,26 @@ export const useStudentsStore = create<State>()(
         const target = s.students.find((st) => st.id === studentId);
         if (!target?.groupId) return { students: s.students };
         const groupId = target.groupId;
-        const updated = s.students.map((st) =>
+        let updated = s.students.map((st) =>
           st.id === studentId ? { ...st, groupId: undefined } : st,
         );
-        // If only one sibling remains, dissolve.
         const remaining = updated.filter((st) => st.groupId === groupId);
         if (remaining.length < 2) {
-          return {
-            students: updated.map((st) =>
-              st.groupId === groupId ? { ...st, groupId: undefined } : st,
-            ),
-          };
+          updated = updated.map((st) =>
+            st.groupId === groupId ? { ...st, groupId: undefined } : st,
+          );
         }
-        return { students: updated };
+        return { students: updated, groupColors: cleanupColors(s.groupColors, updated) };
       }),
 
       syncGroupPriorities: (groupId, priorities) => set((s) => ({
         students: s.students.map((st) =>
           st.groupId === groupId ? { ...st, priorities } : st,
         ),
+      })),
+
+      setGroupColor: (groupId, paletteIndex) => set((s) => ({
+        groupColors: { ...s.groupColors, [groupId]: paletteIndex },
       })),
     }),
     {

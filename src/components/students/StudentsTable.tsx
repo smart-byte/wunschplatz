@@ -4,14 +4,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Popover, PopoverContent, PopoverTrigger,
+} from '@/components/ui/popover';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { StudentFormDialog } from './StudentFormDialog';
-import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Trash2, Users, UserMinus } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, Pencil, Trash2, Users, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
-import { getGroupColor } from '@/lib/groups';
+import { getGroupColor, PALETTE } from '@/lib/groups';
 import type { Student } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -38,10 +41,12 @@ function sortValue(s: Student, key: SortKey, projectName: (id: string) => string
 
 export function StudentsTable() {
   const students = useStudentsStore((s) => s.students);
+  const groupColors = useStudentsStore((s) => s.groupColors);
   const updateStudent = useStudentsStore((s) => s.updateStudent);
   const removeStudent = useStudentsStore((s) => s.removeStudent);
   const createGroup = useStudentsStore((s) => s.createGroup);
   const removeFromGroup = useStudentsStore((s) => s.removeFromGroup);
+  const setGroupColor = useStudentsStore((s) => s.setGroupColor);
   const projects = useProjectsStore((s) => s.projects);
   const clearAssignments = useAssignmentsStore((s) => s.clear);
   const projectName = (id: string) => projects.find((p) => p.id === id)?.name ?? '?';
@@ -127,8 +132,6 @@ export function StudentsTable() {
   const canForm = (() => {
     if (selectedStudents.length < 2) return null;
     if (selectedStudents.some((s) => s.groupId)) return 'Schüler bereits in Gruppe';
-    const grade = selectedStudents[0].grade;
-    if (selectedStudents.some((s) => s.grade !== grade)) return 'Jahrgang muss übereinstimmen';
     return 'ok';
   })();
 
@@ -183,7 +186,7 @@ export function StudentsTable() {
           </TableHeader>
           <TableBody>
             {sortedStudents.map((s) => {
-              const color = s.groupId ? getGroupColor(s.groupId) : null;
+              const color = s.groupId ? getGroupColor(s.groupId, groupColors) : null;
               return (
                 <TableRow
                   key={s.id}
@@ -199,11 +202,45 @@ export function StudentsTable() {
                   <TableCell>{s.className}</TableCell>
                   <TableCell>{s.grade}</TableCell>
                   <TableCell>
-                    {color ? (
-                      <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs', color.bg, color.text)}>
-                        <Users className="size-3" />
-                        {color.label}
-                      </span>
+                    {s.groupId && color ? (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button
+                            type="button"
+                            className={cn(
+                              'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs hover:opacity-80',
+                              color.bg, color.text,
+                            )}
+                            title="Farbe ändern"
+                          >
+                            <Users className="size-3" />
+                            {color.label}
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-2">
+                          <div className="text-xs text-muted-foreground mb-2 px-1">Gruppen-Farbe wählen</div>
+                          <div className="grid grid-cols-4 gap-1">
+                            {PALETTE.map((c, i) => {
+                              const active = groupColors[s.groupId!] === i;
+                              return (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  className={cn(
+                                    'relative size-8 rounded flex items-center justify-center',
+                                    c.swatch,
+                                    active && 'ring-2 ring-offset-2 ring-foreground',
+                                  )}
+                                  title={c.label}
+                                  onClick={() => setGroupColor(s.groupId!, i)}
+                                >
+                                  {active && <Check className="size-4 text-white drop-shadow" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}

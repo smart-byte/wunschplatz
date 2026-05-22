@@ -25,6 +25,7 @@ const NONE = '__none__';
 export function StudentFormDialog({ trigger, initial, onSave }: Props) {
   const projects = useProjectsStore((s) => s.projects);
   const allStudents = useStudentsStore((s) => s.students);
+  const groupColors = useStudentsStore((s) => s.groupColors);
   const [open, setOpen] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -80,7 +81,7 @@ export function StudentFormDialog({ trigger, initial, onSave }: Props) {
   const siblings = initial?.groupId
     ? getGroupMembers(allStudents, initial.groupId).filter((m) => m.id !== initial.id)
     : [];
-  const groupColor = initial?.groupId ? getGroupColor(initial.groupId) : null;
+  const groupColor = initial?.groupId ? getGroupColor(initial.groupId, groupColors) : null;
 
   const compatProjects = projects.filter((p) => p.grades.includes(grade));
   const incompatProjects = projects.filter((p) => !p.grades.includes(grade));
