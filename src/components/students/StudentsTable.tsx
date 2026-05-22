@@ -189,10 +189,11 @@ export function StudentsTable() {
               const color = s.groupId ? getGroupColor(s.groupId, groupColors) : null;
               const rowStyle =
                 color?.kind === 'custom'
-                  ? {
+                  ? ({
                       borderLeftColor: color.hex,
-                      backgroundColor: color.hex + '14', // ~8% alpha
-                    }
+                      ['--row-bg' as string]: color.hex + '14', // ~8%
+                      ['--row-bg-h' as string]: color.hex + '2e', // ~18%
+                    } as React.CSSProperties)
                   : undefined;
               return (
                 <TableRow
@@ -201,6 +202,8 @@ export function StudentsTable() {
                     color && 'border-l-4',
                     color?.kind === 'palette' && color.borderClass,
                     color?.kind === 'palette' && color.rowBgClass,
+                    color?.kind === 'palette' && color.rowBgHoverClass,
+                    color?.kind === 'custom' && '!bg-[var(--row-bg)] hover:!bg-[var(--row-bg-h)]',
                   )}
                   style={rowStyle}
                 >
