@@ -9,7 +9,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { StudentChip } from './StudentChip';
-import { Heart, Star, Target, Users } from 'lucide-react';
+import { Goal, Heart, Star, Users } from 'lucide-react';
 import type { Project, Student, Assignment } from '@/types';
 
 type Row = { student: Student; assignment: Assignment | null };
@@ -236,7 +236,7 @@ export function ProjectCard({ project, students, allProjects, allRows, onStudent
                   className="inline-flex items-center gap-1 px-1.5 py-1 rounded border bg-background text-xs tabular-nums"
                   aria-label={`Soll ${project.targetCapacity}`}
                 >
-                  <Target className="size-3.5 text-muted-foreground" />
+                  <Goal className="size-3.5 text-muted-foreground" />
                   <span className="font-medium">{project.targetCapacity}</span>
                 </span>
               </TooltipTrigger>
