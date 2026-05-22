@@ -9,7 +9,6 @@ import { StudentFormDialog } from './StudentFormDialog';
 import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Trash2, Users, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { getGroupColor } from '@/lib/groups';
-import { MAX_GROUP_SIZE } from '@/types';
 import type { Student } from '@/types';
 import { cn } from '@/lib/utils';
 
@@ -100,7 +99,7 @@ export function StudentsTable() {
   // Pre-validate the "Gruppe bilden" button state
   const selectedStudents = students.filter((s) => selected.has(s.id));
   const canForm = (() => {
-    if (selectedStudents.length < 2 || selectedStudents.length > MAX_GROUP_SIZE) return null;
+    if (selectedStudents.length < 2) return null;
     if (selectedStudents.some((s) => s.groupId)) return 'Schüler bereits in Gruppe';
     const grade = selectedStudents[0].grade;
     if (selectedStudents.some((s) => s.grade !== grade)) return 'Jahrgang muss übereinstimmen';
@@ -112,8 +111,7 @@ export function StudentsTable() {
   }
 
   const hint = (() => {
-    if (selected.size === 0) return `2-${MAX_GROUP_SIZE} Schüler ankreuzen, um eine Gruppe zu bilden`;
-    if (selectedStudents.length > MAX_GROUP_SIZE) return `Max. ${MAX_GROUP_SIZE} pro Gruppe`;
+    if (selected.size === 0) return 'Mind. 2 Schüler ankreuzen, um eine Gruppe zu bilden';
     if (canForm && canForm !== 'ok') return canForm;
     if (canForm === null && selectedStudents.length === 1) return 'Mindestens 2 Schüler ankreuzen';
     return null;

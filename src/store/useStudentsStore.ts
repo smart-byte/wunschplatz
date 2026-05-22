@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuid } from 'uuid';
 import type { Student } from '@/types';
-import { MAX_GROUP_SIZE } from '@/types';
 import { createIdbStorage } from './persist';
 
 type State = {
@@ -69,7 +68,6 @@ export const useStudentsStore = create<State>()(
         const state = get();
         const members = state.students.filter((s) => studentIds.includes(s.id));
         if (members.length < 2) return { ok: false as const, error: 'Mindestens 2 Schüler erforderlich.' };
-        if (members.length > MAX_GROUP_SIZE) return { ok: false as const, error: `Max. ${MAX_GROUP_SIZE} Schüler pro Gruppe.` };
         const grade = members[0].grade;
         if (members.some((m) => m.grade !== grade)) {
           return { ok: false as const, error: 'Alle Mitglieder müssen gleichen Jahrgang haben.' };
@@ -97,9 +95,6 @@ export const useStudentsStore = create<State>()(
         if (target.groupId) return { ok: false as const, error: 'Schüler ist bereits in einer Gruppe.' };
         const existingMembers = state.students.filter((s) => s.groupId === groupId);
         if (existingMembers.length === 0) return { ok: false as const, error: 'Gruppe existiert nicht.' };
-        if (existingMembers.length >= MAX_GROUP_SIZE) {
-          return { ok: false as const, error: `Gruppe ist voll (max. ${MAX_GROUP_SIZE}).` };
-        }
         if (existingMembers[0].grade !== target.grade) {
           return { ok: false as const, error: 'Jahrgang stimmt nicht überein.' };
         }

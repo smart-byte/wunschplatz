@@ -17,8 +17,6 @@ export type Student = {
   groupId?: string;  // optional group membership
 };
 
-export const MAX_GROUP_SIZE = 3;
-
 export type Assignment = {
   studentId: string;
   projectId: string | null;
