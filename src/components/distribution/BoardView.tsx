@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   DndContext, PointerSensor, useDroppable, useSensor, useSensors,
   type DragEndEvent,
@@ -9,16 +9,38 @@ import { useStudentsStore } from '@/store/useStudentsStore';
 import { ProjectCard } from './ProjectCard';
 import { StudentChip } from './StudentChip';
 import { StudentFormDialog } from '@/components/students/StudentFormDialog';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Student } from '@/types';
+import type { Project, Student } from '@/types';
 
 const UNASSIGNED_ID = '__unassigned__';
+const SORT_STORAGE_KEY = 'distribution.boardSort';
+
+type SortKey = 'popularity' | 'name' | 'load' | 'utilization' | 'grade';
+
+function compareStr(a: string, b: string): number {
+  return a.localeCompare(b, 'de', { sensitivity: 'base', numeric: true });
+}
 
 export function BoardView() {
   const { rows, projects } = useDistributionData();
   const updateAssignment = useAssignmentsStore((s) => s.updateAssignment);
   const updateStudent = useStudentsStore((s) => s.updateStudent);
   const [editing, setEditing] = useState<Student | null>(null);
+
+  const [sortKey, setSortKey] = useState<SortKey>(() => {
+    if (typeof window === 'undefined') return 'popularity';
+    const stored = window.localStorage.getItem(SORT_STORAGE_KEY);
+    return (stored === 'popularity' || stored === 'name' || stored === 'load' || stored === 'utilization' || stored === 'grade')
+      ? stored
+      : 'popularity';
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem(SORT_STORAGE_KEY, sortKey); } catch { /* ignore */ }
+  }, [sortKey]);
 
   // Distance constraint allows clicks (under 5px movement) without triggering drag.
   const sensors = useSensors(
@@ -71,10 +93,64 @@ export function BoardView() {
   }
   const unassigned = rows.filter((r) => !r.assignment?.projectId);
 
+  // Popularity score per project (Prio 1 = 5, Prio 5 = 1).
+  const popularityById = useMemo(() => {
+    const out = new Map<string, number>();
+    for (const p of projects) out.set(p.id, 0);
+    for (const r of rows) {
+      r.student.priorities.forEach((pid, i) => {
+        if (i >= 5) return;
+        out.set(pid, (out.get(pid) ?? 0) + (5 - i));
+      });
+    }
+    return out;
+  }, [projects, rows]);
+
+  const sortedProjects = useMemo(() => {
+    const copy = [...projects];
+    const loadOf = (p: Project) => byProject.get(p.id)?.length ?? 0;
+    copy.sort((a, b) => {
+      switch (sortKey) {
+        case 'popularity':
+          return (popularityById.get(b.id) ?? 0) - (popularityById.get(a.id) ?? 0) || compareStr(a.name, b.name);
+        case 'name':
+          return compareStr(a.name, b.name);
+        case 'load':
+          return loadOf(b) - loadOf(a) || compareStr(a.name, b.name);
+        case 'utilization': {
+          const ua = a.maxCapacity > 0 ? loadOf(a) / a.maxCapacity : 0;
+          const ub = b.maxCapacity > 0 ? loadOf(b) / b.maxCapacity : 0;
+          return ub - ua || compareStr(a.name, b.name);
+        }
+        case 'grade': {
+          const ga = Math.min(...a.grades);
+          const gb = Math.min(...b.grades);
+          return ga - gb || compareStr(a.name, b.name);
+        }
+      }
+    });
+    return copy;
+    // byProject not in deps because it's derived from rows; rows already triggers re-memo.
+  }, [projects, rows, sortKey, popularityById]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <div className="flex items-center gap-2 mb-3">
+        <ArrowUpDown className="size-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">Sortieren:</span>
+        <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+          <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="popularity">Beliebtheit (Score)</SelectItem>
+            <SelectItem value="name">Name (A-Z)</SelectItem>
+            <SelectItem value="load">Belegung (absteigend)</SelectItem>
+            <SelectItem value="utilization">Auslastung % (absteigend)</SelectItem>
+            <SelectItem value="grade">Jahrgang (aufsteigend)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {projects.map((p) => (
+        {sortedProjects.map((p) => (
           <ProjectCard
             key={p.id}
             project={p}
