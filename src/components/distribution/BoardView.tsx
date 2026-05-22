@@ -19,7 +19,7 @@ export function BoardView() {
     if (!student) return;
 
     if (targetId === UNASSIGNED_ID) {
-      updateAssignment(studentId, null);
+      updateAssignment(studentId, null, null);
       toast.success('Schüler entfernt aus Projekt');
       return;
     }
@@ -37,7 +37,9 @@ export function BoardView() {
       toast.error(`"${target.name}" ist voll (${currentLoad}/${target.maxCapacity})`);
       return;
     }
-    updateAssignment(studentId, targetId);
+    const idx = student.priorities.indexOf(targetId);
+    const priorityRank = idx >= 0 && idx < 5 ? idx + 1 : null;
+    updateAssignment(studentId, targetId, priorityRank);
     toast.success(`Verschoben zu "${target.name}"`);
   }
 

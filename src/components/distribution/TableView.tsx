@@ -34,9 +34,10 @@ export function TableView() {
 
   function handleChange(studentId: string, projectId: string) {
     const newId = projectId === '__none__' ? null : projectId;
+    const student = rows.find((r) => r.student.id === studentId)!.student;
+    let priorityRank: number | null = null;
     if (newId) {
       const target = projects.find((p) => p.id === newId)!;
-      const student = rows.find((r) => r.student.id === studentId)!.student;
       if (!target.grades.includes(student.grade)) {
         if (!confirm(`Projekt "${target.name}" akzeptiert nur Jahrgänge ${target.grades.join(', ')}. Trotzdem zuweisen?`)) return;
       }
@@ -44,8 +45,11 @@ export function TableView() {
       if (currentLoad >= target.maxCapacity) {
         if (!confirm(`Projekt "${target.name}" ist voll (${currentLoad}/${target.maxCapacity}). Trotzdem zuweisen?`)) return;
       }
+      const idx = student.priorities.indexOf(newId);
+      const compatible = target.grades.includes(student.grade);
+      priorityRank = idx >= 0 && idx < 5 && compatible ? idx + 1 : null;
     }
-    updateAssignment(studentId, newId);
+    updateAssignment(studentId, newId, priorityRank);
     toast.success('Zuweisung geändert');
   }
 
