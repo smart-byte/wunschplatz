@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { writeFile } from 'xlsx';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,12 +15,23 @@ import { useStaleAssignments } from '@/hooks/useStaleAssignments';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
 
+const TAB_STORAGE_KEY = 'distribution.activeTab';
+
 export default function DistributionPage() {
   const navigate = useNavigate();
   const students = useStudentsStore((s) => s.students);
   const projects = useProjectsStore((s) => s.projects);
   const activeDist = useActiveDistribution();
   const { stale, reason } = useStaleAssignments();
+
+  const [tab, setTab] = useState<string>(() => {
+    if (typeof window === 'undefined') return 'board';
+    const stored = window.localStorage.getItem(TAB_STORAGE_KEY);
+    return stored === 'table' || stored === 'board' ? stored : 'board';
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem(TAB_STORAGE_KEY, tab); } catch { /* ignore */ }
+  }, [tab]);
 
   function handleExport() {
     if (!activeDist) return;
@@ -51,13 +63,13 @@ export default function DistributionPage() {
         </div>
       )}
       <StatsPanel />
-      <Tabs defaultValue="table">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="table">Tabelle</TabsTrigger>
           <TabsTrigger value="board">Projekte</TabsTrigger>
+          <TabsTrigger value="table">Tabelle</TabsTrigger>
         </TabsList>
-        <TabsContent value="table"><TableView /></TabsContent>
         <TabsContent value="board"><BoardView /></TabsContent>
+        <TabsContent value="table"><TableView /></TabsContent>
       </Tabs>
     </div>
   );
