@@ -107,8 +107,10 @@ export function TableView() {
                   </TableCell>
                   <TableCell>{r.student.className}</TableCell>
                   <TableCell>{r.student.grade}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                    {r.student.priorities.map((id) => projects.find((p) => p.id === id)?.name ?? '?').join(', ')}
+                  <TableCell className="text-xs text-muted-foreground max-w-[280px]">
+                    <div className="whitespace-normal break-words leading-tight">
+                      {r.student.priorities.map((id) => projects.find((p) => p.id === id)?.name ?? '?').join(', ')}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <Select
