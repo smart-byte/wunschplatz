@@ -25,7 +25,7 @@ function InfoBadge({ children }: InfoBadgeProps) {
           <Info className="size-3.5" />
         </button>
       </TooltipTrigger>
-      <TooltipContent className="max-w-xs text-xs leading-relaxed">
+      <TooltipContent className="max-w-sm text-xs leading-relaxed space-y-1">
         {children}
       </TooltipContent>
     </Tooltip>
@@ -148,15 +148,31 @@ export function SolverConfigForm() {
           <div className="flex items-center gap-2 mb-3">
             <h3 className="text-sm font-semibold">Gruppen-Kohäsion</h3>
             <InfoBadge>
-              Bonus-Punkte für jedes zusätzliche Mitglied einer Gruppe im
-              <strong> gleichen Projekt</strong>. Höher = der Solver gibt mehr
-              Prio-Punkte auf, um Gruppen zusammenzuhalten. Bei <strong>0</strong>
-              werden Gruppen wie Einzel-Schüler behandelt.
-              <br /><br />
-              <span className="font-medium">Faustregel:</span> Gruppe akzeptiert
-              Prio-Rang k wenn <code>bonus × (n−1) ≥ (10−w[k]) × n</code>
-              (n = Subgruppen-Größe, w = Prio-Gewichtungen). Standard 8 hält
-              Gruppen bei Prio 1-2 zusammen, lässt sie ab Prio 3+ eher splitten.
+              <p>
+                Bonus-Punkte für jedes zusätzliche Mitglied einer Gruppe im{' '}
+                <strong>gleichen Projekt</strong>. Höher = Solver gibt mehr
+                Prio-Punkte auf, um Gruppen zusammenzuhalten. Bei <strong>0</strong>{' '}
+                werden Gruppen wie Einzel-Schüler behandelt.
+              </p>
+              <div className="mt-3">
+                <p className="font-medium mb-1">Entscheidungs-Regel</p>
+                <p>Eine Gruppe bleibt zusammen, wenn:</p>
+                <div className="mt-2 rounded border bg-muted/50 px-3 py-2 font-mono text-[11px] leading-relaxed">
+                  <div>Gewinn ≥ Verlust</div>
+                  <div className="mt-1 text-muted-foreground">
+                    Bonus · (n − 1) ≥ (w₁ − w<sub>k</sub>) · n
+                  </div>
+                </div>
+                <ul className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
+                  <li><strong>n</strong> = Gruppen-Größe</li>
+                  <li><strong>k</strong> = erreichter Prio-Rang (1-5)</li>
+                  <li><strong>w₁, w<sub>k</sub></strong> = Prio-Gewichtungen</li>
+                </ul>
+              </div>
+              <p className="mt-3 text-muted-foreground">
+                Standard <strong className="text-foreground">8</strong>: Gruppen bleiben bei Prio 1-2
+                zusammen, splitten ab Prio 3+ eher auf.
+              </p>
             </InfoBadge>
           </div>
           <div className="flex items-center gap-4">
