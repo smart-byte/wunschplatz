@@ -189,7 +189,10 @@ export function StudentsTable() {
               const color = s.groupId ? getGroupColor(s.groupId, groupColors) : null;
               const rowStyle =
                 color?.kind === 'custom'
-                  ? { borderLeftColor: color.hex }
+                  ? {
+                      borderLeftColor: color.hex,
+                      backgroundColor: color.hex + '14', // ~8% alpha
+                    }
                   : undefined;
               return (
                 <TableRow
@@ -197,6 +200,7 @@ export function StudentsTable() {
                   className={cn(
                     color && 'border-l-4',
                     color?.kind === 'palette' && color.borderClass,
+                    color?.kind === 'palette' && color.rowBgClass,
                   )}
                   style={rowStyle}
                 >
