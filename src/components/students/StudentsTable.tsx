@@ -111,28 +111,35 @@ export function StudentsTable() {
     return <p className="text-muted-foreground">Noch keine Schüler. Importiere Excel-Datei oder lege einen neuen Schüler an.</p>;
   }
 
+  const hint = (() => {
+    if (selected.size === 0) return `2-${MAX_GROUP_SIZE} Schüler ankreuzen, um eine Gruppe zu bilden`;
+    if (selectedStudents.length > MAX_GROUP_SIZE) return `Max. ${MAX_GROUP_SIZE} pro Gruppe`;
+    if (canForm && canForm !== 'ok') return canForm;
+    if (canForm === null && selectedStudents.length === 1) return 'Mindestens 2 Schüler ankreuzen';
+    return null;
+  })();
+
   return (
     <div className="space-y-3">
-      {selected.size > 0 && (
-        <div className="flex items-center gap-3 border rounded-lg p-3 bg-card">
-          <span className="text-sm">{selected.size} ausgewählt</span>
-          <Button
-            size="sm"
-            disabled={canForm !== 'ok'}
-            onClick={handleCreateGroup}
-          >
-            <Users className="size-4 mr-2" />
-            Gruppe bilden
+      <div className="flex items-center gap-3 border rounded-lg p-3 bg-card">
+        <span className="text-sm">
+          {selected.size === 0 ? 'Keine Auswahl' : `${selected.size} ausgewählt`}
+        </span>
+        <Button
+          size="sm"
+          disabled={canForm !== 'ok'}
+          onClick={handleCreateGroup}
+        >
+          <Users className="size-4 mr-2" />
+          Gruppe bilden
+        </Button>
+        {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
+        {selected.size > 0 && (
+          <Button size="sm" variant="ghost" className="ml-auto" onClick={clearSelection}>
+            Auswahl löschen
           </Button>
-          {canForm && canForm !== 'ok' && (
-            <span className="text-xs text-muted-foreground">{canForm}</span>
-          )}
-          {canForm === null && selectedStudents.length > MAX_GROUP_SIZE && (
-            <span className="text-xs text-muted-foreground">Max. {MAX_GROUP_SIZE} pro Gruppe</span>
-          )}
-          <Button size="sm" variant="ghost" onClick={clearSelection}>Auswahl löschen</Button>
-        </div>
-      )}
+        )}
+      </div>
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
