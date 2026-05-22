@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
@@ -84,16 +87,39 @@ export function StudentsTable() {
     setSelected(new Set());
   }
 
-  function handleCreateGroup() {
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [templateChoice, setTemplateChoice] = useState<string | null>(null);
+
+  function priosEqual(a: string[], b: string[]): boolean {
+    if (a.length !== b.length) return false;
+    return a.every((v, i) => v === b[i]);
+  }
+
+  function commitGroup(templateId?: string) {
     const ids = [...selected];
-    const result = createGroup(ids);
+    const result = createGroup(ids, templateId);
     if (!result.ok) {
       toast.error(result.error);
       return;
     }
     clearAssignments();
     clearSelection();
+    setTemplateDialogOpen(false);
+    setTemplateChoice(null);
     toast.success(`Gruppe mit ${ids.length} Schülern gebildet`);
+  }
+
+  function handleCreateGroup() {
+    const selStudents = students.filter((s) => selected.has(s.id));
+    if (selStudents.length < 2) return;
+    const firstPrios = selStudents[0].priorities;
+    const allSame = selStudents.every((s) => priosEqual(s.priorities, firstPrios));
+    if (allSame) {
+      commitGroup();
+    } else {
+      setTemplateChoice(selStudents[0].id);
+      setTemplateDialogOpen(true);
+    }
   }
 
   // Pre-validate the "Gruppe bilden" button state
@@ -231,6 +257,57 @@ export function StudentsTable() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Wessen Prioritäten gelten für die Gruppe?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Die ausgewählten Schüler haben unterschiedliche Prios. Wähle eine Vorlage —
+            alle Gruppen-Mitglieder bekommen diese Prios.
+          </p>
+          <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
+            {selectedStudents.map((s) => (
+              <label
+                key={s.id}
+                className={cn(
+                  'flex items-start gap-3 rounded-md border p-3 cursor-pointer hover:bg-muted/50',
+                  templateChoice === s.id && 'border-primary ring-1 ring-primary',
+                )}
+              >
+                <input
+                  type="radio"
+                  name="template"
+                  value={s.id}
+                  checked={templateChoice === s.id}
+                  onChange={() => setTemplateChoice(s.id)}
+                  className="mt-1"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium">
+                    {s.lastName}, {s.firstName} <span className="text-muted-foreground font-normal">({s.className}, Jg. {s.grade})</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {s.priorities.length === 0
+                      ? '(keine Prios)'
+                      : s.priorities.map((id, i) => `${i + 1}. ${projectName(id)}`).join(' · ')}
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>Abbrechen</Button>
+            <Button
+              disabled={!templateChoice}
+              onClick={() => templateChoice && commitGroup(templateChoice)}
+            >
+              Gruppe bilden
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -101,7 +101,6 @@ export function StudentFormDialog({ trigger, initial, onSave }: Props) {
                 <p className="text-xs opacity-80">
                   Prio-Änderungen wirken für alle Mitglieder: {siblings.map((s) => `${s.firstName} ${s.lastName}`).join(', ') || '(nur dieser Schüler)'}
                 </p>
-                <p className="text-xs opacity-80 mt-1">Jahrgang ist gesperrt, weil alle Mitglieder im gleichen Jahrgang sein müssen.</p>
               </div>
             </div>
           )}
@@ -124,7 +123,6 @@ export function StudentFormDialog({ trigger, initial, onSave }: Props) {
               <Label htmlFor="grade">Jahrgang</Label>
               <Input
                 id="grade" type="number" min={5} max={13}
-                disabled={!!initial?.groupId}
                 value={grade}
                 onChange={(e) => setGrade(parseInt(e.target.value, 10) || 7)}
               />

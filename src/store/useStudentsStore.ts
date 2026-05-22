@@ -13,7 +13,7 @@ type State = {
   removeAll: () => void;
   setStudents: (students: Student[]) => void;
   // Group actions
-  createGroup: (studentIds: string[]) => { ok: true; groupId: string } | { ok: false; error: string };
+  createGroup: (studentIds: string[], templateStudentId?: string) => { ok: true; groupId: string } | { ok: false; error: string };
   addToGroup: (studentId: string, groupId: string) => { ok: true } | { ok: false; error: string };
   removeFromGroup: (studentId: string) => void;
   syncGroupPriorities: (groupId: string, priorities: string[]) => void;
@@ -64,20 +64,21 @@ export const useStudentsStore = create<State>()(
       removeAll: () => set({ students: [] }),
       setStudents: (students) => set({ students }),
 
-      createGroup: (studentIds) => {
+      createGroup: (studentIds, templateStudentId) => {
         const state = get();
         const members = state.students.filter((s) => studentIds.includes(s.id));
         if (members.length < 2) return { ok: false as const, error: 'Mindestens 2 Schüler erforderlich.' };
-        const grade = members[0].grade;
-        if (members.some((m) => m.grade !== grade)) {
-          return { ok: false as const, error: 'Alle Mitglieder müssen gleichen Jahrgang haben.' };
-        }
         if (members.some((m) => m.groupId)) {
           return { ok: false as const, error: 'Schüler ist bereits in einer Gruppe. Erst entfernen.' };
         }
+        let template = members[0];
+        if (templateStudentId) {
+          const t = members.find((m) => m.id === templateStudentId);
+          if (!t) return { ok: false as const, error: 'Vorlage-Schüler nicht in Auswahl.' };
+          template = t;
+        }
         const groupId = uuid();
-        // Sync priorities to first member's priorities.
-        const sharedPriorities = members[0].priorities;
+        const sharedPriorities = template.priorities;
         set((s) => ({
           students: s.students.map((st) =>
             studentIds.includes(st.id)
@@ -95,9 +96,6 @@ export const useStudentsStore = create<State>()(
         if (target.groupId) return { ok: false as const, error: 'Schüler ist bereits in einer Gruppe.' };
         const existingMembers = state.students.filter((s) => s.groupId === groupId);
         if (existingMembers.length === 0) return { ok: false as const, error: 'Gruppe existiert nicht.' };
-        if (existingMembers[0].grade !== target.grade) {
-          return { ok: false as const, error: 'Jahrgang stimmt nicht überein.' };
-        }
         const sharedPriorities = existingMembers[0].priorities;
         set((s) => ({
           students: s.students.map((st) =>

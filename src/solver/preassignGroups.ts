@@ -15,8 +15,8 @@ export type PreassignResult = {
  * Greedy pre-assignment of student groups (size ≥ 2) to projects.
  * Larger groups go first to handle capacity contention.
  * For each group, walks shared priorities in order and assigns to the first
- * grade-compatible project with enough free seats for the whole group.
- * Groups that don't fit anywhere are left for the main MCMF solver.
+ * project that (a) accepts EVERY member's grade and (b) has enough free seats
+ * for the whole group. Groups that don't fit anywhere are left for MCMF.
  */
 export function preassignGroups(students: Student[], projects: Project[]): PreassignResult {
   const preassignments = new Map<string, GroupPreassignment>();
@@ -35,14 +35,15 @@ export function preassignGroups(students: Student[], projects: Project[]): Preas
   groups.sort((a, b) => b.length - a.length);
 
   for (const members of groups) {
-    const proto = members[0]; // shared grade + priorities (enforced by store)
+    const proto = members[0]; // priorities are shared across the group
     const size = members.length;
-    let assigned = false;
+    const memberGrades = members.map((m) => m.grade);
     for (let k = 0; k < proto.priorities.length; k++) {
       const projId = proto.priorities[k];
       const project = projects.find((p) => p.id === projId);
       if (!project) continue;
-      if (!project.grades.includes(proto.grade)) continue;
+      // Project must accept every member's grade.
+      if (!memberGrades.every((g) => project.grades.includes(g))) continue;
       const used = consumedCapacity.get(projId) ?? 0;
       const free = project.maxCapacity - used;
       if (free >= size) {
@@ -50,11 +51,9 @@ export function preassignGroups(students: Student[], projects: Project[]): Preas
           preassignments.set(m.id, { projectId: projId, priorityRank: k + 1 });
         }
         consumedCapacity.set(projId, used + size);
-        assigned = true;
         break;
       }
     }
-    void assigned; // group not assigned → members fall through to remainingStudents
   }
 
   const remainingStudents = students.filter((s) => !preassignments.has(s.id));
