@@ -193,8 +193,15 @@ export function StudentsTable() {
                       borderLeftColor: color.hex,
                       ['--row-bg' as string]: color.hex + '14', // ~8%
                       ['--row-bg-h' as string]: color.hex + '2e', // ~18%
+                      ['--btn-hover' as string]: color.hex + '4d', // ~30%
                     } as React.CSSProperties)
                   : undefined;
+              const actionBtnClass =
+                color?.kind === 'palette'
+                  ? color.actionHoverClass
+                  : color?.kind === 'custom'
+                    ? 'hover:!bg-[var(--btn-hover)]'
+                    : '';
               return (
                 <TableRow
                   key={s.id}
@@ -242,7 +249,7 @@ export function StudentsTable() {
                   ))}
                   <TableCell className="flex gap-1">
                     <StudentFormDialog
-                      trigger={<Button variant="ghost" size="icon"><Pencil className="size-4" /></Button>}
+                      trigger={<Button variant="ghost" size="icon" className={actionBtnClass}><Pencil className="size-4" /></Button>}
                       initial={s}
                       onSave={(data) => {
                         updateStudent(s.id, data);
@@ -254,6 +261,7 @@ export function StudentsTable() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        className={actionBtnClass}
                         title="Aus Gruppe entfernen"
                         onClick={() => {
                           removeFromGroup(s.id);
@@ -267,6 +275,7 @@ export function StudentsTable() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      className={actionBtnClass}
                       onClick={() => {
                         if (confirm(`${s.firstName} ${s.lastName} löschen?`)) {
                           removeStudent(s.id);

@@ -53,7 +53,7 @@ export default {
   },
   safelist: [
     {
-      pattern: /(bg|text|ring)-(rose|pink|fuchsia|purple|violet|indigo|blue|sky|cyan|teal|emerald|green|lime|yellow|amber|orange)-(50|100|400|700)/,
+      pattern: /(bg|text|ring)-(rose|pink|fuchsia|purple|violet|indigo|blue|sky|cyan|teal|emerald|green|lime|yellow|amber|orange)-(50|100|200|400|700)/,
       variants: ['hover'],
     },
     {
