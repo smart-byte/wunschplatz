@@ -215,6 +215,13 @@ export function StudentsTable() {
                         groupId={s.groupId}
                         currentKey={groupColors[s.groupId] ?? color.key}
                         color={color}
+                        usedByOthers={
+                          new Set(
+                            Object.entries(groupColors)
+                              .filter(([gid]) => gid !== s.groupId)
+                              .map(([, key]) => key),
+                          )
+                        }
                         onPick={(k) => setGroupColor(s.groupId!, k)}
                       />
                     ) : (
@@ -357,10 +364,11 @@ type GroupColorBadgeProps = {
   groupId: string;
   currentKey: string;
   color: ReturnType<typeof getGroupColor>;
+  usedByOthers: Set<string>;
   onPick: (key: string) => void;
 };
 
-function GroupColorBadge({ currentKey, color, onPick }: GroupColorBadgeProps) {
+function GroupColorBadge({ currentKey, color, usedByOthers, onPick }: GroupColorBadgeProps) {
   const badgeStyle =
     color.kind === 'custom'
       ? { backgroundColor: color.hex + '33', color: color.hex }
@@ -390,17 +398,20 @@ function GroupColorBadge({ currentKey, color, onPick }: GroupColorBadgeProps) {
         <div className="grid grid-cols-8 gap-1">
           {PALETTE.map((c) => {
             const active = currentKey === c.key;
+            const taken = !active && usedByOthers.has(c.key);
             return (
               <button
                 key={c.key}
                 type="button"
+                disabled={taken}
                 className={cn(
                   'relative size-7 rounded flex items-center justify-center',
                   c.swatch,
                   active && 'ring-2 ring-offset-2 ring-foreground',
+                  taken && 'opacity-25 cursor-not-allowed',
                 )}
-                title={c.label}
-                onClick={() => onPick(c.key)}
+                title={taken ? `${c.label} — bereits vergeben` : c.label}
+                onClick={() => !taken && onPick(c.key)}
               >
                 {active && <Check className="size-3.5 text-white drop-shadow" />}
               </button>
