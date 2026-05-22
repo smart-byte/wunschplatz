@@ -49,3 +49,35 @@ describe('solveAssignments', () => {
     expect(stats.notInTop5).toBe(1);
   });
 });
+
+describe('solveAssignments with groups', () => {
+  it('keeps group together on shared prio1', () => {
+    const projects: Project[] = [
+      { id: 'a', name: 'A', grades: [7], maxCapacity: 5, targetCapacity: 4 },
+      { id: 'b', name: 'B', grades: [7], maxCapacity: 5, targetCapacity: 4 },
+    ];
+    const students: Student[] = [
+      { id: 's1', firstName: 'A', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'], groupId: 'g1' },
+      { id: 's2', firstName: 'B', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'], groupId: 'g1' },
+      { id: 's3', firstName: 'C', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'], groupId: 'g1' },
+    ];
+    const { assignments } = solveAssignments(students, projects, defaultSolverConfig);
+    const projectsAssigned = new Set(assignments.map((a) => a.projectId));
+    expect(projectsAssigned.size).toBe(1); // all in one project
+    expect(assignments.every((a) => a.priorityRank === 1)).toBe(true);
+  });
+
+  it('group falls back to prio2 if prio1 cannot fit whole group', () => {
+    const projects: Project[] = [
+      { id: 'a', name: 'A', grades: [7], maxCapacity: 1, targetCapacity: 1 },
+      { id: 'b', name: 'B', grades: [7], maxCapacity: 5, targetCapacity: 4 },
+    ];
+    const students: Student[] = [
+      { id: 's1', firstName: 'A', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'], groupId: 'g1' },
+      { id: 's2', firstName: 'B', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'], groupId: 'g1' },
+    ];
+    const { assignments } = solveAssignments(students, projects, defaultSolverConfig);
+    expect(assignments.every((a) => a.projectId === 'b')).toBe(true);
+    expect(assignments.every((a) => a.priorityRank === 2)).toBe(true);
+  });
+});
