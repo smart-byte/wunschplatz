@@ -9,6 +9,7 @@ import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { toast } from 'sonner';
 import { AssignmentBadge } from './AssignmentBadge';
+import { Badge } from '@/components/ui/badge';
 import { StudentFormDialog } from '@/components/students/StudentFormDialog';
 import type { Student } from '@/types';
 
@@ -107,9 +108,25 @@ export function TableView() {
                   </TableCell>
                   <TableCell>{r.student.className}</TableCell>
                   <TableCell>{r.student.grade}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground max-w-[280px]">
-                    <div className="whitespace-normal break-words leading-tight">
-                      {r.student.priorities.map((id) => projects.find((p) => p.id === id)?.name ?? '?').join(', ')}
+                  <TableCell className="max-w-[320px]">
+                    <div className="flex flex-wrap gap-1">
+                      {r.student.priorities.map((id, i) => {
+                        const name = projects.find((p) => p.id === id)?.name ?? '?';
+                        const assigned = r.assignment?.projectId === id;
+                        return (
+                          <Badge
+                            key={id + i}
+                            variant={assigned ? 'secondary' : 'outline'}
+                            className="text-[10px] py-0 px-1.5 font-normal gap-1"
+                          >
+                            <span className="text-muted-foreground tabular-nums">{i + 1}.</span>
+                            <span className="truncate max-w-[120px]">{name}</span>
+                          </Badge>
+                        );
+                      })}
+                      {r.student.priorities.length === 0 && (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
