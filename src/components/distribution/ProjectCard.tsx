@@ -48,6 +48,20 @@ export function ProjectCard({ project, students, allProjects, allRows, onStudent
     0,
   );
 
+  // Compute scores for ALL projects (for the ranking list).
+  const allScores = useMemo(() => {
+    const scores = allProjects.map((p) => {
+      let total = 0;
+      for (const r of allRows) {
+        const idx = r.student.priorities.indexOf(p.id);
+        if (idx >= 0 && idx < 5) total += 5 - idx;
+      }
+      return { project: p, score: total };
+    });
+    scores.sort((a, b) => b.score - a.score);
+    return scores;
+  }, [allProjects, allRows]);
+
   return (
     <div
       ref={setNodeRef}
@@ -70,13 +84,79 @@ export function ProjectCard({ project, students, allProjects, allRows, onStudent
           </div>
         </div>
         <div className="shrink-0 flex items-center gap-1">
-          <span
-            className="inline-flex items-center gap-0.5 px-1.5 py-1 rounded border bg-background text-xs tabular-nums"
-            title={`Beliebtheits-Score: ${popularityScore} (Prio 1 = 5 Pkt, Prio 2 = 4, …, Prio 5 = 1)`}
-          >
-            <span className="text-muted-foreground">★</span>
-            <span className="font-medium">{popularityScore}</span>
-          </span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex items-center gap-0.5 px-1.5 py-1 rounded border bg-background text-xs tabular-nums hover:bg-muted"
+                title="Beliebtheits-Score anzeigen"
+              >
+                <span className="text-muted-foreground">★</span>
+                <span className="font-medium">{popularityScore}</span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 max-h-[70vh] overflow-y-auto p-3 text-xs">
+              <div className="font-medium text-sm">Beliebtheits-Score</div>
+              <p className="text-muted-foreground mt-0.5">
+                Punkte pro Prio-Rang aller Schüler, die dieses Projekt gewählt haben.
+              </p>
+
+              <div className="mt-3 rounded border bg-muted/30 p-2">
+                <div className="text-muted-foreground mb-1">Berechnung für „{project.name}"</div>
+                <table className="w-full text-xs tabular-nums">
+                  <thead>
+                    <tr className="text-muted-foreground">
+                      <th className="text-left font-normal">Rang</th>
+                      <th className="text-right font-normal">Anzahl</th>
+                      <th className="text-right font-normal">× Pkt</th>
+                      <th className="text-right font-normal">= Summe</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {interestedByRank.map((arr, i) => {
+                      const pts = 5 - i;
+                      return (
+                        <tr key={i}>
+                          <td>Prio {i + 1}</td>
+                          <td className="text-right">{arr.length}</td>
+                          <td className="text-right text-muted-foreground">{pts}</td>
+                          <td className="text-right">{arr.length * pts}</td>
+                        </tr>
+                      );
+                    })}
+                    <tr className="border-t font-medium">
+                      <td colSpan={3} className="pt-1">Gesamt</td>
+                      <td className="text-right pt-1">{popularityScore}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-3">
+                <div className="font-medium mb-1">Alle Projekte nach Score</div>
+                <ol className="space-y-0.5">
+                  {allScores.map(({ project: p, score }, i) => {
+                    const isThis = p.id === project.id;
+                    return (
+                      <li
+                        key={p.id}
+                        className={cn(
+                          'flex items-center justify-between gap-2 rounded px-1.5 py-0.5',
+                          isThis && 'bg-primary/10 font-medium',
+                        )}
+                      >
+                        <span className="inline-flex items-center gap-2 min-w-0">
+                          <span className="text-muted-foreground tabular-nums w-5 text-right">{i + 1}.</span>
+                          <span className="truncate">{p.name}</span>
+                        </span>
+                        <span className="tabular-nums">{score}</span>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            </PopoverContent>
+          </Popover>
           <Popover>
             <PopoverTrigger asChild>
               <button
