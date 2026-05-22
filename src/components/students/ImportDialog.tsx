@@ -16,7 +16,7 @@ import { useProjectsStore } from '@/store/useProjectsStore';
 import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { parseStudentRows, type ParseResult } from '@/excel/importStudents';
 import { pickFreeColorKey } from '@/lib/groups';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function ImportDialog() {
@@ -88,7 +88,10 @@ export function ImportDialog() {
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
       <DialogTrigger asChild>
-        <Button>Excel importieren</Button>
+        <Button variant="outline">
+          <Upload className="size-4 mr-2" />
+          Excel importieren
+        </Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
