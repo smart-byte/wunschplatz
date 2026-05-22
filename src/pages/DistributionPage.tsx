@@ -61,7 +61,7 @@ export default function DistributionPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-4">
+    <div className="max-w-screen-2xl mx-auto space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Verteilung</h1>
         <Button onClick={handleExport} disabled={!activeDist || activeDist.assignments.length === 0}>
