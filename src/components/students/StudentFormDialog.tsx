@@ -9,6 +9,9 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
 import { useProjectsStore } from '@/store/useProjectsStore';
+import { useStudentsStore } from '@/store/useStudentsStore';
+import { getGroupMembers, getGroupColor } from '@/lib/groups';
+import { Users } from 'lucide-react';
 import type { Student } from '@/types';
 
 type Props = {
@@ -21,6 +24,7 @@ const NONE = '__none__';
 
 export function StudentFormDialog({ trigger, initial, onSave }: Props) {
   const projects = useProjectsStore((s) => s.projects);
+  const allStudents = useStudentsStore((s) => s.students);
   const [open, setOpen] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -73,6 +77,11 @@ export function StudentFormDialog({ trigger, initial, onSave }: Props) {
     setOpen(false);
   }
 
+  const siblings = initial?.groupId
+    ? getGroupMembers(allStudents, initial.groupId).filter((m) => m.id !== initial.id)
+    : [];
+  const groupColor = initial?.groupId ? getGroupColor(initial.groupId) : null;
+
   const compatProjects = projects.filter((p) => p.grades.includes(grade));
   const incompatProjects = projects.filter((p) => !p.grades.includes(grade));
 
@@ -84,6 +93,18 @@ export function StudentFormDialog({ trigger, initial, onSave }: Props) {
           <DialogTitle>{initial ? 'Schüler bearbeiten' : 'Neuer Schüler'}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4">
+          {initial?.groupId && groupColor && (
+            <div className={`flex items-start gap-2 rounded-md border p-3 ${groupColor.bg} ${groupColor.text}`}>
+              <Users className="size-4 mt-0.5 shrink-0" />
+              <div className="text-sm">
+                <p className="font-medium">In Gruppe ({groupColor.label})</p>
+                <p className="text-xs opacity-80">
+                  Prio-Änderungen wirken für alle Mitglieder: {siblings.map((s) => `${s.firstName} ${s.lastName}`).join(', ') || '(nur dieser Schüler)'}
+                </p>
+                <p className="text-xs opacity-80 mt-1">Jahrgang ist gesperrt, weil alle Mitglieder im gleichen Jahrgang sein müssen.</p>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-1.5">
               <Label htmlFor="firstName">Vorname</Label>
@@ -103,6 +124,7 @@ export function StudentFormDialog({ trigger, initial, onSave }: Props) {
               <Label htmlFor="grade">Jahrgang</Label>
               <Input
                 id="grade" type="number" min={5} max={13}
+                disabled={!!initial?.groupId}
                 value={grade}
                 onChange={(e) => setGrade(parseInt(e.target.value, 10) || 7)}
               />
