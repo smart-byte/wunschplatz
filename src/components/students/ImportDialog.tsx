@@ -101,6 +101,12 @@ export function ImportDialog() {
             {fileName && <p className="text-sm mt-2">Datei: {fileName}</p>}
           </div>
 
+          {!fileName && (
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <ImportHelpContent />
+            </div>
+          )}
+
           {showSheetPicker && (
             <div className="grid gap-1.5">
               <label className="text-sm font-medium">
@@ -182,53 +188,59 @@ function ImportHelp() {
           <HelpCircle className="size-4" />
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[28rem] max-h-[70vh] overflow-y-auto p-4 text-xs">
-        <div className="space-y-3">
-          <div>
-            <div className="font-medium text-sm">Excel-Format für Schüler-Import</div>
-            <p className="text-muted-foreground mt-1">
-              Erste Zeile = Spaltenüberschriften. Reihenfolge egal, Erkennung case-insensitiv.
-            </p>
-          </div>
-
-          <div>
-            <div className="font-medium mb-1">Pflichtspalten</div>
-            <table className="w-full">
-              <thead>
-                <tr className="text-muted-foreground">
-                  <th className="text-left font-normal">Spalte</th>
-                  <th className="text-left font-normal">Akzeptierte Namen</th>
-                </tr>
-              </thead>
-              <tbody className="font-mono text-[11px]">
-                <tr><td className="pr-2 align-top">Vorname</td><td>Vorname · First Name · FirstName</td></tr>
-                <tr><td className="pr-2 align-top">Nachname</td><td>Nachname · Last Name · LastName · Name</td></tr>
-                <tr><td className="pr-2 align-top">Klasse</td><td>Klasse · Class</td></tr>
-                <tr><td className="pr-2 align-top">Jahrgang</td><td>Jahrgang · Grade · Stufe · Jahrgangsstufe</td></tr>
-                <tr><td className="pr-2 align-top">Prio 1-5</td><td>Prio1, Prio 1, Priorität 1, Priority 1 …</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div>
-            <div className="font-medium mb-1">Beispiel</div>
-            <pre className="rounded border bg-muted/50 p-2 text-[10px] leading-relaxed overflow-x-auto">{`Vorname  | Nachname  | Klasse | Jahrgang | Prio1   | Prio2 | Prio3 | Prio4   | Prio5
-Anna     | Müller    | 7a     | 7        | Schach  | Yoga  | Comic | Theater | Kochen
-Ben      | Schmidt   | 7b     | 7        | Theater | Yoga  | Comic | Schach  | Kochen`}</pre>
-          </div>
-
-          <div>
-            <div className="font-medium mb-1">Regeln</div>
-            <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-              <li>Jahrgang muss eine Zahl zwischen 5 und 13 sein.</li>
-              <li>Prio-Werte müssen exakt den Projektnamen aus dem Reiter „Projekte" entsprechen (case-insensitiv).</li>
-              <li>Prios untereinander müssen verschieden sein.</li>
-              <li>Leere Prio-Zellen sind OK (≤5 Prios möglich).</li>
-              <li>Mehrere Mappen → Auswahl-Dropdown erscheint.</li>
-            </ul>
-          </div>
-        </div>
+      <PopoverContent align="start" className="w-[28rem] max-h-[70vh] overflow-y-auto p-4">
+        <ImportHelpContent />
       </PopoverContent>
     </Popover>
+  );
+}
+
+function ImportHelpContent() {
+  return (
+    <div className="space-y-3 text-xs">
+      <div>
+        <div className="font-medium text-sm">Excel-Format für Schüler-Import</div>
+        <p className="text-muted-foreground mt-1">
+          Erste Zeile = Spaltenüberschriften. Reihenfolge egal, Erkennung case-insensitiv.
+        </p>
+      </div>
+
+      <div>
+        <div className="font-medium mb-1">Pflichtspalten</div>
+        <table className="w-full">
+          <thead>
+            <tr className="text-muted-foreground">
+              <th className="text-left font-normal">Spalte</th>
+              <th className="text-left font-normal">Akzeptierte Namen</th>
+            </tr>
+          </thead>
+          <tbody className="font-mono text-[11px]">
+            <tr><td className="pr-2 align-top">Vorname</td><td>Vorname · First Name · FirstName</td></tr>
+            <tr><td className="pr-2 align-top">Nachname</td><td>Nachname · Last Name · LastName · Name</td></tr>
+            <tr><td className="pr-2 align-top">Klasse</td><td>Klasse · Class</td></tr>
+            <tr><td className="pr-2 align-top">Jahrgang</td><td>Jahrgang · Grade · Stufe · Jahrgangsstufe</td></tr>
+            <tr><td className="pr-2 align-top">Prio 1-5</td><td>Prio1, Prio 1, Priorität 1, Priority 1 …</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div>
+        <div className="font-medium mb-1">Beispiel</div>
+        <pre className="rounded border bg-background p-2 text-[10px] leading-relaxed overflow-x-auto">{`Vorname  | Nachname  | Klasse | Jahrgang | Prio1   | Prio2 | Prio3 | Prio4   | Prio5
+Anna     | Müller    | 7a     | 7        | Schach  | Yoga  | Comic | Theater | Kochen
+Ben      | Schmidt   | 7b     | 7        | Theater | Yoga  | Comic | Schach  | Kochen`}</pre>
+      </div>
+
+      <div>
+        <div className="font-medium mb-1">Regeln</div>
+        <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+          <li>Jahrgang muss eine Zahl zwischen 5 und 13 sein.</li>
+          <li>Prio-Werte müssen exakt den Projektnamen aus dem Reiter „Projekte" entsprechen (case-insensitiv).</li>
+          <li>Prios untereinander müssen verschieden sein.</li>
+          <li>Leere Prio-Zellen sind OK (≤5 Prios möglich).</li>
+          <li>Mehrere Mappen → Auswahl-Dropdown erscheint.</li>
+        </ul>
+      </div>
+    </div>
   );
 }
