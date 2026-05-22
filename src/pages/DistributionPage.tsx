@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { writeFile } from 'xlsx';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -20,7 +20,7 @@ import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useActiveDistribution } from '@/store/useAssignmentsStore';
 import { useStaleAssignments } from '@/hooks/useStaleAssignments';
-import { Download } from 'lucide-react';
+import { Download, ListChecks } from 'lucide-react';
 import { toast } from 'sonner';
 
 const TAB_STORAGE_KEY = 'distribution.activeTab';
@@ -46,6 +46,9 @@ export default function DistributionPage() {
     try { window.localStorage.setItem(BOARD_SORT_STORAGE_KEY, sortKey); } catch { /* ignore */ }
   }, [sortKey]);
 
+  const hasProjects = projects.length > 0;
+  const hasStudents = students.length > 0;
+
   function handleExport() {
     if (!activeDist) return;
     const wb = buildExportWorkbook(students, projects, activeDist.assignments);
@@ -58,6 +61,47 @@ export default function DistributionPage() {
       .replace(/^-+|-+$/g, '');
     writeFile(wb, `projektverteilung-${slug || 'verteilung'}-${date}.xlsx`);
     toast.success('Excel-Export gestartet');
+  }
+
+  if (!hasProjects || !hasStudents) {
+    const linkClass = 'text-primary underline underline-offset-2 hover:text-primary/80';
+    const projectsLink = <Link to="/projects" className={linkClass}>Projekte</Link>;
+    const studentsLink = <Link to="/students" className={linkClass}>Schüler</Link>;
+    let message: React.ReactNode;
+    if (!hasProjects && !hasStudents) {
+      message = (
+        <>Lege zuerst {projectsLink} an und importiere deine {studentsLink}, um eine Verteilung zu berechnen.</>
+      );
+    } else if (!hasProjects) {
+      message = (
+        <>Lege zuerst {projectsLink} an, um eine Verteilung berechnen zu können.</>
+      );
+    } else {
+      message = (
+        <>Importiere zuerst deine {studentsLink}, um eine Verteilung zu berechnen.</>
+      );
+    }
+    return (
+      <div className="max-w-xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center gap-6">
+        <ListChecks className="size-12 text-muted-foreground/40" />
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold">Noch keine Verteilung möglich</h1>
+          <p className="text-muted-foreground">{message}</p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          {!hasProjects && (
+            <Button asChild variant={hasStudents ? 'default' : 'outline'}>
+              <Link to="/projects">Zu den Projekten</Link>
+            </Button>
+          )}
+          {!hasStudents && (
+            <Button asChild>
+              <Link to="/students">Zu den Schülern</Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (
