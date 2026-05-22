@@ -16,7 +16,6 @@ import type { Student } from '@/types';
 export function TableView() {
   const { rows, projects } = useDistributionData();
   const updateAssignment = useAssignmentsStore((s) => s.updateAssignment);
-  const clearAssignments = useAssignmentsStore((s) => s.clear);
   const updateStudent = useStudentsStore((s) => s.updateStudent);
   const [filter, setFilter] = useState<'all' | 'unassigned' | 'notInTop5' | 'manual'>('all');
   const [search, setSearch] = useState('');
@@ -168,8 +167,7 @@ export function TableView() {
         onSave={(data) => {
           if (!editing) return;
           updateStudent(editing.id, data);
-          clearAssignments();
-          toast.success('Schüler aktualisiert — Verteilung muss neu berechnet werden');
+          toast.success('Schüler aktualisiert');
           setEditing(null);
         }}
       />

@@ -58,3 +58,12 @@ export type AssignmentsState = {
   assignments: Assignment[];
   lastRun: SolverRun | null;
 };
+
+export type Distribution = {
+  id: string;
+  name: string;
+  createdAt: number;
+  updatedAt: number;
+  assignments: Assignment[];
+  run: SolverRun;
+};

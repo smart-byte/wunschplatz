@@ -40,7 +40,6 @@ export default function StudentsPage() {
             }
             onSave={(data) => {
               addStudent(data);
-              clearAssignments();
               toast.success(`Schüler "${data.firstName} ${data.lastName}" angelegt`);
             }}
           />

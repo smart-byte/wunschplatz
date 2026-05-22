@@ -17,7 +17,6 @@ const UNASSIGNED_ID = '__unassigned__';
 export function BoardView() {
   const { rows, projects } = useDistributionData();
   const updateAssignment = useAssignmentsStore((s) => s.updateAssignment);
-  const clearAssignments = useAssignmentsStore((s) => s.clear);
   const updateStudent = useStudentsStore((s) => s.updateStudent);
   const [editing, setEditing] = useState<Student | null>(null);
 
@@ -106,8 +105,7 @@ export function BoardView() {
         onSave={(data) => {
           if (!editing) return;
           updateStudent(editing.id, data);
-          clearAssignments();
-          toast.success('Schüler aktualisiert — Verteilung muss neu berechnet werden');
+          toast.success('Schüler aktualisiert');
           setEditing(null);
         }}
       />

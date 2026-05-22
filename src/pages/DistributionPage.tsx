@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { TableView } from '@/components/distribution/TableView';
 import { BoardView } from '@/components/distribution/BoardView';
 import { StatsPanel } from '@/components/distribution/StatsPanel';
+import { DistributionSelector } from '@/components/distribution/DistributionSelector';
 import { buildExportWorkbook } from '@/excel/exportDistribution';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
-import { useAssignmentsStore } from '@/store/useAssignmentsStore';
+import { useActiveDistribution } from '@/store/useAssignmentsStore';
 import { useStaleAssignments } from '@/hooks/useStaleAssignments';
 import { Download } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,11 +18,12 @@ export default function DistributionPage() {
   const navigate = useNavigate();
   const students = useStudentsStore((s) => s.students);
   const projects = useProjectsStore((s) => s.projects);
-  const assignments = useAssignmentsStore((s) => s.assignments);
+  const activeDist = useActiveDistribution();
   const { stale, reason } = useStaleAssignments();
 
   function handleExport() {
-    const wb = buildExportWorkbook(students, projects, assignments);
+    if (!activeDist) return;
+    const wb = buildExportWorkbook(students, projects, activeDist.assignments);
     const date = new Date().toISOString().slice(0, 10);
     writeFile(wb, `projektverteilung-${date}.xlsx`);
     toast.success('Excel-Export gestartet');
@@ -31,10 +33,11 @@ export default function DistributionPage() {
     <div className="max-w-7xl mx-auto space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Verteilung</h1>
-        <Button onClick={handleExport} disabled={assignments.length === 0}>
+        <Button onClick={handleExport} disabled={!activeDist || activeDist.assignments.length === 0}>
           <Download className="size-4 mr-2" />Excel exportieren
         </Button>
       </div>
+      <DistributionSelector />
       {stale && (
         <div className="border border-amber-400 bg-amber-50 text-amber-900 rounded-lg p-3 flex items-center justify-between">
           <span className="text-sm">⚠ {reason} — Verteilung ist möglicherweise nicht mehr aktuell.</span>

@@ -10,7 +10,6 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
-import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { StudentFormDialog } from './StudentFormDialog';
 import { ArrowDown, ArrowUp, ArrowUpDown, Check, Pencil, Pipette, Trash2, Users, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -48,7 +47,6 @@ export function StudentsTable() {
   const removeFromGroup = useStudentsStore((s) => s.removeFromGroup);
   const setGroupColor = useStudentsStore((s) => s.setGroupColor);
   const projects = useProjectsStore((s) => s.projects);
-  const clearAssignments = useAssignmentsStore((s) => s.clear);
   const projectName = (id: string) => projects.find((p) => p.id === id)?.name ?? '?';
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -107,7 +105,6 @@ export function StudentsTable() {
       toast.error(result.error);
       return;
     }
-    clearAssignments();
     clearSelection();
     setTemplateDialogOpen(false);
     setTemplateChoice(null);
@@ -253,7 +250,6 @@ export function StudentsTable() {
                       initial={s}
                       onSave={(data) => {
                         updateStudent(s.id, data);
-                        clearAssignments();
                         toast.success(s.groupId ? 'Schüler + Gruppe aktualisiert' : 'Schüler aktualisiert');
                       }}
                     />
@@ -265,7 +261,6 @@ export function StudentsTable() {
                         title="Aus Gruppe entfernen"
                         onClick={() => {
                           removeFromGroup(s.id);
-                          clearAssignments();
                           toast.success('Aus Gruppe entfernt');
                         }}
                       >
@@ -279,7 +274,6 @@ export function StudentsTable() {
                       onClick={() => {
                         if (confirm(`${s.firstName} ${s.lastName} löschen?`)) {
                           removeStudent(s.id);
-                          clearAssignments();
                           toast.success('Schüler gelöscht');
                         }
                       }}

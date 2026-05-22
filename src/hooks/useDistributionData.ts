@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useAssignmentsStore } from '@/store/useAssignmentsStore';
+import { useActiveDistribution } from '@/store/useAssignmentsStore';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import type { Project, Student, Assignment } from '@/types';
@@ -11,7 +11,8 @@ export type RowData = {
 };
 
 export function useDistributionData() {
-  const assignments = useAssignmentsStore((s) => s.assignments);
+  const activeDist = useActiveDistribution();
+  const assignments = activeDist?.assignments ?? [];
   const students = useStudentsStore((s) => s.students);
   const projects = useProjectsStore((s) => s.projects);
 

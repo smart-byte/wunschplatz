@@ -1,10 +1,11 @@
-import { useAssignmentsStore } from '@/store/useAssignmentsStore';
+import { useActiveDistribution } from '@/store/useAssignmentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useStudentsStore } from '@/store/useStudentsStore';
 
 export function StatsPanel() {
-  const assignments = useAssignmentsStore((s) => s.assignments);
-  const lastRun = useAssignmentsStore((s) => s.lastRun);
+  const activeDist = useActiveDistribution();
+  const assignments = activeDist?.assignments ?? [];
+  const lastRun = activeDist?.run ?? null;
   const studentCount = useStudentsStore((s) => s.students.length);
   const projects = useProjectsStore((s) => s.projects);
 

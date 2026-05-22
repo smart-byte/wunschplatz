@@ -38,10 +38,9 @@ export function useSolver() {
         return;
       }
 
-      useAssignmentsStore.getState().setAssignments(
-        result.payload.assignments,
-        result.payload.run,
-      );
+      const existing = useAssignmentsStore.getState().distributions;
+      const defaultName = `Lauf ${existing.length + 1}`;
+      useAssignmentsStore.getState().createDistribution(defaultName, result.payload.assignments, result.payload.run);
       setLastStats(result.payload.stats);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

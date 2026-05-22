@@ -1,14 +1,17 @@
-import { useAssignmentsStore } from '@/store/useAssignmentsStore';
+import { useActiveDistribution } from '@/store/useAssignmentsStore';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 
 export function useStaleAssignments(): { stale: boolean; reason: string | null } {
-  const lastRun = useAssignmentsStore((s) => s.lastRun);
-  const assignments = useAssignmentsStore((s) => s.assignments);
+  const activeDist = useActiveDistribution();
   const students = useStudentsStore((s) => s.students);
   const projects = useProjectsStore((s) => s.projects);
 
-  if (!lastRun || assignments.length === 0) return { stale: false, reason: null };
+  if (!activeDist || activeDist.assignments.length === 0) return { stale: false, reason: null };
+
+  const { assignments, run: lastRun } = activeDist;
+
+  if (!lastRun) return { stale: false, reason: null };
 
   const studentIds = new Set(students.map((s) => s.id));
   const projectIds = new Set(projects.map((p) => p.id));
