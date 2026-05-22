@@ -2,7 +2,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { useSolverConfigStore } from '@/store/useSolverConfigStore';
-import { defaultSolverConfig } from '@/types';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -175,7 +174,16 @@ export function SolverConfigForm() {
           </div>
         </div>
 
-        <Button variant="ghost" onClick={reset}>Auf Default ({defaultSolverConfig.priorityWeights.join(', ')}) zurücksetzen</Button>
+        <Button
+          variant="outline"
+          onClick={() => {
+            if (confirm('Alle Optimierungs-Einstellungen auf Standardwerte zurücksetzen (Prio-Gewichtungen, alle Strafen, Cohesion-Bonus)?')) {
+              reset();
+            }
+          }}
+        >
+          Alle Werte auf Standard zurücksetzen
+        </Button>
       </div>
     </TooltipProvider>
   );
