@@ -20,7 +20,6 @@ export function buildExportWorkbook(
       Jahrgang: s.grade,
       'Zugewiesenes Projekt': project?.name ?? '—',
       'Erfüllte Prio': a?.priorityRank ?? (a?.projectId ? 'außerhalb' : '—'),
-      Manuell: a?.manuallyEdited ? 'ja' : '',
     };
   });
 

@@ -39,7 +39,7 @@ test('happy path: create projects, import students, optimize, edit, export', asy
   const downloadPromise = page.waitForEvent('download');
   await page.getByRole('button', { name: /Excel exportieren/ }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/projektverteilung-\d{4}-\d{2}-\d{2}\.xlsx/);
+  expect(download.suggestedFilename()).toMatch(/projektverteilung-[a-z0-9-]+-\d{4}-\d{2}-\d{2}\.xlsx/);
 });
 
 test('persistence: reload preserves projects', async ({ page }) => {

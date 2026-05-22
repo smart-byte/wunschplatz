@@ -25,7 +25,13 @@ export default function DistributionPage() {
     if (!activeDist) return;
     const wb = buildExportWorkbook(students, projects, activeDist.assignments);
     const date = new Date().toISOString().slice(0, 10);
-    writeFile(wb, `projektverteilung-${date}.xlsx`);
+    const slug = activeDist.name
+      .toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '') // strip accents
+      .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    writeFile(wb, `projektverteilung-${slug || 'verteilung'}-${date}.xlsx`);
     toast.success('Excel-Export gestartet');
   }
 
