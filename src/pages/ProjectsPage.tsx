@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { ProjectFormDialog } from '@/components/projects/ProjectFormDialog';
+import { ProjectImportDialog } from '@/components/projects/ProjectImportDialog';
 import { ProjectsTable } from '@/components/projects/ProjectsTable';
 import { SampleDataDialog } from '@/components/projects/SampleDataDialog';
 import { useProjectsStore } from '@/store/useProjectsStore';
@@ -14,6 +15,7 @@ export default function ProjectsPage() {
         <h1 className="text-2xl font-bold">Projekte</h1>
         <div className="flex gap-2">
           <SampleDataDialog />
+          <ProjectImportDialog />
           <ProjectFormDialog
             trigger={<Button><Plus className="size-4 mr-2" />Neues Projekt</Button>}
             onSave={(data) => {
