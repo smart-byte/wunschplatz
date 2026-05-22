@@ -1,6 +1,7 @@
 import { useActiveDistribution } from '@/store/useAssignmentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useStudentsStore } from '@/store/useStudentsStore';
+import { DistributionInfoPopover } from './DistributionInfoPopover';
 
 export function StatsPanel() {
   const activeDist = useActiveDistribution();
@@ -38,9 +39,12 @@ export function StatsPanel() {
             <strong>Projekte:</strong> {projects.length}
           </div>
         )}
-        {lastRun && (
-          <div className="text-muted-foreground ml-auto">
-            Score: {lastRun.score} · {new Date(lastRun.timestamp).toLocaleString('de-DE')}
+        {lastRun && activeDist && (
+          <div className="text-muted-foreground ml-auto inline-flex items-center gap-1.5">
+            <span>Score: {lastRun.score}</span>
+            <DistributionInfoPopover distribution={activeDist} />
+            <span>·</span>
+            <span>{new Date(lastRun.timestamp).toLocaleString('de-DE')}</span>
           </div>
         )}
       </div>
