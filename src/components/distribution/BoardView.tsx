@@ -46,14 +46,14 @@ export function BoardView() {
     const target = projects.find((p) => p.id === targetId);
     if (!target) return;
     if (!target.grades.includes(student.grade)) {
-      toast.error(`Jahrgang ${student.grade} passt nicht zu "${target.name}" (${target.grades.join(', ')})`);
+      toast.warning(`Jahrgang ${student.grade} passt nicht zu "${target.name}" (${target.grades.join(', ')})`);
       return;
     }
     const currentLoad = rows.filter(
       (r) => r.assignment?.projectId === targetId && r.student.id !== studentId,
     ).length;
     if (currentLoad >= target.maxCapacity) {
-      toast.error(`"${target.name}" ist voll (${currentLoad}/${target.maxCapacity})`);
+      toast.warning(`"${target.name}" ist voll (${currentLoad}/${target.maxCapacity})`);
       return;
     }
     const idx = student.priorities.indexOf(targetId);
