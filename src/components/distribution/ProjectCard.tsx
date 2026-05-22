@@ -81,16 +81,22 @@ export function ProjectCard({ project, students, allProjects, allRows, onStudent
         <TooltipProvider delayDuration={150}>
           <div className="shrink-0 flex items-center gap-1">
             <Popover>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 px-1.5 py-1 rounded border bg-background text-xs tabular-nums hover:bg-muted"
-                  title="Beliebtheits-Score anzeigen"
-                >
-                  <Heart className="size-3.5 text-rose-500 fill-rose-500" />
-                  <span className="font-medium">{popularityScore}</span>
-                </button>
-              </PopoverTrigger>
+              <Tooltip>
+                <PopoverTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 px-1.5 py-1 rounded border bg-background text-xs tabular-nums hover:bg-muted"
+                    >
+                      <Heart className="size-3.5 text-rose-500 fill-rose-500" />
+                      <span className="font-medium">{popularityScore}</span>
+                    </button>
+                  </TooltipTrigger>
+                </PopoverTrigger>
+                <TooltipContent className="text-xs">
+                  Beliebtheits-Score: {popularityScore} — klicken für Details
+                </TooltipContent>
+              </Tooltip>
             <PopoverContent align="end" className="w-80 max-h-[70vh] overflow-y-auto p-3 text-xs">
               <div className="font-medium text-sm">Beliebtheits-Score</div>
               <p className="text-muted-foreground mt-0.5">
@@ -154,16 +160,22 @@ export function ProjectCard({ project, students, allProjects, allRows, onStudent
             </PopoverContent>
           </Popover>
           <Popover>
-            <PopoverTrigger asChild>
-              <button
-                type="button"
-                className="inline-flex items-center gap-1 px-1.5 py-1 rounded border bg-background text-xs hover:bg-muted"
-                title="Wer hat dieses Projekt gewählt?"
-              >
-                <Star className="size-3.5 text-amber-500 fill-amber-500" />
-                <span className="tabular-nums font-medium">{totalInterested}</span>
-              </button>
-            </PopoverTrigger>
+            <Tooltip>
+              <PopoverTrigger asChild>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1 px-1.5 py-1 rounded border bg-background text-xs hover:bg-muted"
+                  >
+                    <Star className="size-3.5 text-amber-500 fill-amber-500" />
+                    <span className="tabular-nums font-medium">{totalInterested}</span>
+                  </button>
+                </TooltipTrigger>
+              </PopoverTrigger>
+              <TooltipContent className="text-xs">
+                {totalInterested} Schüler haben dieses Projekt gewählt — klicken für Liste
+              </TooltipContent>
+            </Tooltip>
           <PopoverContent align="end" className="w-80 max-h-[60vh] overflow-y-auto p-3">
             <div className="text-sm font-medium mb-1">Wer hat „{project.name}" gewählt?</div>
             <div className="text-xs text-muted-foreground mb-3">
