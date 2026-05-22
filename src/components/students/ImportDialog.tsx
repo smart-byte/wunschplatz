@@ -237,7 +237,7 @@ Ben      | Schmidt   | 7b     | 7        | Theater | Yoga  | Comic | Schach  | K
           <li>Jahrgang muss eine Zahl zwischen 5 und 13 sein.</li>
           <li>Prio-Werte müssen exakt den Projektnamen aus dem Reiter „Projekte" entsprechen (case-insensitiv).</li>
           <li>Prios untereinander müssen verschieden sein.</li>
-          <li>Leere Prio-Zellen sind OK (≤5 Prios möglich).</li>
+          <li>Leere Prio-Zellen sind OK (≤5 Prios möglich). Auch „-", „–" oder „—" gilt als leer.</li>
           <li>Mehrere Mappen → Auswahl-Dropdown erscheint.</li>
         </ul>
       </div>

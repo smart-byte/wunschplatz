@@ -47,7 +47,8 @@ export function parseStudentRows(rows: unknown[][], projects: Project[]): ParseR
       const colIdx = cols.priorities[k];
       if (colIdx === -1) continue;
       const name = String(row[colIdx] ?? '').trim();
-      if (!name) continue;
+      // Treat empty cells, dashes (-, –, —), and similar placeholders as "no choice".
+      if (!name || /^[-–—]+$/.test(name)) continue;
       const id = projectByName.get(name.toLowerCase());
       if (!id) {
         errors.push({ rowIndex: r, message: `Prio${k + 1}: Unbekanntes Projekt "${name}"` });

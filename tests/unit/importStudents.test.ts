@@ -74,4 +74,15 @@ describe('parseStudentRows', () => {
     expect(result.missingColumns.length).toBeGreaterThan(0);
     expect(result.students).toHaveLength(0);
   });
+
+  it('treats dash placeholders (-, –, —) as empty priority cells', () => {
+    const rows = [
+      ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Prio1', 'Prio2', 'Prio3', 'Prio4', 'Prio5'],
+      ['Anna', 'Müller', '7a', '7', 'Alpha', '-', 'Beta', '–', '—'],
+    ];
+    const result = parseStudentRows(rows, projects);
+    expect(result.students).toHaveLength(1);
+    expect(result.students[0].priorities).toEqual(['a', 'b']);
+    expect(result.errors).toHaveLength(0);
+  });
 });
