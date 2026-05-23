@@ -182,7 +182,7 @@ export function StudentsTable() {
               <SortHead label="Prio 3" col="prio3" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
               <SortHead label="Prio 4" col="prio4" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
               <SortHead label="Prio 5" col="prio5" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
-              <TableHead className="sticky right-0 bg-background w-[60px]"></TableHead>
+              <TableHead className="sticky right-0 bg-background w-[60px] xl:w-[140px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -255,7 +255,7 @@ export function StudentsTable() {
                       ) : '—'}
                     </TableCell>
                   ))}
-                  <TableCell className="sticky right-0 z-10 bg-inherit w-[60px]">
+                  <TableCell className="sticky right-0 z-10 bg-inherit w-[60px] xl:w-[140px]">
                     <StudentRowActions
                       student={s}
                       actionBtnClass={actionBtnClass}
@@ -456,30 +456,67 @@ function StudentRowActions({
   const [editOpen, setEditOpen] = useState(false);
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className={actionBtnClass} title="Aktionen">
-            <MoreHorizontal className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setEditOpen(true)}>
-            <Pencil className="size-4 mr-2" /> Bearbeiten
-          </DropdownMenuItem>
-          {student.groupId && (
-            <DropdownMenuItem onClick={onRemoveFromGroup}>
-              <UserMinus className="size-4 mr-2" /> Aus Gruppe entfernen
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={onDelete}
-            className="text-destructive focus:text-destructive"
+      {/* Inline icon buttons on wide screens */}
+      <div className="hidden xl:flex gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className={actionBtnClass}
+          title="Bearbeiten"
+          onClick={() => setEditOpen(true)}
+        >
+          <Pencil className="size-4" />
+        </Button>
+        {student.groupId && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className={actionBtnClass}
+            title="Aus Gruppe entfernen"
+            onClick={onRemoveFromGroup}
           >
-            <Trash2 className="size-4 mr-2" /> Löschen
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <UserMinus className="size-4" />
+          </Button>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={actionBtnClass}
+          title="Löschen"
+          onClick={onDelete}
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      </div>
+
+      {/* Dropdown on narrower screens — visible outline button */}
+      <div className="xl:hidden">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon" title="Aktionen">
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setEditOpen(true)}>
+              <Pencil className="size-4 mr-2" /> Bearbeiten
+            </DropdownMenuItem>
+            {student.groupId && (
+              <DropdownMenuItem onClick={onRemoveFromGroup}>
+                <UserMinus className="size-4 mr-2" /> Aus Gruppe entfernen
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={onDelete}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="size-4 mr-2" /> Löschen
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <StudentFormDialog
         open={editOpen}
         onOpenChange={setEditOpen}
