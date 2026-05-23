@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { StudentChip } from './StudentChip';
 import { Goal, Heart, Star, Users } from 'lucide-react';
+import { formatGrades } from '@/lib/utils';
 import type { Project, Student, Assignment } from '@/types';
 
 type Row = { student: Student; assignment: Assignment | null };
@@ -76,7 +77,7 @@ export function ProjectCard({ project, students, allProjects, allRows, onStudent
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-sm truncate">{project.name}</h3>
-          <p className="text-xs text-muted-foreground">Jg. {project.grades.join(', ')}</p>
+          <p className="text-xs text-muted-foreground">Jg. {formatGrades(project.grades)}</p>
         </div>
         <TooltipProvider delayDuration={150}>
           <div className="shrink-0 flex items-center gap-1">

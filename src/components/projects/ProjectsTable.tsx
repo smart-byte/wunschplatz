@@ -5,6 +5,7 @@ import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { ProjectFormDialog } from './ProjectFormDialog';
 import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatGrades } from '@/lib/utils';
 
 export function ProjectsTable() {
   const projects = useProjectsStore((s) => s.projects);
@@ -32,7 +33,7 @@ export function ProjectsTable() {
         {projects.map((p) => (
           <TableRow key={p.id}>
             <TableCell className="font-medium">{p.name}</TableCell>
-            <TableCell>{p.grades.join(', ')}</TableCell>
+            <TableCell>{formatGrades(p.grades)}</TableCell>
             <TableCell>{p.targetCapacity}</TableCell>
             <TableCell>{p.maxCapacity}</TableCell>
             <TableCell className="text-muted-foreground">{p.description ?? '—'}</TableCell>
