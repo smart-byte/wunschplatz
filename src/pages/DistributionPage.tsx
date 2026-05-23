@@ -23,7 +23,7 @@ import { useStaleAssignments } from '@/hooks/useStaleAssignments';
 import { Download, ListChecks } from 'lucide-react';
 import { toast } from 'sonner';
 
-const TAB_STORAGE_KEY = 'distribution.activeTab';
+const TAB_STORAGE_KEY = 'distribution.activeTab.v2';
 
 export default function DistributionPage() {
   const navigate = useNavigate();

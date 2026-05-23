@@ -8,7 +8,7 @@ export const BOARD_SORT_LABELS: Record<BoardSortKey, string> = {
   grade: 'Jahrgang (aufsteigend)',
 };
 
-export const BOARD_SORT_STORAGE_KEY = 'distribution.boardSort';
+export const BOARD_SORT_STORAGE_KEY = 'distribution.boardSort.v2';
 
 export function readStoredSortKey(): BoardSortKey {
   if (typeof window === 'undefined') return 'popularity';
