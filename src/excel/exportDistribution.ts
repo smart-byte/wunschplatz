@@ -1,6 +1,7 @@
 import { utils } from 'xlsx';
 import type { WorkBook } from 'xlsx';
 import type { Project, Student, Assignment } from '@/types';
+import { formatGrades } from '@/lib/utils';
 
 export function buildExportWorkbook(
   students: Student[],
@@ -28,7 +29,7 @@ export function buildExportWorkbook(
     if (assigned.length === 0) {
       return [{
         Projekt: p.name,
-        Jahrgänge: p.grades.join(', '),
+        Jahrgänge: formatGrades(p.grades),
         Belegung: 0,
         'Max': p.maxCapacity,
         Soll: p.targetCapacity,
@@ -37,7 +38,7 @@ export function buildExportWorkbook(
     }
     return assigned.map((s, i) => ({
       Projekt: i === 0 ? p.name : '',
-      Jahrgänge: i === 0 ? p.grades.join(', ') : '',
+      Jahrgänge: i === 0 ? formatGrades(p.grades) : '',
       Belegung: i === 0 ? assigned.length : '',
       'Max': i === 0 ? p.maxCapacity : '',
       Soll: i === 0 ? p.targetCapacity : '',

@@ -1,6 +1,7 @@
 import { utils } from 'xlsx';
 import type { WorkBook } from 'xlsx';
 import type { Project } from '@/types';
+import { formatGrades } from '@/lib/utils';
 
 /**
  * Build a workbook with one sheet containing all projects. Columns match
@@ -10,7 +11,7 @@ export function buildProjectsWorkbook(projects: Project[]): WorkBook {
   const rows = projects.map((p) => ({
     Name: p.name,
     Beschreibung: p.description ?? '',
-    Jahrgänge: p.grades.join(', '),
+    Jahrgänge: formatGrades(p.grades),
     Max: p.maxCapacity,
     Soll: p.targetCapacity,
   }));
