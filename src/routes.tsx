@@ -5,6 +5,10 @@ import StudentsPage from '@/pages/StudentsPage';
 import OptimizePage from '@/pages/OptimizePage';
 import DistributionPage from '@/pages/DistributionPage';
 
+// import.meta.env.BASE_URL is injected by Vite from vite.config `base`.
+// createBrowserRouter expects a basename WITHOUT trailing slash.
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined;
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -17,4 +21,4 @@ export const router = createBrowserRouter([
       { path: 'distribution', element: <DistributionPage /> },
     ],
   },
-]);
+], { basename });
