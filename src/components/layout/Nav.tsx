@@ -21,7 +21,7 @@ export function Nav() {
             <ClipboardList className="size-4" />
           </div>
           <span className="font-semibold tracking-tight hidden sm:inline">
-            Projektverteilung
+            Wunschplatz
           </span>
         </NavLink>
 

@@ -59,7 +59,7 @@ export default function DistributionPage() {
       .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
-    writeFile(wb, `projektverteilung-${slug || 'verteilung'}-${date}.xlsx`);
+    writeFile(wb, `wunschplatz-${slug || 'verteilung'}-${date}.xlsx`);
     toast.success('Excel-Export gestartet');
   }
 

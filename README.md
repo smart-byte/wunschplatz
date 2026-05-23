@@ -1,6 +1,6 @@
-# Projektverteilung
+# Wunschplatz
 
-Offline-fähige Webapp zur optimalen Verteilung von Schülern auf jahrgangsgebundene Projekte mit begrenzter Kapazität, basierend auf Top-5-Prioritäten.
+Offline-fähige Webapp zur optimalen Verteilung von Schülern auf jahrgangsgebundene Projekte mit begrenzter Kapazität, basierend auf Top-5-Prioritäten. Jeder bekommt seinen Wunschplatz — oder so nah wie möglich dran.
 
 ## Features
 
