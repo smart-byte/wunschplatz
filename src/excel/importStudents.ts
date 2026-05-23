@@ -38,6 +38,32 @@ export function parseStudentRows(rows: unknown[][], projects: Project[]): ParseR
   const projectByName = new Map<string, string>();
   for (const p of projects) projectByName.set(p.name.toLowerCase().trim(), p.id);
 
+  /**
+   * Match a prio cell value to a project. Tries exact, then prefix
+   * ("Yoga" → "Yogakurs"), then word-boundary ("Comic" → "Comicbuch zeichnen").
+   * Returns ambiguous if more than one candidate matches at the same level.
+   */
+  function findProject(
+    name: string,
+  ): { ok: true; id: string } | { ok: false; reason: 'unknown' | 'ambiguous'; candidates: string[] } {
+    const n = name.toLowerCase().trim();
+    // Exact match (case-insensitive)
+    const exact = projectByName.get(n);
+    if (exact) return { ok: true, id: exact };
+    // Prefix match: project name starts with the prio value
+    const prefix = projects.filter((p) => p.name.toLowerCase().trim().startsWith(n));
+    if (prefix.length === 1) return { ok: true, id: prefix[0].id };
+    if (prefix.length > 1) return { ok: false, reason: 'ambiguous', candidates: prefix.map((p) => p.name) };
+    // Word-boundary contains: project contains the prio value as a separate word
+    const word = projects.filter((p) => {
+      const words = p.name.toLowerCase().split(/[\s\-:,/]+/);
+      return words.includes(n);
+    });
+    if (word.length === 1) return { ok: true, id: word[0].id };
+    if (word.length > 1) return { ok: false, reason: 'ambiguous', candidates: word.map((p) => p.name) };
+    return { ok: false, reason: 'unknown', candidates: [] };
+  }
+
   const errors: ParseError[] = [];
   const pending: Pending[] = [];
 
@@ -66,11 +92,15 @@ export function parseStudentRows(rows: unknown[][], projects: Project[]): ParseR
       if (colIdx === -1) continue;
       const name = String(row[colIdx] ?? '').trim();
       if (!name || /^[-–—]+$/.test(name)) continue;
-      const id = projectByName.get(name.toLowerCase());
-      if (!id) {
-        errors.push({ rowIndex: r, message: `Prio${k + 1}: Unbekanntes Projekt "${name}"` });
+      const match = findProject(name);
+      if (!match.ok) {
+        const msg = match.reason === 'ambiguous'
+          ? `Prio${k + 1}: "${name}" passt zu mehreren Projekten (${match.candidates.join(', ')})`
+          : `Prio${k + 1}: Unbekanntes Projekt "${name}"`;
+        errors.push({ rowIndex: r, message: msg });
         continue;
       }
+      const id = match.id;
       if (seen.has(id)) {
         errors.push({ rowIndex: r, message: `Prio${k + 1}: Doppeltes Projekt "${name}"` });
         priorityError = true;

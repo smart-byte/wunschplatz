@@ -110,6 +110,61 @@ describe('parseStudentRows', () => {
     expect(result.students[0].groupId).toBeUndefined();
   });
 
+  it('matches priority via prefix (e.g. "Yoga" → "Yogakurs")', () => {
+    const projectsExt = [
+      ...projects,
+      { id: 'y', name: 'Yogakurs', grades: [7], maxCapacity: 10, targetCapacity: 8 },
+    ];
+    const rows = [
+      ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Prio1'],
+      ['Anna', 'Müller', '7a', '7', 'Yoga'],
+    ];
+    const result = parseStudentRows(rows, projectsExt);
+    expect(result.errors).toHaveLength(0);
+    expect(result.students[0].priorities).toEqual(['y']);
+  });
+
+  it('matches priority via word-boundary contains', () => {
+    const projectsExt = [
+      ...projects,
+      { id: 'cz', name: 'Comicbuch zeichnen', grades: [7], maxCapacity: 10, targetCapacity: 8 },
+    ];
+    const rows = [
+      ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Prio1'],
+      ['Anna', 'Müller', '7a', '7', 'zeichnen'],
+    ];
+    const result = parseStudentRows(rows, projectsExt);
+    expect(result.errors).toHaveLength(0);
+    expect(result.students[0].priorities).toEqual(['cz']);
+  });
+
+  it('reports ambiguous when prefix matches multiple projects', () => {
+    const projectsAmb = [
+      { id: 'y1', name: 'Yoga und Meditation', grades: [7], maxCapacity: 10, targetCapacity: 8 },
+      { id: 'y2', name: 'Yoga für Anfänger', grades: [7], maxCapacity: 10, targetCapacity: 8 },
+    ];
+    const rows = [
+      ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Prio1'],
+      ['Anna', 'Müller', '7a', '7', 'Yoga'],
+    ];
+    const result = parseStudentRows(rows, projectsAmb);
+    expect(result.errors.some((e) => /mehreren Projekten/i.test(e.message))).toBe(true);
+  });
+
+  it('prefers exact match over prefix match', () => {
+    const projectsExt = [
+      { id: 'y1', name: 'Yoga', grades: [7], maxCapacity: 10, targetCapacity: 8 },
+      { id: 'y2', name: 'Yogakurs', grades: [7], maxCapacity: 10, targetCapacity: 8 },
+    ];
+    const rows = [
+      ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Prio1'],
+      ['Anna', 'Müller', '7a', '7', 'Yoga'],
+    ];
+    const result = parseStudentRows(rows, projectsExt);
+    expect(result.errors).toHaveLength(0);
+    expect(result.students[0].priorities).toEqual(['y1']);
+  });
+
   it('syncs group priorities to first member and warns on mismatch', () => {
     const rows = [
       ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Gruppe', 'Prio1', 'Prio2'],
