@@ -11,7 +11,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { StudentFormDialog } from './StudentFormDialog';
-import { ArrowDown, ArrowUp, ArrowUpDown, Check, Pencil, Pipette, Trash2, Users, UserMinus } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, MoreHorizontal, Pencil, Pipette, Trash2, Users, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { getGroupColor, PALETTE, isHex } from '@/lib/groups';
 import type { Student } from '@/types';
@@ -178,7 +182,7 @@ export function StudentsTable() {
               <SortHead label="Prio 3" col="prio3" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
               <SortHead label="Prio 4" col="prio4" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
               <SortHead label="Prio 5" col="prio5" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
-              <TableHead className="w-[120px]"></TableHead>
+              <TableHead className="sticky right-0 bg-background w-[60px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -240,46 +244,36 @@ export function StudentsTable() {
                     )}
                   </TableCell>
                   {[0, 1, 2, 3, 4].map((i) => (
-                    <TableCell key={i} className="text-sm">
-                      {s.priorities[i] ? projectName(s.priorities[i]) : '—'}
+                    <TableCell key={i} className="text-sm max-w-[140px]">
+                      {s.priorities[i] ? (
+                        <span
+                          className="block truncate"
+                          title={projectName(s.priorities[i])}
+                        >
+                          {projectName(s.priorities[i])}
+                        </span>
+                      ) : '—'}
                     </TableCell>
                   ))}
-                  <TableCell className="flex gap-1">
-                    <StudentFormDialog
-                      trigger={<Button variant="ghost" size="icon" className={actionBtnClass}><Pencil className="size-4" /></Button>}
-                      initial={s}
-                      onSave={(data) => {
+                  <TableCell className="sticky right-0 z-10 bg-inherit w-[60px]">
+                    <StudentRowActions
+                      student={s}
+                      actionBtnClass={actionBtnClass}
+                      onEditSave={(data) => {
                         updateStudent(s.id, data);
                         toast.success(s.groupId ? 'Schüler + Gruppe aktualisiert' : 'Schüler aktualisiert');
                       }}
-                    />
-                    {s.groupId && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={actionBtnClass}
-                        title="Aus Gruppe entfernen"
-                        onClick={() => {
-                          removeFromGroup(s.id);
-                          toast.success('Aus Gruppe entfernt');
-                        }}
-                      >
-                        <UserMinus className="size-4" />
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={actionBtnClass}
-                      onClick={() => {
+                      onRemoveFromGroup={() => {
+                        removeFromGroup(s.id);
+                        toast.success('Aus Gruppe entfernt');
+                      }}
+                      onDelete={() => {
                         if (confirm(`${s.firstName} ${s.lastName} löschen?`)) {
                           removeStudent(s.id);
                           toast.success('Schüler gelöscht');
                         }
                       }}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                    />
                   </TableCell>
                 </TableRow>
               );
@@ -445,5 +439,53 @@ function GroupColorBadge({ currentKey, color, usedByOthers, onPick }: GroupColor
         </div>
       </PopoverContent>
     </Popover>
+  );
+}
+
+type StudentRowActionsProps = {
+  student: Student;
+  actionBtnClass: string;
+  onEditSave: (data: Omit<Student, 'id'>) => void;
+  onRemoveFromGroup: () => void;
+  onDelete: () => void;
+};
+
+function StudentRowActions({
+  student, actionBtnClass, onEditSave, onRemoveFromGroup, onDelete,
+}: StudentRowActionsProps) {
+  const [editOpen, setEditOpen] = useState(false);
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className={actionBtnClass} title="Aktionen">
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setEditOpen(true)}>
+            <Pencil className="size-4 mr-2" /> Bearbeiten
+          </DropdownMenuItem>
+          {student.groupId && (
+            <DropdownMenuItem onClick={onRemoveFromGroup}>
+              <UserMinus className="size-4 mr-2" /> Aus Gruppe entfernen
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={onDelete}
+            className="text-destructive focus:text-destructive"
+          >
+            <Trash2 className="size-4 mr-2" /> Löschen
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <StudentFormDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        initial={student}
+        onSave={onEditSave}
+      />
+    </>
   );
 }
