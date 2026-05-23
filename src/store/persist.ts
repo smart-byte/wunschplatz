@@ -2,7 +2,7 @@ import { createStore, get, set, del } from 'idb-keyval';
 import type { StateStorage } from 'zustand/middleware';
 
 export function createIdbStorage(dbName: string): StateStorage {
-  const customStore = createStore(`projektverteilung-${dbName}`, dbName);
+  const customStore = createStore(`wunschplatz-${dbName}`, dbName);
 
   return {
     getItem: async (name) => {
