@@ -40,19 +40,48 @@ const PROJECT_POOL: ProjectTemplate[] = [
 ];
 
 const FIRST_NAMES = [
-  'Anna', 'Ben', 'Carla', 'David', 'Emma', 'Felix', 'Greta', 'Henry', 'Ida', 'Jonas',
-  'Klara', 'Leon', 'Mia', 'Noah', 'Olivia', 'Paul', 'Romy', 'Simon', 'Tilda', 'Vera',
-  'Wim', 'Yara', 'Zoe', 'Lukas', 'Lara', 'Max', 'Sophie', 'Tim', 'Lea', 'Jan',
-  'Lisa', 'Tom', 'Mila', 'Hannes', 'Lena', 'Finn', 'Marie', 'Luca', 'Hanna', 'Mats',
-  'Jule', 'Theo', 'Frieda', 'Niklas', 'Lina', 'Linus', 'Alma', 'Oscar', 'Helena', 'Erik',
-  'Mathilda', 'Levi', 'Ronja', 'Bruno', 'Lotte', 'Karl', 'Pia', 'Anton', 'Nele', 'Joris',
+  // f
+  'Anna', 'Carla', 'Emma', 'Greta', 'Ida', 'Klara', 'Mia', 'Olivia', 'Romy', 'Tilda',
+  'Vera', 'Yara', 'Zoe', 'Lara', 'Sophie', 'Lea', 'Lisa', 'Mila', 'Lena', 'Marie',
+  'Hanna', 'Jule', 'Frieda', 'Lina', 'Alma', 'Helena', 'Mathilda', 'Ronja', 'Lotte', 'Pia',
+  'Nele', 'Amelie', 'Lilly', 'Leni', 'Ella', 'Ida', 'Charlotte', 'Johanna', 'Paula', 'Luisa',
+  'Antonia', 'Clara', 'Elena', 'Emilia', 'Jana', 'Juna', 'Katharina', 'Laura', 'Magdalena', 'Maja',
+  'Mara', 'Mariella', 'Mathea', 'Melina', 'Merle', 'Mira', 'Nora', 'Pauline', 'Rosa', 'Selma',
+  'Sina', 'Smilla', 'Stella', 'Sunna', 'Tessa', 'Thea', 'Valentina', 'Viktoria', 'Aaliyah', 'Aylin',
+  'Esma', 'Fatima', 'Hira', 'Layla', 'Leyla', 'Maryam', 'Nisa', 'Sara', 'Sila', 'Zeynep',
+  'Wiebke', 'Xenia', 'Birte', 'Britta', 'Doreen', 'Edda', 'Elfi', 'Henrike', 'Sophia',
+  // m
+  'Ben', 'David', 'Felix', 'Henry', 'Jonas', 'Leon', 'Noah', 'Paul', 'Simon', 'Lukas',
+  'Max', 'Tim', 'Jan', 'Tom', 'Hannes', 'Finn', 'Luca', 'Mats', 'Theo', 'Niklas',
+  'Linus', 'Oscar', 'Erik', 'Levi', 'Bruno', 'Karl', 'Anton', 'Joris', 'Alexander', 'Anton',
+  'Bastian', 'Benjamin', 'Carl', 'Cornelius', 'Daniel', 'Dennis', 'Dominik', 'Elias', 'Emil', 'Fabian',
+  'Florian', 'Gabriel', 'Henri', 'Jakob', 'Jaron', 'Jasper', 'Johann', 'Jonathan', 'Julius', 'Konrad',
+  'Lennard', 'Leonard', 'Linus', 'Louis', 'Maximilian', 'Mika', 'Milan', 'Moritz', 'Nils', 'Oskar',
+  'Phil', 'Philipp', 'Quentin', 'Raphael', 'Robin', 'Samuel', 'Sebastian', 'Severin', 'Thilo', 'Tobias',
+  'Valentin', 'Vincent', 'Wim', 'Xaver', 'Yannick', 'Yusuf', 'Ahmed', 'Ali', 'Amir', 'Aram',
+  'Eren', 'Hakan', 'Kerim', 'Mehmet', 'Mustafa', 'Omar', 'Samir', 'Tarek',
 ];
 
 const LAST_NAMES = [
+  // Top 50 deutsche Nachnamen
   'Müller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker',
-  'Schulz', 'Hoffmann', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf', 'Schröder',
-  'Neumann', 'Schwarz', 'Zimmermann', 'Krüger', 'Hartmann', 'Lange', 'Schmitt',
-  'Werner', 'Krause', 'Lehmann', 'Köhler', 'Herrmann', 'König', 'Walter',
+  'Schulz', 'Hoffmann', 'Schäfer', 'Koch', 'Bauer', 'Richter', 'Klein', 'Wolf',
+  'Schröder', 'Neumann', 'Schwarz', 'Zimmermann', 'Braun', 'Krüger', 'Hofmann',
+  'Hartmann', 'Lange', 'Schmitt', 'Werner', 'Schmitz', 'Krause', 'Meier',
+  'Lehmann', 'Schmid', 'Schulze', 'Maier', 'Köhler', 'Herrmann', 'König', 'Walter',
+  'Mayer', 'Huber', 'Kaiser', 'Fuchs', 'Peters', 'Lang', 'Scholz', 'Möller',
+  'Weiß', 'Jung', 'Hahn', 'Schubert',
+  // weitere häufige
+  'Vogel', 'Friedrich', 'Keller', 'Günther', 'Frank', 'Berger', 'Winkler', 'Roth',
+  'Beck', 'Lorenz', 'Baumann', 'Franke', 'Albrecht', 'Schuster', 'Simon', 'Ludwig',
+  'Böhm', 'Winter', 'Kraus', 'Martin', 'Schumacher', 'Krämer', 'Vogt', 'Stein',
+  'Jäger', 'Otto', 'Sommer', 'Groß', 'Seidel', 'Heinrich', 'Brandt', 'Haas',
+  'Schreiber', 'Graf', 'Schulte', 'Dietrich', 'Ziegler', 'Kuhn', 'Kühn', 'Pohl',
+  'Engel', 'Horn', 'Busch', 'Bergmann', 'Thomas', 'Voigt', 'Sauer', 'Arnold',
+  'Wolff', 'Pfeiffer', 'Stahl', 'Reuter', 'Adler', 'Linke', 'Beyer', 'Ebert',
+  'Bach', 'Voß', 'Lindner', 'Brunner', 'Heinz', 'Rieger',
+  // migrantische Häufige in DE
+  'Yilmaz', 'Demir', 'Kaya', 'Öztürk', 'Aydin', 'Polat', 'Nguyen', 'Tran', 'Le', 'Pham',
 ];
 
 // Realistic grade distribution: more students in lower grades (typical school)
