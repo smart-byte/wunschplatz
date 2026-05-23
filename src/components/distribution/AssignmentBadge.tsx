@@ -23,15 +23,17 @@ export function AssignmentBadge({
     ? '(keine Prioritäten gesetzt)'
     : prios.map((id, i) => `${i + 1}. ${projectName(id)}`).join('\n');
 
+  // Hide badge entirely when student is unassigned — badge is only meaningful
+  // to reveal which priority rank the assigned project had.
+  if (!assignment || assignment.projectId === null) {
+    return null;
+  }
+
   let label: string;
   let variant: 'secondary' | 'outline' | 'destructive' = 'outline';
   let status: string;
 
-  if (!assignment || assignment.projectId === null) {
-    label = 'unverteilt';
-    variant = 'outline';
-    status = 'Schüler ist keinem Projekt zugewiesen.';
-  } else if (assignment.priorityRank !== null) {
+  if (assignment.priorityRank !== null) {
     label = `Prio ${assignment.priorityRank}`;
     variant = 'secondary';
     status = `Schüler hat Wunsch Nr. ${assignment.priorityRank} erhalten.`;
