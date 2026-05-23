@@ -244,12 +244,9 @@ export function StudentsTable() {
                     )}
                   </TableCell>
                   {[0, 1, 2, 3, 4].map((i) => (
-                    <TableCell key={i} className="text-sm max-w-[140px]">
+                    <TableCell key={i} className="text-sm max-w-[160px] align-top">
                       {s.priorities[i] ? (
-                        <span
-                          className="block truncate"
-                          title={projectName(s.priorities[i])}
-                        >
+                        <span className="block break-words leading-tight">
                           {projectName(s.priorities[i])}
                         </span>
                       ) : '—'}
