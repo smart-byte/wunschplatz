@@ -55,6 +55,8 @@ export function parseProjectRows(rows: unknown[][]): ProjectParseResult {
 
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r];
+    // Skip fully empty rows silently.
+    if (!row || row.every((cell) => String(cell ?? '').trim() === '')) continue;
     const name = String(row[cols.name] ?? '').trim();
     if (!name) {
       errors.push({ rowIndex: r, message: 'Name fehlt' });

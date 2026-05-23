@@ -43,6 +43,8 @@ export function parseStudentRows(rows: unknown[][], projects: Project[]): ParseR
 
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r];
+    // Skip fully empty rows silently — no error noise from trailing blanks.
+    if (!row || row.every((cell) => String(cell ?? '').trim() === '')) continue;
     const firstName = String(row[cols.firstName] ?? '').trim();
     const lastName = String(row[cols.lastName] ?? '').trim();
     const className = String(row[cols.className] ?? '').trim();
