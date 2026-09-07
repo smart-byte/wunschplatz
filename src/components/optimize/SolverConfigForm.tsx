@@ -3,24 +3,21 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { useSolverConfigStore } from '@/store/useSolverConfigStore';
 import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Info } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ChevronDown, Info, RotateCcw } from 'lucide-react';
 
 type InfoBadgeProps = { children: React.ReactNode };
 
 function InfoBadge({ children }: InfoBadgeProps) {
+  const { t } = useTranslation('app');
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <button
           type="button"
-          className="inline-flex text-muted-foreground hover:text-foreground"
-          aria-label="Info"
+          className="inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-prose-soft hover:text-mark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={t('optimize.infoLabel')}
         >
           <Info className="size-3.5" />
         </button>
@@ -32,15 +29,8 @@ function InfoBadge({ children }: InfoBadgeProps) {
   );
 }
 
-const priorityInfo = [
-  'Punkte, die ein Schüler beiträgt, wenn er sein 1. Wunschprojekt bekommt. Höher = der Solver bevorzugt diese Zuweisung stärker.',
-  'Punkte für 2. Wunsch. Sollte kleiner als Prio 1 sein, sonst sind Prio 1 und 2 gleichwertig.',
-  'Punkte für 3. Wunsch.',
-  'Punkte für 4. Wunsch.',
-  'Punkte für 5. Wunsch. Sollte ≥ 0 bleiben, sonst wird Prio 5 schlechter als gar keine Zuweisung.',
-];
-
-export function SolverConfigForm() {
+export function SolverConfigForm({ disabled = false }: { disabled?: boolean }) {
+  const { t } = useTranslation('app');
   const config = useSolverConfigStore((s) => s.config);
   const setConfig = useSolverConfigStore((s) => s.setConfig);
   const reset = useSolverConfigStore((s) => s.reset);
@@ -53,27 +43,28 @@ export function SolverConfigForm() {
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="space-y-6 border rounded-lg p-6 bg-card">
+      <div className="space-y-8">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <h2 className="text-lg font-semibold">Prio-Gewichtungen</h2>
-            <InfoBadge>
-              Punkte pro Prio-Rang. Der Solver maximiert die Summe der vergebenen
-              Punkte über alle Schüler. Höher = Solver versucht stärker, Schüler in dieses
-              Wunschprojekt zu bekommen. Standard: 10 / 6 / 3 / 2 / 1.
-            </InfoBadge>
+            <h2 className="font-serif text-2xl font-medium">{t('optimize.priority.heading')}</h2>
+            <InfoBadge>{t('optimize.priority.headingInfo')}</InfoBadge>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Höher = stärker bevorzugt. Solver maximiert Summe gewichteter Zuweisungen.
+          <p className="text-sm leading-relaxed text-prose-soft mb-6">
+            {t('optimize.priority.description')}
           </p>
-          <div className="space-y-3">
+          <div className="space-y-5">
             {config.priorityWeights.map((w, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <div className="flex items-center gap-1 w-24">
-                  <Label>Prio {i + 1}</Label>
-                  <InfoBadge>{priorityInfo[i]}</InfoBadge>
+              <div key={i} className="flex items-center gap-3 sm:gap-5">
+                <div className="flex w-28 shrink-0 items-center">
+                  <Label htmlFor={`priority-${i}`}>
+                    {t('optimize.priority.label', { n: i + 1 })}
+                  </Label>
+                  <InfoBadge>{t(`optimize.priority.info${i + 1}`)}</InfoBadge>
                 </div>
                 <Slider
+                  disabled={disabled}
+                  id={`priority-${i}`}
+                  aria-label={t('optimize.priority.label', { n: i + 1 })}
                   value={[w]}
                   min={0}
                   max={20}
@@ -81,104 +72,66 @@ export function SolverConfigForm() {
                   onValueChange={(v) => updateWeight(i, v[0])}
                   className="flex-1"
                 />
-                <span className="w-12 text-right tabular-nums">{w}</span>
+                <span className="w-8 text-right text-sm font-medium tabular-nums text-mark-ink">
+                  {w}
+                </span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div className="grid gap-1.5">
-            <div className="flex items-center gap-1">
-              <Label htmlFor="unmatched">Unverteilt-Strafe</Label>
-              <InfoBadge>
-                Straf-Punkte, wenn ein Schüler <strong>überhaupt nicht</strong> verteilt
-                wird (kein Projekt zugewiesen). Sehr hoher Wert (Standard 1000) sorgt
-                dafür, dass der Solver alle Schüler unterbringt, solange noch ein
-                jahrgangskompatibles Projekt freie Plätze hat. Reduzieren nur, wenn du
-                Schüler bewusst unverteilt lassen willst.
-              </InfoBadge>
-            </div>
-            <Input
-              id="unmatched"
-              type="number"
-              value={config.unmatchedPenalty}
-              onChange={(e) => setConfig({ ...config, unmatchedPenalty: parseInt(e.target.value, 10) || 0 })}
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <div className="flex items-center gap-1">
-              <Label htmlFor="overTarget">Über-Soll-Strafe</Label>
-              <InfoBadge>
-                Straf-Punkte für jeden Schüler, der ein Projekt <strong>über
-                seine Soll-Kapazität</strong> hinaus füllt (bis zur Max-Kapazität).
-                Niedrige Werte (Standard 2) bedeuten "weiches Soll" — Projekte werden
-                gleichmäßig auf Soll-Niveau gefüllt, bevor irgendwo überfüllt wird.
-                Höher = Solver bleibt strikter beim Soll.
-              </InfoBadge>
-            </div>
-            <Input
-              id="overTarget"
-              type="number"
-              value={config.overTargetPenalty}
-              onChange={(e) => setConfig({ ...config, overTargetPenalty: parseInt(e.target.value, 10) || 0 })}
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <div className="flex items-center gap-1">
-              <Label htmlFor="notInTop5">Nicht-in-Top5-Strafe</Label>
-              <InfoBadge>
-                Straf-Punkte, wenn ein Schüler in ein Projekt kommt, das <strong>nicht
-                in seinen Top 5 Wünschen</strong> stand (passiert nur, wenn alle 5 Wünsche
-                voll sind). Standard 50: viel besser als unverteilt (1000), aber deutlich
-                schlechter als jeder Top-5-Platz. Höher = Solver lässt eher Plätze leer
-                als Schüler in fremdes Projekt zu stecken.
-              </InfoBadge>
-            </div>
-            <Input
-              id="notInTop5"
-              type="number"
-              value={config.notInTop5Penalty}
-              onChange={(e) => setConfig({ ...config, notInTop5Penalty: parseInt(e.target.value, 10) || 0 })}
-            />
-          </div>
-        </div>
-
-        <div className="border-t pt-4">
+        <div className="border-t border-rule pt-7">
           <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-sm font-semibold">Gruppen-Kohäsion</h3>
+            <h3 className="font-serif text-2xl font-medium">{t('optimize.cohesion.heading')}</h3>
             <InfoBadge>
               <p>
-                Bonus-Punkte für jedes zusätzliche Mitglied einer Gruppe im{' '}
-                <strong>gleichen Projekt</strong>. Höher = Solver gibt mehr
-                Prio-Punkte auf, um Gruppen zusammenzuhalten. Bei <strong>0</strong>{' '}
-                werden Gruppen wie Einzel-Schüler behandelt.
+                {t('optimize.cohesion.info.introPre')}{' '}
+                <strong>{t('optimize.cohesion.info.introStrong')}</strong>
+                {t('optimize.cohesion.info.introMid')} <strong>0</strong>{' '}
+                {t('optimize.cohesion.info.introEnd')}
               </p>
               <div className="mt-3">
-                <p className="font-medium mb-1">Entscheidungs-Regel</p>
-                <p>Eine Gruppe bleibt zusammen, wenn:</p>
+                <p className="font-medium mb-1">{t('optimize.cohesion.info.ruleHeading')}</p>
+                <p>{t('optimize.cohesion.info.ruleIntro')}</p>
                 <div className="mt-2 rounded border bg-muted/50 px-3 py-2 font-mono text-[11px] leading-relaxed">
-                  <div>Gewinn ≥ Verlust</div>
+                  <div>{t('optimize.cohesion.info.formulaLabel')}</div>
                   <div className="mt-1 text-muted-foreground">
                     Bonus · (n − 1) ≥ (w₁ − w<sub>k</sub>) · n
                   </div>
                 </div>
                 <ul className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
-                  <li><strong>n</strong> = Gruppen-Größe</li>
-                  <li><strong>k</strong> = erreichter Prio-Rang (1-5)</li>
-                  <li><strong>w₁, w<sub>k</sub></strong> = Prio-Gewichtungen</li>
+                  <li>
+                    <strong>n</strong> = {t('optimize.cohesion.info.legendN')}
+                  </li>
+                  <li>
+                    <strong>k</strong> = {t('optimize.cohesion.info.legendK')}
+                  </li>
+                  <li>
+                    <strong>
+                      w₁, w<sub>k</sub>
+                    </strong>{' '}
+                    = {t('optimize.priority.heading')}
+                  </li>
                 </ul>
               </div>
               <p className="mt-3 text-muted-foreground">
-                Standard <strong className="text-foreground">8</strong>: Gruppen bleiben bei Prio 1-2
-                zusammen, splitten ab Prio 3+ eher auf.
+                {t('optimize.cohesion.info.defaultPre')}{' '}
+                <strong className="text-foreground">8</strong>
+                {t('optimize.cohesion.info.defaultPost')}
               </p>
             </InfoBadge>
           </div>
-          <div className="flex items-center gap-4">
-            <Label htmlFor="groupCohesion" className="w-32">Cohesion-Bonus</Label>
+          <p className="mb-5 text-sm leading-relaxed text-prose-soft">
+            {t('optimize.cohesion.description')}
+          </p>
+          <div className="flex items-center gap-3 sm:gap-5">
+            <Label htmlFor="groupCohesion" className="w-28 shrink-0">
+              {t('optimize.cohesion.label')}
+            </Label>
             <Slider
+              disabled={disabled}
               id="groupCohesion"
+              aria-label={t('optimize.cohesion.label')}
               value={[config.groupCohesionBonus]}
               min={0}
               max={30}
@@ -186,19 +139,89 @@ export function SolverConfigForm() {
               onValueChange={(v) => setConfig({ ...config, groupCohesionBonus: v[0] })}
               className="flex-1"
             />
-            <span className="w-12 text-right tabular-nums">{config.groupCohesionBonus}</span>
+            <span className="w-8 text-right text-sm font-medium tabular-nums text-mark-ink">
+              {config.groupCohesionBonus}
+            </span>
           </div>
         </div>
 
+        <details className="group border-y border-rule py-5">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 rounded-sm text-sm font-medium text-prose focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+            {t('optimize.advanced.heading')}
+            <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+          </summary>
+          <p className="mb-5 mt-3 text-sm leading-relaxed text-prose-soft">
+            {t('optimize.advanced.description')}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid gap-1.5">
+              <div className="flex items-center gap-1">
+                <Label htmlFor="unmatched">{t('optimize.penalty.unmatched.label')}</Label>
+                <InfoBadge>
+                  {t('optimize.penalty.unmatched.infoPre')}{' '}
+                  <strong>{t('optimize.penalty.unmatched.infoStrong')}</strong>{' '}
+                  {t('optimize.penalty.unmatched.infoPost')}
+                </InfoBadge>
+              </div>
+              <Input
+                id="unmatched"
+                type="number"
+                value={config.unmatchedPenalty}
+                onChange={(e) =>
+                  setConfig({ ...config, unmatchedPenalty: parseInt(e.target.value, 10) || 0 })
+                }
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <div className="flex items-center gap-1">
+                <Label htmlFor="overTarget">{t('optimize.penalty.overTarget.label')}</Label>
+                <InfoBadge>
+                  {t('optimize.penalty.overTarget.infoPre')}{' '}
+                  <strong>{t('optimize.penalty.overTarget.infoStrong')}</strong>{' '}
+                  {t('optimize.penalty.overTarget.infoPost')}
+                </InfoBadge>
+              </div>
+              <Input
+                id="overTarget"
+                type="number"
+                value={config.overTargetPenalty}
+                onChange={(e) =>
+                  setConfig({ ...config, overTargetPenalty: parseInt(e.target.value, 10) || 0 })
+                }
+              />
+            </div>
+            <div className="grid gap-1.5">
+              <div className="flex items-center gap-1">
+                <Label htmlFor="notInTop5">{t('optimize.penalty.notInTop5.label')}</Label>
+                <InfoBadge>
+                  {t('optimize.penalty.notInTop5.infoPre')}{' '}
+                  <strong>{t('optimize.penalty.notInTop5.infoStrong')}</strong>{' '}
+                  {t('optimize.penalty.notInTop5.infoPost')}
+                </InfoBadge>
+              </div>
+              <Input
+                id="notInTop5"
+                type="number"
+                value={config.notInTop5Penalty}
+                onChange={(e) =>
+                  setConfig({ ...config, notInTop5Penalty: parseInt(e.target.value, 10) || 0 })
+                }
+              />
+            </div>
+          </div>
+        </details>
+
         <Button
-          variant="outline"
+          variant="ghost"
+          className="text-prose-soft"
           onClick={() => {
-            if (confirm('Alle Optimierungs-Einstellungen auf Standardwerte zurücksetzen (Prio-Gewichtungen, alle Strafen, Cohesion-Bonus)?')) {
+            if (confirm(t('optimize.reset.confirm'))) {
               reset();
             }
           }}
         >
-          Alle Werte auf Standard zurücksetzen
+          <RotateCcw className="size-4" />
+          {t('optimize.reset.button')}
         </Button>
       </div>
     </TooltipProvider>

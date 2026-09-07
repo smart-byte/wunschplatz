@@ -1,52 +1,63 @@
 # Wunschplatz
 
-Offline-fähige Webapp zur optimalen Verteilung von Schülern auf jahrgangsgebundene Projekte mit begrenzter Kapazität, basierend auf Top-5-Prioritäten. Jeder bekommt seinen Wunschplatz — oder so nah wie möglich dran.
+Wunschplatz hilft Schulen, Schüler anhand ihrer Projektwünsche, Jahrgänge und verfügbarer Plätze zu verteilen. Die App ist auf Deutsch und Englisch verfügbar. Importierte Daten und Berechnungen bleiben im Browser.
 
-## Features
+## Lokal starten
 
-- Verwaltung von Projekten (Name, Jahrgänge, Max- & Soll-Kapazität)
-- Excel-Import von Schülerangaben (Vorname, Nachname, Klasse, Jahrgang, Prio1-5)
-- Min-Cost-Flow-basierte Optimierung mit konfigurierbaren Gewichtungen
-- Tabellen- und Drag-&-Drop-Ansicht zur Review & Korrektur
-- Excel-Export der finalen Verteilung
-- Komplett offline (IndexedDB-Persistenz)
+Voraussetzung: Node.js 22.13 oder neuer innerhalb der 22er-Reihe, oder Node.js 24+.
 
-## Setup
-
-```bash
-npm install
+```sh
+npm ci
 npm run dev
 ```
 
-Öffnet auf http://localhost:5173.
+Die App läuft unter http://localhost:5173. `npm run build` erstellt `dist/`; `npm run preview` zeigt den Produktions-Build.
 
-## Skripte
+## Ablauf
 
-- `npm run dev` — Dev-Server
-- `npm run build` — Produktions-Build
-- `npm test` — Unit-Tests (Vitest)
-- `npm run test:e2e` — E2E-Tests (Playwright)
-- `npm run typecheck` — TypeScript-Check
+1. **Wunschrunde auswählen, anlegen oder umbenennen.** Jede Runde besitzt eigene Projekte, Schüler, Formularvorlagen, Einstellungen und Verteilungen. „Geplant“, „Laufend“ und „Abgeschlossen“ sind organisatorische Labels; abgeschlossene Runden bleiben bearbeitbar.
+2. **Projekte erstellen oder importieren.** Namen müssen eindeutig sein. Jahrgänge sind ganze Zahlen von 5 bis 13, z. B. `5–7` oder `5, 7, 9`. Maximale Kapazität und Sollzahl sind ganze Zahlen; die Sollzahl darf die maximale Kapazität nicht überschreiten.
+3. **Wünsche erfassen.** Schüler können manuell oder per Excel-/CSV-Datei importiert werden. Alternativ erzeugt die App eine Vorlage für Google Forms oder Microsoft Forms. Formularantworten anschließend exportieren und in Wunschplatz importieren. Nach Neuerstellung einer Vorlage muss beim Import die tatsächlich verwendete Version ausgewählt werden.
+4. **Optimieren und prüfen.** Die Berechnung berücksichtigt Wünsche, Jahrgänge, Kapazitäten und Gruppen. Änderungen an Eingaben oder ein Rundenwechsel brechen laufende Berechnungen ab. Board und Tabelle erlauben dieselben manuellen Änderungen; Ausnahmen von Jahrgangs- und Kapazitätsregeln müssen bestätigt werden. Die Tabelle bietet die Bedienung per Tastatur.
+5. **Exportieren.** Excel-Exporte und die Übersicht zeigen die aktuellen Zuordnungen und Wunschränge. Die Punktzahl und Laufdetails beschreiben die ursprüngliche Berechnung. Nach relevanten Eingabeänderungen weist die App auf eine nötige Neuberechnung hin.
 
-## Workflow
+## Importregeln
 
-1. **Projekte** anlegen (Jahrgänge, Max- und Soll-Kapazität)
-2. **Schüler** als Excel importieren (Spalten: Vorname, Nachname, Klasse, Jahrgang, Prio1-5)
-3. **Optimierung** starten (Gewichtungen optional anpassen)
-4. **Verteilung** review/korrigieren (Tabelle oder Board), exportieren
+Excel-Schülerspalten: `Vorname`, `Nachname`, `Klasse`, `Jahrgang`, `Prio1` bis `Prio5`; optional `Gruppe`. Englische Entsprechungen wie `First Name`, `Last Name`, `Class`, `Grade` und `Priority 1` werden ebenfalls erkannt. Formularimporte verwenden die Spalten und Projekt-IDs der ausgewählten Vorlage. Bei mehrfachen Formularantworten gewinnt die letzte gültige Abschlusszeit, sonst die letzte Zeile.
 
-## Stack
+CSV-Dateien müssen UTF-8 sein (mit oder ohne BOM); UTF-16 mit BOM wird ebenfalls unterstützt. Ungültige, mehrdeutige, gelöschte oder doppelte Projektwünsche blockieren den Import. Korrigiere die Datei und lade sie erneut. Unterschiedliche Gruppenwünsche werden mit einem Hinweis an das erste Gruppenmitglied angeglichen.
 
-React 18, TypeScript, Vite, Tailwind, shadcn/ui, Zustand, IndexedDB (via idb-keyval), xlsx, @dnd-kit, Web Workers.
+Beim Ersetzen von Projekten bleiben IDs bei eindeutig gleichem Namen erhalten. Werden Projekte entfernt, leert die App nach dem entsprechenden Hinweis die gesamten betroffenen Wunschlisten und löscht die Verteilungen, damit keine späteren Wünsche unbemerkt aufrücken. Ältere Formularvorlagen bleiben zur Prüfung früherer Antworten erhalten.
 
-## Persistenz
+## Speicherung und Datenschutz
 
-Alle Daten (Projekte, Schüler, Verteilung) werden im Browser via IndexedDB gespeichert. Kein Server. Browser-Daten löschen = Reset.
+Wunschplatz speichert Daten in IndexedDB auf diesem Gerät und überträgt importierte Schülerdaten nicht an einen Server. Es gibt kein Wunschplatz-Konto und kein Tracking. Google Forms und Microsoft Forms sind eigenständige externe Dienste: Dort erhobene Antworten werden beim jeweiligen Anbieter gespeichert und verarbeitet.
 
-## Excel-Format
+Mehrere Tabs und Fenster desselben Browserprofils können gleichzeitig arbeiten. Jeder Tab behält seine eigene ausgewählte Wunschrunde; gespeicherte Änderungen erscheinen auch in den anderen Tabs. Änderungen an verschiedenen Einträgen und Feldern werden zusammengeführt. Bei gleichzeitigen Änderungen desselben Feldes gilt die zuletzt gespeicherte Änderung; ein Hinweis macht auf den Konflikt aufmerksam. Gelöschte Einträge werden durch veraltete Tabs nicht wiederhergestellt. Offene Bearbeitungsformulare behalten ihre Eingaben und verlangen bei einem Konflikt eine erneute Prüfung.
 
-Spalten (case-insensitiv, Reihenfolge egal):
-- `Vorname` / `Nachname` / `Klasse` (z.B. "7a") / `Jahrgang` (Zahl 5-13)
-- `Prio1` bis `Prio5` (Projekt-Namen, müssen mit angelegten Projekten übereinstimmen)
+Alle Runden werden gemeinsam in einer atomaren IndexedDB-Transaktion gespeichert. Bei Speicherfehlern stoppt die Bearbeitung; der vorherige vollständige Datenbestand bleibt erhalten. Daten aus älteren Versionen einschließlich unterbrochener Rundenwechsel werden beim ersten Laden übernommen.
 
-Englische Spalten ebenfalls erkannt: `First Name`, `Last Name`, `Class`, `Grade`, `Priority 1-5`.
+Die App benötigt HTTPS (oder localhost) und einen aktuellen Browser mit IndexedDB. Eine Internetverbindung ist zum Öffnen oder Neuladen nötig. Es gibt keinen Service Worker für einen garantierten Offline-Neustart. Bereits geladene Ansichten können offline nutzbar bleiben; weitere Ansichten und der Rechenworker werden bei Bedarf geladen. Das Erheben von Antworten über externe Formulare benötigt ebenfalls Internet.
+
+Browserdaten löschen, ein anderes Browserprofil oder eine andere App-Adresse verwenden bedeutet einen anderen Datenbestand. Excel-Exporte sichern die angezeigten Daten, sind aber kein vollständiges Backup aller Runden und Vorlagen.
+
+## Entwicklung
+
+React, TypeScript, Vite, Tailwind, Radix UI, Zustand, IndexedDB, SheetJS und ein Web Worker für die Optimierung.
+
+```sh
+npm run lint
+npm run format:check
+npm test
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+`npm run format` formatiert den Quellcode. Beitragsregeln und Hinweise zur Architektur stehen in [CONTRIBUTING.md](CONTRIBUTING.md). Pull Requests werden mit Linting, Formatierung, Unit-Tests, Build und Browser-Tests geprüft.
+
+SheetJS wird in einer festen, gepatchten Version von der [offiziellen Distribution](https://docs.sheetjs.com/docs/getting-started/installation/nodejs/) installiert; das npm-Registry-Paket `xlsx` wird dort nicht mehr aktuell gehalten. Der Lockfile enthält die Integritätsprüfung.
+
+## Lizenz
+
+[ISC](LICENSE), wie in `package.json` angegeben.

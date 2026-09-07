@@ -14,7 +14,7 @@ export type Student = {
   className: string;
   grade: number;
   priorities: string[];
-  groupId?: string;  // optional group membership
+  groupId?: string;
 };
 
 export type Assignment = {
@@ -48,15 +48,12 @@ export type SolverStats = {
 };
 
 export type SolverRun = {
+  kind?: 'solver' | 'manual';
+  inputSignature?: string;
   timestamp: number;
   config: SolverConfig;
   score: number;
   stats: SolverStats;
-};
-
-export type AssignmentsState = {
-  assignments: Assignment[];
-  lastRun: SolverRun | null;
 };
 
 export type Distribution = {
@@ -66,4 +63,56 @@ export type Distribution = {
   updatedAt: number;
   assignments: Assignment[];
   run: SolverRun;
+};
+
+export type RoundStatus = 'active' | 'idle';
+
+export type RoundPhase = 'planned' | 'running' | 'completed';
+
+export type BlueprintOption = { projectId: string; label: string };
+
+export type BlueprintQuestion = {
+  key:
+    | 'firstName'
+    | 'lastName'
+    | 'className'
+    | 'grade'
+    | 'priority1'
+    | 'priority2'
+    | 'priority3'
+    | 'priority4'
+    | 'priority5';
+  title: string; // exact text → becomes the exported CSV column header
+  type: 'short_text' | 'choice' | 'dropdown';
+  options?: string[];
+  required: boolean;
+};
+
+export type FormBlueprint = {
+  prioritiesCount: number;
+  identity: BlueprintQuestion[];
+  priorities: BlueprintQuestion[];
+  projectOptions: BlueprintOption[];
+  generatedAt: string;
+};
+
+export type RoundData = {
+  projects: Project[];
+  students: Student[];
+  groupColors: Record<string, string>;
+  distributions: Distribution[];
+  distributionActiveId: string | null;
+  solverConfig: SolverConfig;
+};
+
+export type Round = {
+  id: string;
+  name: string;
+  createdAt: string; // ISO
+  status: RoundStatus;
+  phase?: RoundPhase; // absent = legacy round, read as 'running'
+  blueprint?: FormBlueprint;
+  blueprintHistory?: FormBlueprint[];
+  // The selected round lives in the working stores; other rounds carry snapshots.
+  data?: RoundData;
 };

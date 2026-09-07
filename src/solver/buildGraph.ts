@@ -32,12 +32,10 @@ export function buildAssignmentGraph(
 
   const mcf = new MinCostFlow(nodeCount);
 
-  // Source → Student
   for (const s of students) {
     mcf.addEdge(sourceIdx, studentToIdx.get(s.id)!, 1, 0);
   }
 
-  // Student → Project edges
   for (const s of students) {
     const sIdx = studentToIdx.get(s.id)!;
     const priorityIds = new Set<string>();
@@ -62,7 +60,6 @@ export function buildAssignmentGraph(
     mcf.addEdge(sIdx, sinkIdx, 1, config.unmatchedPenalty);
   }
 
-  // Project → Sink (tiered)
   for (const p of projects) {
     const pIdx = projectToIdx.get(p.id)!;
     const tier1 = Math.min(p.targetCapacity, p.maxCapacity);

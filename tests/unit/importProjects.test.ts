@@ -86,17 +86,17 @@ describe('parseProjectRows', () => {
     ];
     const result = parseProjectRows(rows);
     expect(result.projects).toHaveLength(0);
-    expect(result.errors.some((e) => /Name fehlt/.test(e.message))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'nameMissing')).toBe(true);
   });
 
   it('rejects rows with no valid grades', () => {
     const rows = [
       ['Name', 'Jahrgänge', 'Max', 'Soll'],
-      ['Schach', '20-25', 20, 16], // all outside 5-13
+      ['Schach', '20-25', 20, 16],
     ];
     const result = parseProjectRows(rows);
     expect(result.projects).toHaveLength(0);
-    expect(result.errors.some((e) => /Jahrgänge/i.test(e.message))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'invalidGrades')).toBe(true);
   });
 
   it('rejects rows where Soll exceeds Max', () => {
@@ -106,7 +106,7 @@ describe('parseProjectRows', () => {
     ];
     const result = parseProjectRows(rows);
     expect(result.projects).toHaveLength(0);
-    expect(result.errors.some((e) => /Soll/i.test(e.message))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'invalidTarget')).toBe(true);
   });
 
   it('accepts alternative header names', () => {

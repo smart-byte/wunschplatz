@@ -1,8 +1,7 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuid } from 'uuid';
 import type { Project } from '@/types';
-import { createIdbStorage } from './persist';
+import { editableStore } from './session';
 
 type State = {
   projects: Project[];
@@ -13,23 +12,20 @@ type State = {
 };
 
 export const useProjectsStore = create<State>()(
-  persist(
-    (set) => ({
-      projects: [],
-      addProject: (data) => set((s) => ({
+  editableStore((set) => ({
+    projects: [],
+    addProject: (data) =>
+      set((s) => ({
         projects: [...s.projects, { ...data, id: uuid() }],
       })),
-      updateProject: (id, data) => set((s) => ({
-        projects: s.projects.map((p) => p.id === id ? { ...p, ...data } : p),
+    updateProject: (id, data) =>
+      set((s) => ({
+        projects: s.projects.map((p) => (p.id === id ? { ...p, ...data } : p)),
       })),
-      removeProject: (id) => set((s) => ({
+    removeProject: (id) =>
+      set((s) => ({
         projects: s.projects.filter((p) => p.id !== id),
       })),
-      setProjects: (projects) => set({ projects }),
-    }),
-    {
-      name: 'projects',
-      storage: createJSONStorage(() => createIdbStorage('projects')),
-    },
-  ),
+    setProjects: (projects) => set({ projects }),
+  })),
 );

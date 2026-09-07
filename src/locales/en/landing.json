@@ -1,0 +1,93 @@
+{
+  "header": {
+    "github": "GitHub"
+  },
+  "hero": {
+    "kicker": "For project weeks at schools",
+    "title": "Fair project assignment for your school.",
+    "lede": "Wunschplatz imports your students’ project wishes and helps assign them fairly – <b>right in the browser, with no Wunschplatz account.</b> No paper chaos or spreadsheet formulas: imported student data is processed and stored on your device.",
+    "cta": "Open the app",
+    "ctaHint": "Free · No account needed · Open source"
+  },
+  "how": {
+    "title": "How it works",
+    "step1Title": "Create the form",
+    "step1Text": "Generate a ready-made template for Google Forms or Microsoft Forms from your projects.",
+    "step2Title": "Import responses",
+    "step2Text": "Upload the CSV export of the responses – Wunschplatz detects columns and priorities automatically.",
+    "step3Title": "Assign optimally",
+    "step3Text": "The solver finds the fairest assignment based on wishes, priorities, and capacities.",
+    "kicker": "In three steps"
+  },
+  "features": {
+    "title": "Everything for project week",
+    "roundsTitle": "Wish rounds",
+    "roundsText": "Multiple assignment rounds per year – each round keeps its projects, students, and results.",
+    "blueprintTitle": "Form generator",
+    "blueprintText": "A ready-to-paste question template for Google or Microsoft Forms – no retyping.",
+    "importTitle": "CSV import",
+    "importText": "Import responses from Google and Microsoft Forms, including duplicate detection.",
+    "solverTitle": "Fair optimization",
+    "solverText": "The solver assigns by priorities and capacities – transparent and fair.",
+    "editingTitle": "Edit & export",
+    "editingText": "Adjust assignments manually and export them as an Excel file.",
+    "offlineTitle": "Local processing",
+    "offlineText": "Imports and calculations run on your device. An internet connection is needed to open or reload the app.",
+    "kicker": "Features"
+  },
+  "privacy": {
+    "title": "Local processing, clear boundaries",
+    "text": "Wunschplatz processes imported data in your browser and does not upload it. If you collect responses through Google Forms or Microsoft Forms, that provider stores and processes the responses before you import them here.",
+    "point1": "Imported data is stored locally in the browser",
+    "point2": "No Wunschplatz account or tracking",
+    "point3": "External forms use the chosen provider’s storage and privacy settings",
+    "kicker": "Data protection"
+  },
+  "openSource": {
+    "text": "Wunschplatz is open source and free. The entire code is publicly available – transparency instead of a black box.",
+    "cta": "View on GitHub",
+    "kicker": "Open Source"
+  },
+  "footer": {
+    "ctaTitle": "Ready for the next project week?",
+    "cta": "Get started"
+  },
+  "figure": {
+    "student": "Student",
+    "project": "Assigned project",
+    "wish": "Wish",
+    "caption": "Example distribution: 248 students, 18 projects, 81 % first wish, nobody left without a place.",
+    "rows": [
+      {
+        "name": "Mia Harper",
+        "className": "8b",
+        "project": "Design a School Garden",
+        "wish": 1
+      },
+      {
+        "name": "Jonas Fletcher",
+        "className": "9a",
+        "project": "Programming with Python",
+        "wish": 1
+      },
+      {
+        "name": "Lena Brooks",
+        "className": "7c",
+        "project": "Robots with Lego Mindstorms",
+        "wish": 1
+      },
+      {
+        "name": "Anton Wright",
+        "className": "10b",
+        "project": "Drama Club: Romeo and Juliet",
+        "wish": 2
+      },
+      {
+        "name": "Sara Wagner",
+        "className": "6a",
+        "project": "Pottery and Ceramics",
+        "wish": 1
+      }
+    ]
+  }
+}

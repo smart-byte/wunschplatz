@@ -1,11 +1,25 @@
 import { useState, useMemo } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useDistributionData } from '@/hooks/useDistributionData';
-import { useAssignmentsStore } from '@/store/useAssignmentsStore';
+import { useManualAssignment } from '@/hooks/useManualAssignment';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { toast } from 'sonner';
 import { AssignmentBadge } from './AssignmentBadge';
@@ -14,8 +28,9 @@ import { StudentFormDialog } from '@/components/students/StudentFormDialog';
 import type { Student } from '@/types';
 
 export function TableView() {
+  const { t } = useTranslation('app');
   const { rows, projects } = useDistributionData();
-  const updateAssignment = useAssignmentsStore((s) => s.updateAssignment);
+  const move = useManualAssignment(rows, projects);
   const updateStudent = useStudentsStore((s) => s.updateStudent);
   const [filter, setFilter] = useState<'all' | 'unassigned' | 'notInTop5' | 'manual'>('all');
   const [search, setSearch] = useState('');
@@ -23,9 +38,10 @@ export function TableView() {
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
-      if (filter === 'unassigned' && r.assignment?.projectId !== null) return false;
-      if (filter === 'notInTop5' && r.assignment?.priorityRank !== null) return false;
-      if (filter === 'manual' && !r.assignment?.manuallyEdited) return false;
+      if (filter === 'unassigned' && r.assignment.projectId !== null) return false;
+      if (filter === 'notInTop5' && (!r.assignment.projectId || r.assignment.priorityRank !== null))
+        return false;
+      if (filter === 'manual' && !r.assignment.manuallyEdited) return false;
       if (search) {
         const q = search.toLowerCase();
         return (
@@ -39,84 +55,103 @@ export function TableView() {
   }, [rows, filter, search]);
 
   function handleChange(studentId: string, projectId: string) {
-    const newId = projectId === '__none__' ? null : projectId;
-    const student = rows.find((r) => r.student.id === studentId)!.student;
-    let priorityRank: number | null = null;
-    if (newId) {
-      const target = projects.find((p) => p.id === newId)!;
-      if (!target.grades.includes(student.grade)) {
-        if (!confirm(`Projekt "${target.name}" akzeptiert nur Jahrgänge ${target.grades.join(', ')}. Trotzdem zuweisen?`)) return;
-      }
-      const currentLoad = rows.filter((r) => r.assignment?.projectId === newId && r.student.id !== studentId).length;
-      if (currentLoad >= target.maxCapacity) {
-        if (!confirm(`Projekt "${target.name}" ist voll (${currentLoad}/${target.maxCapacity}). Trotzdem zuweisen?`)) return;
-      }
-      const idx = student.priorities.indexOf(newId);
-      const compatible = target.grades.includes(student.grade);
-      priorityRank = idx >= 0 && idx < 5 && compatible ? idx + 1 : null;
-    }
-    updateAssignment(studentId, newId, priorityRank);
-    toast.success('Zuweisung geändert');
+    move(studentId, projectId === '__none__' ? null : projectId);
   }
 
   if (rows.length === 0) {
-    return <p className="text-muted-foreground">Keine Schüler. Importiere zuerst Schüler und starte die Berechnung.</p>;
+    return <p className="text-muted-foreground">{t('distribution.table.emptyMessage')}</p>;
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex gap-2 items-center">
-        <Input placeholder="Suche…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
-        <Select value={filter} onValueChange={(v) => setFilter(v as 'all' | 'unassigned' | 'notInTop5' | 'manual')}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative w-full sm:max-w-xs">
+          <Search
+            aria-hidden
+            className="pointer-events-none absolute left-3 top-3 size-4 text-prose-soft"
+          />
+          <Input
+            aria-label={t('distribution.table.searchPlaceholder')}
+            placeholder={t('distribution.table.searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 bg-white"
+          />
+        </div>
+        <Select
+          value={filter}
+          onValueChange={(v) => setFilter(v as 'all' | 'unassigned' | 'notInTop5' | 'manual')}
+        >
+          <SelectTrigger aria-label={t('distribution.table.filterLabel')} className="w-48">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Alle anzeigen</SelectItem>
-            <SelectItem value="unassigned">Nur unverteilt</SelectItem>
-            <SelectItem value="notInTop5">Nicht in Top5</SelectItem>
-            <SelectItem value="manual">Manuell geändert</SelectItem>
+            <SelectItem value="all">{t('distribution.table.filterAll')}</SelectItem>
+            <SelectItem value="unassigned">{t('distribution.table.filterUnassigned')}</SelectItem>
+            <SelectItem value="notInTop5">{t('distribution.table.filterNotInTop5')}</SelectItem>
+            <SelectItem value="manual">{t('distribution.table.filterManual')}</SelectItem>
           </SelectContent>
         </Select>
-        <span className="text-sm text-muted-foreground">{filtered.length} / {rows.length}</span>
+        <span className="ml-auto text-xs tabular-nums text-prose-soft">
+          {filtered.length} / {rows.length}
+        </span>
       </div>
-      <div className="overflow-x-auto border rounded-lg">
+      <div className="overflow-hidden border border-rule rounded-lg bg-white">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-mark/[0.04] [&_th]:text-[10px] [&_th]:font-semibold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-prose-soft">
             <TableRow>
-              <TableHead>Schüler</TableHead>
-              <TableHead>Klasse</TableHead>
-              <TableHead>Jg.</TableHead>
-              <TableHead>Prios</TableHead>
-              <TableHead>Zugewiesen</TableHead>
-              <TableHead>Rang</TableHead>
+              <TableHead>{t('distribution.table.headers.student')}</TableHead>
+              <TableHead>{t('distribution.table.headers.class')}</TableHead>
+              <TableHead className="hidden lg:table-cell">
+                {t('distribution.table.headers.grade')}
+              </TableHead>
+              <TableHead className="hidden xl:table-cell">
+                {t('distribution.table.headers.priorities')}
+              </TableHead>
+              <TableHead>{t('distribution.table.headers.assigned')}</TableHead>
+              <TableHead>{t('distribution.table.headers.rank')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
+            {filtered.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="py-12 text-center text-prose-soft">
+                  {t('distribution.table.noResults')}
+                </TableCell>
+              </TableRow>
+            )}
             {filtered.map((r) => {
               const compatProjects = projects.filter((p) => p.grades.includes(r.student.grade));
               const incompatible = projects.filter((p) => !p.grades.includes(r.student.grade));
               return (
-                <TableRow key={r.student.id} className={r.assignment?.manuallyEdited ? 'bg-muted/30' : ''}>
+                <TableRow
+                  key={r.student.id}
+                  className={r.assignment.manuallyEdited ? 'bg-mark/[0.025]' : ''}
+                >
                   <TableCell className="font-medium">
                     <button
                       type="button"
-                      className="text-left hover:underline"
+                      className="rounded-sm text-left hover:text-mark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       onClick={() => setEditing(r.student)}
                     >
                       {r.student.lastName}, {r.student.firstName}
                     </button>
                   </TableCell>
                   <TableCell>{r.student.className}</TableCell>
-                  <TableCell>{r.student.grade}</TableCell>
-                  <TableCell className="max-w-[320px]">
+                  <TableCell className="hidden lg:table-cell">{r.student.grade}</TableCell>
+                  <TableCell className="hidden max-w-[320px] xl:table-cell">
                     <div className="flex flex-wrap gap-1">
                       {r.student.priorities.map((id, i) => {
                         const name = projects.find((p) => p.id === id)?.name ?? '?';
-                        const assigned = r.assignment?.projectId === id;
+                        const assigned = r.assignment.projectId === id;
                         return (
                           <Badge
                             key={id + i}
                             variant={assigned ? 'secondary' : 'outline'}
-                            className="text-[10px] py-0 px-1.5 font-normal gap-1"
+                            className={cn(
+                              'rounded-sm text-[10px] py-0 px-1.5 font-normal gap-1',
+                              assigned && 'border-mark/20 bg-mark/[0.06] text-mark-ink',
+                            )}
                           >
                             <span className="text-muted-foreground tabular-nums">{i + 1}.</span>
                             <span className="truncate max-w-[120px]">{name}</span>
@@ -130,20 +165,35 @@ export function TableView() {
                   </TableCell>
                   <TableCell>
                     <Select
-                      value={r.assignment?.projectId ?? '__none__'}
+                      value={r.assignment.projectId ?? '__none__'}
                       onValueChange={(v) => handleChange(r.student.id, v)}
                     >
-                      <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+                      <SelectTrigger
+                        aria-label={t('distribution.table.assignmentLabel', {
+                          name: `${r.student.firstName} ${r.student.lastName}`,
+                        })}
+                        className="w-44 border-transparent bg-transparent hover:border-input hover:bg-white focus:border-mark lg:w-56"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__none__">— unverteilt —</SelectItem>
+                        <SelectItem value="__none__">
+                          {t('distribution.table.unassignedOption')}
+                        </SelectItem>
                         {compatProjects.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name}
+                          </SelectItem>
                         ))}
                         {incompatible.length > 0 && (
                           <>
-                            <div className="px-2 py-1 text-xs text-muted-foreground">Jahrgang nicht passend:</div>
+                            <div className="px-2 py-1 text-xs text-muted-foreground">
+                              {t('distribution.table.gradeIncompatible')}
+                            </div>
                             {incompatible.map((p) => (
-                              <SelectItem key={p.id} value={p.id}>{p.name} ⚠</SelectItem>
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.name} ⚠
+                              </SelectItem>
                             ))}
                           </>
                         )}
@@ -151,7 +201,11 @@ export function TableView() {
                     </Select>
                   </TableCell>
                   <TableCell>
-                    <AssignmentBadge student={r.student} assignment={r.assignment} projects={projects} />
+                    <AssignmentBadge
+                      student={r.student}
+                      assignment={r.assignment}
+                      projects={projects}
+                    />
                   </TableCell>
                 </TableRow>
               );
@@ -167,7 +221,7 @@ export function TableView() {
         onSave={(data) => {
           if (!editing) return;
           updateStudent(editing.id, data);
-          toast.success('Schüler aktualisiert');
+          toast.success(t('distribution.studentUpdated'));
           setEditing(null);
         }}
       />

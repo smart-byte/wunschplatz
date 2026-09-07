@@ -23,16 +23,16 @@ describe('parseStudentRows', () => {
     expect(result.errors).toHaveLength(0);
   });
 
-  it('reports unknown project as error but keeps row', () => {
+  it('rejects the entire row when a project is unknown', () => {
     const rows = [
       ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Prio1', 'Prio2'],
       ['Anna', 'Müller', '7a', '7', 'Alpha', 'Unknown'],
     ];
     const result = parseStudentRows(rows, projects);
-    expect(result.students[0].priorities).toEqual(['a']);
+    expect(result.students).toEqual([]);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0].rowIndex).toBe(1);
-    expect(result.errors[0].message).toContain('Unknown');
+    expect(result.errors[0]).toMatchObject({ code: 'unknownProject', values: { name: 'Unknown' } });
   });
 
   it('reports rows missing required fields and skips them', () => {
@@ -43,7 +43,7 @@ describe('parseStudentRows', () => {
     const result = parseStudentRows(rows, projects);
     expect(result.students).toHaveLength(0);
     expect(result.errors).toHaveLength(1);
-    expect(result.errors[0].message).toMatch(/Vorname/);
+    expect(result.errors[0].code).toBe('firstNameMissing');
   });
 
   it('reports duplicate priorities as error', () => {
@@ -52,7 +52,7 @@ describe('parseStudentRows', () => {
       ['Anna', 'Müller', '7a', '7', 'Alpha', 'Alpha'],
     ];
     const result = parseStudentRows(rows, projects);
-    expect(result.errors.some((e) => /doppel/i.test(e.message))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'duplicateProject')).toBe(true);
   });
 
   it('rejects grade out of range', () => {
@@ -62,7 +62,7 @@ describe('parseStudentRows', () => {
     ];
     const result = parseStudentRows(rows, projects);
     expect(result.students).toHaveLength(0);
-    expect(result.errors.some((e) => /Jahrgang/i.test(e.message))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'invalidGrade')).toBe(true);
   });
 
   it('returns missing-columns error when headers cannot be auto-detected', () => {
@@ -148,7 +148,7 @@ describe('parseStudentRows', () => {
       ['Anna', 'Müller', '7a', '7', 'Yoga'],
     ];
     const result = parseStudentRows(rows, projectsAmb);
-    expect(result.errors.some((e) => /mehreren Projekten/i.test(e.message))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'ambiguousProject')).toBe(true);
   });
 
   it('prefers exact match over prefix match', () => {
@@ -174,6 +174,6 @@ describe('parseStudentRows', () => {
     const result = parseStudentRows(rows, projects);
     expect(result.students[0].priorities).toEqual(['a', 'b']);
     expect(result.students[1].priorities).toEqual(['a', 'b']);
-    expect(result.errors.some((e) => /Prios weichen ab/i.test(e.message))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'groupPrioritiesMismatch')).toBe(true);
   });
 });

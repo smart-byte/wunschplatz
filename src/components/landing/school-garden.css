@@ -1,0 +1,80 @@
+.landing-page {
+  --landing-header-height: 67px;
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+}
+
+.landing-header {
+  min-height: var(--landing-header-height);
+}
+
+.landing-intro {
+  position: relative;
+  display: flow-root;
+}
+
+.school-garden-backdrop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .school-garden-backdrop {
+    display: block;
+    position: absolute;
+    z-index: -1;
+    top: calc(-1 * var(--landing-header-height));
+    bottom: 0;
+    left: 50%;
+    width: 100vw;
+    transform: translateX(-50%);
+    pointer-events: none;
+    opacity: 0.5;
+    filter: grayscale(1);
+    mix-blend-mode: multiply;
+    mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 100%);
+  }
+
+  .school-garden-scene {
+    position: absolute;
+    inset: 0;
+    mask-image: linear-gradient(
+      to right,
+      #000,
+      #000 calc(50% - 500px),
+      #00000008 calc(50% - 300px),
+      #00000008 calc(50% + 300px),
+      #000 calc(50% + 500px),
+      #000
+    );
+  }
+
+  .school-garden-scene::before,
+  .school-garden-scene::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 100%;
+    aspect-ratio: 3 / 4;
+    max-width: 50%;
+    background-image: url('../../assets/school-garden.webp');
+    background-repeat: no-repeat;
+    background-size: auto 100%;
+  }
+
+  .school-garden-scene::before {
+    left: 0;
+    background-position: left top;
+  }
+
+  .school-garden-scene::after {
+    right: 0;
+    background-position: right top;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1100px) {
+  .school-garden-backdrop {
+    opacity: 0.32;
+  }
+}

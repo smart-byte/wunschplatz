@@ -1,5 +1,5 @@
-import { utils, writeFile } from 'xlsx';
-import { mkdirSync } from 'node:fs';
+import { utils, write } from 'xlsx';
+import { mkdirSync, writeFileSync } from 'node:fs';
 
 mkdirSync('tests/e2e/fixtures', { recursive: true });
 
@@ -12,5 +12,5 @@ const data = [
 ];
 const ws = utils.aoa_to_sheet(data);
 utils.book_append_sheet(wb, ws, 'Schüler');
-writeFile(wb, 'tests/e2e/fixtures/students.xlsx');
+writeFileSync('tests/e2e/fixtures/students.xlsx', write(wb, { type: 'buffer', bookType: 'xlsx' }));
 console.log('Fixture written.');

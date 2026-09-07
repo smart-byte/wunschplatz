@@ -10,8 +10,22 @@ describe('solveAssignments', () => {
       { id: 'b', name: 'B', grades: [7], maxCapacity: 5, targetCapacity: 3 },
     ];
     const students: Student[] = [
-      { id: 's1', firstName: 'A', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'] },
-      { id: 's2', firstName: 'B', lastName: 'X', className: '7a', grade: 7, priorities: ['b', 'a'] },
+      {
+        id: 's1',
+        firstName: 'A',
+        lastName: 'X',
+        className: '7a',
+        grade: 7,
+        priorities: ['a', 'b'],
+      },
+      {
+        id: 's2',
+        firstName: 'B',
+        lastName: 'X',
+        className: '7a',
+        grade: 7,
+        priorities: ['b', 'a'],
+      },
     ];
     const { assignments, stats } = solveAssignments(students, projects, defaultSolverConfig);
     expect(assignments.find((a) => a.studentId === 's1')?.projectId).toBe('a');
@@ -27,8 +41,22 @@ describe('solveAssignments', () => {
       { id: 'b', name: 'B', grades: [7], maxCapacity: 5, targetCapacity: 3 },
     ];
     const students: Student[] = [
-      { id: 's1', firstName: 'A', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'] },
-      { id: 's2', firstName: 'B', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'] },
+      {
+        id: 's1',
+        firstName: 'A',
+        lastName: 'X',
+        className: '7a',
+        grade: 7,
+        priorities: ['a', 'b'],
+      },
+      {
+        id: 's2',
+        firstName: 'B',
+        lastName: 'X',
+        className: '7a',
+        grade: 7,
+        priorities: ['a', 'b'],
+      },
     ];
     const { assignments } = solveAssignments(students, projects, defaultSolverConfig);
     const ranks = assignments.map((a) => a.priorityRank).sort();
@@ -51,19 +79,82 @@ describe('solveAssignments', () => {
 });
 
 describe('solveAssignments with groups', () => {
+  it('preserves student order when combining group, individual, and unassigned results', () => {
+    const projects: Project[] = [
+      { id: 'a', name: 'A', grades: [7], maxCapacity: 2, targetCapacity: 2 },
+      { id: 'b', name: 'B', grades: [7], maxCapacity: 1, targetCapacity: 1 },
+    ];
+    const student: Student = {
+      id: 'individual',
+      firstName: 'A',
+      lastName: 'X',
+      className: '7a',
+      grade: 7,
+      priorities: ['a', 'b'],
+    };
+    const { assignments, stats } = solveAssignments(
+      [
+        student,
+        { ...student, id: 'group-1', groupId: 'g' },
+        { ...student, id: 'ineligible', grade: 8 },
+        { ...student, id: 'group-2', groupId: 'g' },
+        { ...student, id: 'no-room', priorities: [] },
+      ],
+      projects,
+      defaultSolverConfig,
+    );
+    expect(assignments).toEqual([
+      { studentId: 'individual', projectId: 'b', priorityRank: 2, manuallyEdited: false },
+      { studentId: 'group-1', projectId: 'a', priorityRank: 1, manuallyEdited: false },
+      { studentId: 'ineligible', projectId: null, priorityRank: null, manuallyEdited: false },
+      { studentId: 'group-2', projectId: 'a', priorityRank: 1, manuallyEdited: false },
+      { studentId: 'no-room', projectId: null, priorityRank: null, manuallyEdited: false },
+    ]);
+    expect(stats).toEqual({
+      totalStudents: 5,
+      assignedByPriority: [2, 1, 0, 0, 0],
+      notInTop5: 0,
+      unassigned: 2,
+    });
+  });
+
   it('keeps group together on shared prio1', () => {
     const projects: Project[] = [
       { id: 'a', name: 'A', grades: [7], maxCapacity: 5, targetCapacity: 4 },
       { id: 'b', name: 'B', grades: [7], maxCapacity: 5, targetCapacity: 4 },
     ];
     const students: Student[] = [
-      { id: 's1', firstName: 'A', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'], groupId: 'g1' },
-      { id: 's2', firstName: 'B', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'], groupId: 'g1' },
-      { id: 's3', firstName: 'C', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'], groupId: 'g1' },
+      {
+        id: 's1',
+        firstName: 'A',
+        lastName: 'X',
+        className: '7a',
+        grade: 7,
+        priorities: ['a', 'b'],
+        groupId: 'g1',
+      },
+      {
+        id: 's2',
+        firstName: 'B',
+        lastName: 'X',
+        className: '7a',
+        grade: 7,
+        priorities: ['a', 'b'],
+        groupId: 'g1',
+      },
+      {
+        id: 's3',
+        firstName: 'C',
+        lastName: 'X',
+        className: '7a',
+        grade: 7,
+        priorities: ['a', 'b'],
+        groupId: 'g1',
+      },
     ];
     const { assignments } = solveAssignments(students, projects, defaultSolverConfig);
     const projectsAssigned = new Set(assignments.map((a) => a.projectId));
-    expect(projectsAssigned.size).toBe(1); // all in one project
+    expect(projectsAssigned.size).toBe(1);
     expect(assignments.every((a) => a.priorityRank === 1)).toBe(true);
   });
 
@@ -73,8 +164,24 @@ describe('solveAssignments with groups', () => {
       { id: 'b', name: 'B', grades: [7], maxCapacity: 5, targetCapacity: 4 },
     ];
     const students: Student[] = [
-      { id: 's1', firstName: 'A', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'], groupId: 'g1' },
-      { id: 's2', firstName: 'B', lastName: 'X', className: '7a', grade: 7, priorities: ['a', 'b'], groupId: 'g1' },
+      {
+        id: 's1',
+        firstName: 'A',
+        lastName: 'X',
+        className: '7a',
+        grade: 7,
+        priorities: ['a', 'b'],
+        groupId: 'g1',
+      },
+      {
+        id: 's2',
+        firstName: 'B',
+        lastName: 'X',
+        className: '7a',
+        grade: 7,
+        priorities: ['a', 'b'],
+        groupId: 'g1',
+      },
     ];
     const { assignments } = solveAssignments(students, projects, defaultSolverConfig);
     expect(assignments.every((a) => a.projectId === 'b')).toBe(true);

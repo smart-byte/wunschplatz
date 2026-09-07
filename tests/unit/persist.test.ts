@@ -1,34 +1,52 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { createWorkspaceStorage, type Workspace } from '@/store/persist';
+import { emptyRoundData } from '@/store/workspaceState';
 
-const store = new Map<string, unknown>();
+const workspace = (): Workspace => ({
+  version: 1,
+  revision: 0,
+  rounds: [{ id: 'r', name: 'R', createdAt: 'x', data: emptyRoundData() }],
+});
 
-vi.mock('idb-keyval', () => ({
-  get: vi.fn(async (key: string) => store.get(key)),
-  set: vi.fn(async (key: string, val: unknown) => { store.set(key, val); }),
-  del: vi.fn(async (key: string) => { store.delete(key); }),
-  createStore: vi.fn(() => ({})),
-}));
-
-import { createIdbStorage } from '@/store/persist';
-
-describe('createIdbStorage', () => {
-  beforeEach(() => { store.clear(); });
-
-  it('returns null for missing key', async () => {
-    const storage = createIdbStorage('test');
-    expect(await storage.getItem('missing')).toBeNull();
+describe('atomic workspace storage', () => {
+  it('returns undefined for a new installation', async () => {
+    expect(await createWorkspaceStorage().read()).toBeUndefined();
   });
 
-  it('returns JSON string after setItem', async () => {
-    const storage = createIdbStorage('test');
-    await storage.setItem('foo', JSON.stringify({ a: 1 }));
-    expect(await storage.getItem('foo')).toBe(JSON.stringify({ a: 1 }));
+  it('initializes once when two tabs start together', async () => {
+    const a = createWorkspaceStorage();
+    const b = createWorkspaceStorage();
+    const values = await Promise.all([
+      a.transact((current) => current ?? workspace()),
+      b.transact(
+        (current) =>
+          current ?? { ...workspace(), rounds: [{ ...workspace().rounds[0], id: 'other' }] },
+      ),
+    ]);
+    expect(values[0]).toEqual(values[1]);
+    expect((await a.read())?.rounds).toHaveLength(1);
   });
 
-  it('removeItem deletes key', async () => {
-    const storage = createIdbStorage('test');
-    await storage.setItem('foo', 'bar');
-    await storage.removeItem('foo');
-    expect(await storage.getItem('foo')).toBeNull();
+  it('serializes concurrent read-modify-write transactions', async () => {
+    const a = createWorkspaceStorage();
+    const b = createWorkspaceStorage();
+    await a.transact(workspace);
+    await Promise.all(
+      Array.from({ length: 12 }, (_, i) =>
+        (i % 2 ? a : b).transact((current) => ({ ...current!, revision: current!.revision + 1 })),
+      ),
+    );
+    expect((await a.read())?.revision).toBe(12);
+  });
+
+  it('leaves the previous complete document intact when a transaction fails', async () => {
+    const storage = createWorkspaceStorage();
+    const saved = await storage.transact(workspace);
+    await expect(
+      storage.transact(() => {
+        throw new Error('Failed');
+      }),
+    ).rejects.toThrow('Failed');
+    expect(await storage.read()).toEqual(saved);
   });
 });

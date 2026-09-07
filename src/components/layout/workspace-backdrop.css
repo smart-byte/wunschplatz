@@ -1,0 +1,92 @@
+.workspace-backdrop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .workspace-backdrop {
+    display: block;
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    filter: grayscale(1);
+  }
+
+  .workspace-backdrop[data-state='empty'] {
+    opacity: 0.52;
+    mask-image: linear-gradient(
+      to right,
+      #000,
+      #000 calc(50% - 500px),
+      #00000008 calc(50% - 300px),
+      #00000008 calc(50% + 300px),
+      #000 calc(50% + 500px),
+      #000
+    );
+  }
+
+  .workspace-backdrop[data-state='filled'] {
+    opacity: 0.28;
+  }
+
+  .workspace-scene {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 100%;
+    max-height: 960px;
+    mask-image: linear-gradient(to bottom, transparent, #000 16%, #000 72%, transparent);
+  }
+
+  .workspace-scene::before,
+  .workspace-scene::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    height: 100%;
+    aspect-ratio: 3 / 4;
+    max-width: 50%;
+    background-repeat: no-repeat;
+    background-size: auto 100%;
+  }
+
+  .workspace-scene::before {
+    left: 0;
+    background-position: left top;
+  }
+
+  .workspace-scene::after {
+    right: 0;
+    background-position: right top;
+  }
+
+  .workspace-backdrop[data-page='projects'][data-state='empty'] .workspace-scene::before,
+  .workspace-backdrop[data-page='projects'][data-state='empty'] .workspace-scene::after {
+    background-image: url('../../assets/projects-empty.webp');
+  }
+
+  .workspace-backdrop[data-page='projects'][data-state='filled'] .workspace-scene::before,
+  .workspace-backdrop[data-page='projects'][data-state='filled'] .workspace-scene::after {
+    background-image: url('../../assets/projects-filled.webp');
+  }
+
+  .workspace-backdrop[data-page='students'][data-state='empty'] .workspace-scene::before,
+  .workspace-backdrop[data-page='students'][data-state='empty'] .workspace-scene::after {
+    background-image: url('../../assets/students-empty.webp');
+  }
+
+  .workspace-backdrop[data-page='students'][data-state='filled'] .workspace-scene::before,
+  .workspace-backdrop[data-page='students'][data-state='filled'] .workspace-scene::after {
+    background-image: url('../../assets/students-filled.webp');
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1100px) {
+  .workspace-backdrop[data-state='empty'] {
+    opacity: 0.3;
+  }
+
+  .workspace-backdrop[data-state='filled'] {
+    opacity: 0.18;
+  }
+}

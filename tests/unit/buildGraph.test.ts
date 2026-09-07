@@ -4,11 +4,20 @@ import { defaultSolverConfig } from '@/types';
 import type { Project, Student } from '@/types';
 
 const project = (id: string, grades: number[], max: number, target: number): Project => ({
-  id, name: `P-${id}`, grades, maxCapacity: max, targetCapacity: target,
+  id,
+  name: `P-${id}`,
+  grades,
+  maxCapacity: max,
+  targetCapacity: target,
 });
 
 const student = (id: string, grade: number, priorities: string[]): Student => ({
-  id, firstName: `S${id}`, lastName: 'X', className: '7a', grade, priorities,
+  id,
+  firstName: `S${id}`,
+  lastName: 'X',
+  className: '7a',
+  grade,
+  priorities,
 });
 
 describe('buildAssignmentGraph', () => {
@@ -16,7 +25,9 @@ describe('buildAssignmentGraph', () => {
     const projects = [project('a', [7], 10, 8), project('b', [7], 5, 4)];
     const students = [student('s1', 7, ['a', 'b'])];
     const { nodeMap, nodeCount, sourceIdx, sinkIdx } = buildAssignmentGraph(
-      students, projects, defaultSolverConfig,
+      students,
+      projects,
+      defaultSolverConfig,
     );
     expect(nodeCount).toBe(5);
     expect(sourceIdx).toBe(0);
@@ -55,10 +66,7 @@ describe('buildAssignmentGraph', () => {
 
   it('assigns both students when target=1, max=2 across two projects', () => {
     const projects = [project('a', [7], 2, 1), project('b', [7], 2, 1)];
-    const students = [
-      student('s1', 7, ['a']),
-      student('s2', 7, ['a']),
-    ];
+    const students = [student('s1', 7, ['a']), student('s2', 7, ['a'])];
     const { mcf, nodeMap } = buildAssignmentGraph(students, projects, defaultSolverConfig);
     mcf.solve(0, 1);
     const flows = mcf.getFlows();

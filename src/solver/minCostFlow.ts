@@ -15,11 +15,19 @@ export class MinCostFlow {
 
   addEdge(from: number, to: number, capacity: number, cost: number): void {
     const e1: Edge = {
-      from, to, capacity, cost, flow: 0,
+      from,
+      to,
+      capacity,
+      cost,
+      flow: 0,
       reverse: this.edges.length + 1,
     };
     const e2: Edge = {
-      from: to, to: from, capacity: 0, cost: -cost, flow: 0,
+      from: to,
+      to: from,
+      capacity: 0,
+      cost: -cost,
+      flow: 0,
       reverse: this.edges.length,
     };
     this.graph[from].push(this.edges.length);
@@ -60,12 +68,12 @@ export class MinCostFlow {
       const { dist, prevEdge } = this.spfa(source);
       if (dist[sink] === INF) break;
       let pushFlow = INF;
-      for (let v = sink; v !== source; ) {
+      for (let v = sink; v !== source;) {
         const e = this.edges[prevEdge[v]];
         pushFlow = Math.min(pushFlow, e.capacity - e.flow);
         v = e.from;
       }
-      for (let v = sink; v !== source; ) {
+      for (let v = sink; v !== source;) {
         const e = this.edges[prevEdge[v]];
         e.flow += pushFlow;
         this.edges[e.reverse].flow -= pushFlow;

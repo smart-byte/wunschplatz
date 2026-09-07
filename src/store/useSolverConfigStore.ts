@@ -1,8 +1,7 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import type { SolverConfig } from '@/types';
 import { defaultSolverConfig } from '@/types';
-import { createIdbStorage } from './persist';
+import { editableStore } from './session';
 
 type State = {
   config: SolverConfig;
@@ -11,15 +10,9 @@ type State = {
 };
 
 export const useSolverConfigStore = create<State>()(
-  persist(
-    (set) => ({
-      config: defaultSolverConfig,
-      setConfig: (config) => set({ config }),
-      reset: () => set({ config: defaultSolverConfig }),
-    }),
-    {
-      name: 'solverConfig',
-      storage: createJSONStorage(() => createIdbStorage('solverConfig')),
-    },
-  ),
+  editableStore((set) => ({
+    config: defaultSolverConfig,
+    setConfig: (config) => set({ config }),
+    reset: () => set({ config: defaultSolverConfig }),
+  })),
 );

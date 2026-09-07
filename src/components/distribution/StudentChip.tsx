@@ -5,13 +5,13 @@ import { AssignmentBadge } from './AssignmentBadge';
 
 type Props = {
   student: Student;
-  assignment: Assignment | null;
+  assignment: Assignment;
   projects: Project[];
   onClick?: () => void;
 };
 
 export function StudentChip({ student, assignment, projects, onClick }: Props) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: student.id,
   });
 
@@ -20,20 +20,23 @@ export function StudentChip({ student, assignment, projects, onClick }: Props) {
     : undefined;
 
   return (
-    <div
+    <button
+      type="button"
       ref={setNodeRef}
       style={style}
       {...listeners}
-      {...attributes}
+      aria-label={`${student.firstName} ${student.lastName}, ${student.className}`}
       onClick={onClick}
       className={cn(
-        'flex items-center gap-2 px-2 py-1 rounded border bg-background text-xs cursor-pointer',
-        isDragging && 'opacity-50',
-        assignment?.manuallyEdited && 'border-dashed',
+        'relative flex min-h-9 w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-xs transition-colors hover:bg-mark/[0.04] focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        isDragging && 'z-20 bg-white shadow-md ring-1 ring-mark/30',
+        assignment.manuallyEdited && 'border-l-2 border-dashed border-mark/40',
       )}
     >
-      <span className="truncate max-w-[120px]">{student.lastName}, {student.firstName.charAt(0)}.</span>
-      <span className="text-muted-foreground">{student.className}</span>
+      <span className="min-w-0 flex-1 truncate text-prose">
+        {student.lastName}, {student.firstName}
+      </span>
+      <span className="shrink-0 text-prose-soft">{student.className}</span>
       <AssignmentBadge
         student={student}
         assignment={assignment}
@@ -41,6 +44,6 @@ export function StudentChip({ student, assignment, projects, onClick }: Props) {
         size="xs"
         disableTooltip={isDragging}
       />
-    </div>
+    </button>
   );
 }

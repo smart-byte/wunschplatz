@@ -1,0 +1,93 @@
+{
+  "header": {
+    "github": "GitHub"
+  },
+  "hero": {
+    "kicker": "Für Projektwochen an Schulen",
+    "title": "Faire Projektverteilung für deine Schule.",
+    "lede": "Wunschplatz importiert die Projektwünsche deiner Schüler und hilft bei einer fairen Verteilung – <b>direkt im Browser, ohne Wunschplatz-Konto.</b> Kein Zettelchaos und keine Excel-Formeln: Importierte Schülerdaten werden auf deinem Gerät verarbeitet und gespeichert.",
+    "cta": "App starten",
+    "ctaHint": "Kostenlos · Kein Konto nötig · Open Source"
+  },
+  "how": {
+    "title": "So funktioniert’s",
+    "step1Title": "Formular erstellen",
+    "step1Text": "Erzeuge aus deinen Projekten eine fertige Vorlage für Google Forms oder Microsoft Forms.",
+    "step2Title": "Antworten importieren",
+    "step2Text": "Lade den CSV-Export der Antworten hoch – Wunschplatz erkennt Spalten und Prioritäten automatisch.",
+    "step3Title": "Optimal verteilen",
+    "step3Text": "Der Solver findet die fairste Zuteilung nach Wünschen, Prioritäten und Kapazitäten.",
+    "kicker": "In drei Schritten"
+  },
+  "features": {
+    "title": "Alles für die Projektwoche",
+    "roundsTitle": "Wunschrunden",
+    "roundsText": "Mehrere Verteilungsrunden pro Jahr – jede Runde behält Projekte, Schüler und Ergebnis.",
+    "blueprintTitle": "Formular-Generator",
+    "blueprintText": "Fertige Fragenvorlage zum Einfügen in Google oder Microsoft Forms – ohne Abtippen.",
+    "importTitle": "CSV-Import",
+    "importText": "Antworten aus Google und Microsoft Forms importieren, inklusive Duplikat-Erkennung.",
+    "solverTitle": "Faire Optimierung",
+    "solverText": "Der Solver verteilt nach Prioritäten und Kapazitäten – nachvollziehbar und fair.",
+    "editingTitle": "Nachbearbeiten & Export",
+    "editingText": "Zuteilungen manuell anpassen und als Excel-Datei exportieren.",
+    "offlineTitle": "Lokale Verarbeitung",
+    "offlineText": "Importe und Berechnungen laufen auf deinem Gerät. Zum Öffnen oder Neuladen der App ist eine Internetverbindung nötig.",
+    "kicker": "Features"
+  },
+  "privacy": {
+    "title": "Lokale Verarbeitung, klare Grenzen",
+    "text": "Wunschplatz verarbeitet importierte Daten in deinem Browser und lädt sie nicht hoch. Wenn du Antworten über Google Forms oder Microsoft Forms erhebst, speichert und verarbeitet der jeweilige Anbieter die Antworten vor dem Import.",
+    "point1": "Importierte Daten bleiben lokal im Browser",
+    "point2": "Kein Wunschplatz-Konto und kein Tracking",
+    "point3": "Für externe Formulare gelten Speicherung und Datenschutzeinstellungen des Anbieters",
+    "kicker": "Datenschutz"
+  },
+  "openSource": {
+    "text": "Wunschplatz ist quelloffen und kostenlos. Der komplette Code ist öffentlich einsehbar – Transparenz statt Blackbox.",
+    "cta": "Auf GitHub ansehen",
+    "kicker": "Open Source"
+  },
+  "footer": {
+    "ctaTitle": "Bereit für die nächste Projektwoche?",
+    "cta": "Jetzt starten"
+  },
+  "figure": {
+    "student": "Schüler",
+    "project": "Zugeteiltes Projekt",
+    "wish": "Wunsch",
+    "caption": "Beispiel-Verteilung: 248 Schüler, 18 Projekte, 81 % Erstwunsch, niemand ohne Platz.",
+    "rows": [
+      {
+        "name": "Mira Hoffmann",
+        "className": "8b",
+        "project": "Schulgarten gestalten",
+        "wish": 1
+      },
+      {
+        "name": "Jonas Schneider",
+        "className": "9a",
+        "project": "Programmieren mit Python",
+        "wish": 1
+      },
+      {
+        "name": "Leni Bauer",
+        "className": "7c",
+        "project": "Roboter mit Lego Mindstorms",
+        "wish": 1
+      },
+      {
+        "name": "Anton Krüger",
+        "className": "10b",
+        "project": "Theater-AG: Romeo und Julia",
+        "wish": 2
+      },
+      {
+        "name": "Sara Wagner",
+        "className": "6a",
+        "project": "Töpfern und Keramik",
+        "wish": 1
+      }
+    ]
+  }
+}

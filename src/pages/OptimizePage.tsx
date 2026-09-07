@@ -1,5 +1,8 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { ArrowRight, LoaderCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { SolverConfigForm } from '@/components/optimize/SolverConfigForm';
 import { useSolver } from '@/hooks/useSolver';
 import { useStudentsStore } from '@/store/useStudentsStore';
@@ -7,39 +10,99 @@ import { useProjectsStore } from '@/store/useProjectsStore';
 import { toast } from 'sonner';
 
 export default function OptimizePage() {
+  const { t } = useTranslation('app');
   const navigate = useNavigate();
-  const { running, error, lastStats, run } = useSolver();
+  const { running, error, run } = useSolver();
   const studentCount = useStudentsStore((s) => s.students.length);
-  const projectCount = useProjectsStore((s) => s.projects.length);
+  const projects = useProjectsStore((s) => s.projects);
+  const capacity = projects.reduce((sum, project) => sum + project.maxCapacity, 0);
+  const ready = studentCount > 0 && projects.length > 0;
 
   async function handleRun() {
-    await run();
-    toast.success('Verteilung berechnet');
+    const succeeded = await run();
+    if (!succeeded) return;
+    toast.success(t('optimize.computed'));
     navigate('/distribution');
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Optimierung</h1>
-      <p className="text-sm text-muted-foreground">
-        {studentCount} Schüler · {projectCount} Projekte
-      </p>
-      <SolverConfigForm />
-      <div className="flex items-center gap-4">
-        <Button
-          size="lg"
-          disabled={running || studentCount === 0 || projectCount === 0}
-          onClick={handleRun}
-        >
-          {running ? 'Berechne…' : 'Verteilung berechnen'}
-        </Button>
-        {error && <p className="text-sm text-destructive">{error}</p>}
+    <div className="mx-auto max-w-6xl space-y-8">
+      <PageHeader
+        title={t('optimize.title')}
+        kicker={t('optimize.kicker')}
+        description={t('optimize.description')}
+      />
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-12">
+        <fieldset disabled={running} className="min-w-0 disabled:opacity-60">
+          <legend className="sr-only">{t('optimize.settings')}</legend>
+          <SolverConfigForm disabled={running} />
+        </fieldset>
+        <aside className="overflow-hidden rounded-lg border border-rule bg-white lg:sticky lg:top-36">
+          <div aria-hidden className="h-0.5 bg-gradient-to-r from-mark to-mark-2" />
+          <div className="p-6">
+            <p className="section-label">{t('optimize.overview')}</p>
+            <h2 className="mt-3 font-serif text-2xl">
+              {t(ready ? 'optimize.readyHeading' : 'optimize.prepareHeading')}
+            </h2>
+            <dl className="my-6 divide-y divide-rule-soft">
+              {[
+                ['students', studentCount],
+                ['projects', projects.length],
+                ['capacity', capacity],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-baseline justify-between gap-4 py-3 text-sm">
+                  <dt className="text-prose-soft">{t(`optimize.counts.${label}`)}</dt>
+                  <dd className="font-medium tabular-nums text-mark-ink">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            {!ready ? (
+              <div className="mb-5 space-y-2 text-sm leading-relaxed text-prose-soft">
+                <p>{t('optimize.missingData')}</p>
+                {projects.length === 0 && (
+                  <Link className="block text-mark underline underline-offset-4" to="/projects">
+                    {t('distribution.empty.goToProjects')} →
+                  </Link>
+                )}
+                {studentCount === 0 && (
+                  <Link className="block text-mark underline underline-offset-4" to="/students">
+                    {t('distribution.empty.goToStudents')} →
+                  </Link>
+                )}
+              </div>
+            ) : capacity < studentCount ? (
+              <p className="mb-5 text-sm leading-relaxed text-amber-800">
+                {t('optimize.capacityHint', { count: studentCount - capacity })}
+              </p>
+            ) : null}
+            <Button
+              size="lg"
+              className="w-full px-4"
+              disabled={running || !ready}
+              onClick={handleRun}
+            >
+              {running ? (
+                <LoaderCircle className="animate-spin motion-reduce:animate-none" />
+              ) : null}
+              {running ? t('optimize.running') : t('optimize.run')}
+              {!running && <ArrowRight />}
+            </Button>
+            <p className="mt-4 text-xs leading-relaxed text-prose-soft">
+              {t('optimize.savedSeparately')}
+            </p>
+            {error && (
+              <p role="alert" className="mt-4 text-sm text-destructive">
+                {error}
+              </p>
+            )}
+            {running && (
+              <p role="status" className="sr-only">
+                {t('optimize.running')}
+              </p>
+            )}
+          </div>
+        </aside>
       </div>
-      {lastStats && (
-        <div className="text-sm text-muted-foreground">
-          Letzte Berechnung: Prio1: {lastStats.assignedByPriority[0]} · Prio2: {lastStats.assignedByPriority[1]} · …
-        </div>
-      )}
     </div>
   );
 }

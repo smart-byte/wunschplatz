@@ -10,6 +10,16 @@ export default {
     },
     extend: {
       colors: {
+        paper: '#fdfdfc',
+        rule: '#e7e5e0',
+        'rule-soft': '#f0eeea',
+        quiet: '#8a8578',
+        prose: '#3f4a5a',
+        'prose-soft': '#5a6472',
+        mark: '#4f5ef0',
+        'mark-2': '#1f9ec2',
+        'mark-soft': '#c7cdfa',
+        'mark-ink': '#26306e',
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -51,14 +61,5 @@ export default {
       },
     },
   },
-  safelist: [
-    {
-      pattern: /(bg|text|ring)-(rose|pink|fuchsia|purple|violet|indigo|blue|sky|cyan|teal|emerald|green|lime|yellow|amber|orange)-(50|100|200|400|700)/,
-      variants: ['hover'],
-    },
-    {
-      pattern: /border-l-(rose|pink|fuchsia|purple|violet|indigo|blue|sky|cyan|teal|emerald|green|lime|yellow|amber|orange)-400/,
-    },
-  ],
   plugins: [],
 };

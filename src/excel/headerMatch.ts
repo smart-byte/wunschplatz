@@ -36,6 +36,7 @@ function findPriority(headers: string[], k: number): number {
     new RegExp(`^priority\\s*${k}$`, 'i'),
     new RegExp(`^prioritat\\s*${k}$`, 'i'),
     new RegExp(`^priorität\\s*${k}$`, 'i'),
+    new RegExp(`^${k}\\.?\\s*wahl$`, 'i'),
   ];
   return findColumn(headers, regs);
 }

@@ -1,21 +1,29 @@
-import { useEffect, useRef, useState } from 'react';
-import { read, utils } from 'xlsx';
-import type { WorkBook } from 'xlsx';
+import { useEffect, useMemo, useState } from 'react';
+import { useImportWorkbook } from '@/hooks/useImportWorkbook';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  Popover, PopoverContent, PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
-import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
-import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { parseStudentRows, type ParseResult } from '@/excel/importStudents';
-import { pickFreeColorKey } from '@/lib/groups';
+import { commitImportedStudents } from '@/store/commitImportedStudents';
+import { useRoundsStore } from '@/store/useRoundsStore';
+import { parseFormResponses, type FormImportResult } from '@/forms/importFormResponses';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HelpCircle, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -23,9 +31,18 @@ type ImportDialogProps = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   externalFile?: File | null;
+  defaultMode?: ImportMode;
 };
 
-export function ImportDialog({ open: externalOpen, onOpenChange, externalFile }: ImportDialogProps = {}) {
+export type ImportMode = 'excel' | 'forms';
+
+export function ImportDialog({
+  open: externalOpen,
+  onOpenChange,
+  externalFile,
+  defaultMode = 'excel',
+}: ImportDialogProps = {}) {
+  const { t } = useTranslation('app');
   const [internalOpen, setInternalOpen] = useState(false);
   const isControlled = externalOpen !== undefined;
   const open = isControlled ? externalOpen : internalOpen;
@@ -33,72 +50,62 @@ export function ImportDialog({ open: externalOpen, onOpenChange, externalFile }:
     if (isControlled) onOpenChange?.(v);
     else setInternalOpen(v);
   };
-  const [result, setResult] = useState<ParseResult | null>(null);
-  const [fileName, setFileName] = useState('');
-  const [workbook, setWorkbook] = useState<WorkBook | null>(null);
-  const [sheetName, setSheetName] = useState<string>('');
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState<ImportMode>(defaultMode);
+  const activeRound = useRoundsStore((s) => s.rounds.find((r) => r.id === s.activeRoundId));
+  const versions = useMemo(
+    () =>
+      activeRound?.blueprint
+        ? [...(activeRound.blueprintHistory ?? []), activeRound.blueprint]
+        : [],
+    [activeRound],
+  );
+  const [version, setVersion] = useState('');
+  const blueprint =
+    versions.length === 1 ? versions[0] : version ? versions[Number(version) - 1] : undefined;
+  const {
+    rows,
+    workbook,
+    fileName,
+    sheetName,
+    setSheetName: handleSheetChange,
+    fileRef,
+    handleFile,
+    reset: resetWorkbook,
+    loading,
+  } = useImportWorkbook(open, externalFile);
   const projects = useProjectsStore((s) => s.projects);
-  const setStudents = useStudentsStore((s) => s.setStudents);
-  const setGroupColor = useStudentsStore((s) => s.setGroupColor);
-  const clearAssignments = useAssignmentsStore((s) => s.clear);
-
-  function parseSheet(wb: WorkBook, name: string) {
-    const sheet = wb.Sheets[name];
-    const rows = utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: '' });
-    const parsed = parseStudentRows(rows as unknown[][], projects);
-    setResult(parsed);
-  }
-
-  async function handleFile(file: File) {
-    setFileName(file.name);
-    const buf = await file.arrayBuffer();
-    const wb = read(buf);
-    setWorkbook(wb);
-    const firstSheet = wb.SheetNames[0] ?? '';
-    setSheetName(firstSheet);
-    if (firstSheet) parseSheet(wb, firstSheet);
-  }
-
-  // When an external file is provided (e.g. dropped on the page),
-  // auto-load it as soon as the dialog opens.
+  const canImportForms = versions.length > 0;
+  const result = useMemo<ParseResult | FormImportResult | null>(() => {
+    if (!rows) return null;
+    return mode === 'forms'
+      ? blueprint
+        ? parseFormResponses(rows, projects, blueprint)
+        : null
+      : parseStudentRows(rows, projects);
+  }, [rows, mode, projects, blueprint]);
+  const blockingErrors = result?.errors.some((error) => error.severity === 'error');
   useEffect(() => {
-    if (open && externalFile) {
-      void handleFile(externalFile);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, externalFile]);
-
-  function handleSheetChange(name: string) {
-    setSheetName(name);
-    if (workbook) parseSheet(workbook, name);
-  }
-
+    setMode(defaultMode);
+    if (!open) setVersion('');
+  }, [open, defaultMode]);
   function reset() {
-    setResult(null);
-    setFileName('');
-    setWorkbook(null);
-    setSheetName('');
+    resetWorkbook();
+    setMode(defaultMode);
+    setVersion('');
   }
 
   function handleConfirm() {
-    if (!result) return;
-    const withIds = result.students.map((s) => ({
-      ...s,
-      id: crypto.randomUUID(),
-    }));
-    setStudents(withIds);
-    // Assign a free palette color to each imported group.
-    const groupIds = [...new Set(withIds.map((s) => s.groupId).filter((g): g is string => !!g))];
-    const usedKeys: string[] = [];
-    for (const gid of groupIds) {
-      const key = pickFreeColorKey(gid, usedKeys);
-      setGroupColor(gid, key);
-      usedKeys.push(key);
-    }
-    clearAssignments();
-    const groupSuffix = groupIds.length > 0 ? ` (inkl. ${groupIds.length} Gruppe${groupIds.length === 1 ? '' : 'n'})` : '';
-    toast.success(`${withIds.length} Schüler importiert${groupSuffix}`);
+    if (
+      !result ||
+      blockingErrors ||
+      loading ||
+      result.missingColumns.length ||
+      !result.students.length
+    )
+      return;
+    const { count, groupCount } = commitImportedStudents(result.students);
+    const groupSuffix = groupCount > 0 ? t('import.groupSuffix', { count: groupCount }) : '';
+    toast.success(t('import.imported', { count }) + groupSuffix);
     setOpen(false);
     reset();
   }
@@ -107,104 +114,210 @@ export function ImportDialog({ open: externalOpen, onOpenChange, externalFile }:
   const showSheetPicker = sheetNames.length > 1;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) reset();
+      }}
+    >
       {!isControlled && (
         <DialogTrigger asChild>
           <Button variant="outline">
             <Upload className="size-4 mr-2" />
-            Excel importieren
+            {t('students.importExcel')}
           </Button>
         </DialogTrigger>
       )}
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Schüler aus Excel importieren
-            <ImportHelp />
+            {t(mode === 'forms' ? 'import.formsTitle' : 'import.title')}
+            {mode === 'excel' && <ImportHelp />}
           </DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4">
+        <div className="grid grid-cols-1 gap-4">
+          <Tabs value={mode} onValueChange={(v) => setMode(v as ImportMode)}>
+            <TabsList className="grid h-auto w-full grid-cols-1 sm:grid-cols-2">
+              <TabsTrigger value="excel">{t('import.tabExcel')}</TabsTrigger>
+              <TabsTrigger value="forms">{t('import.tabForms')}</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          {mode === 'forms' && !canImportForms && (
+            <p className="text-sm text-muted-foreground">{t('import.formsHint')}</p>
+          )}
+          {mode === 'forms' && versions.length > 1 && (
+            <div className="grid gap-2">
+              <p className="text-sm">{t('import.templateVersionHint')}</p>
+              <Select value={version} onValueChange={setVersion}>
+                <SelectTrigger aria-label={t('import.templateVersion')}>
+                  <SelectValue placeholder={t('import.templateVersion')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {versions.map((item, i) => (
+                    <SelectItem key={i} value={String(i + 1)}>
+                      {t('import.templateVersionOption', {
+                        n: i + 1,
+                        date: new Date(item.generatedAt).toLocaleString(),
+                      })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {blueprint && (
+                <p className="text-xs text-muted-foreground">
+                  {blueprint.projectOptions.map((o) => o.label).join(' · ')}
+                </p>
+              )}
+            </div>
+          )}
           <div>
             <input
               ref={fileRef}
               type="file"
               accept=".xlsx,.xls,.csv"
-              className="block text-sm"
+              disabled={mode === 'forms' && !canImportForms}
+              className="hidden"
               onChange={(e) => {
                 const f = e.target.files?.[0];
-                if (f) handleFile(f);
+                if (f) void handleFile(f);
               }}
             />
-            {fileName && <p className="text-sm mt-2">Datei: {fileName}</p>}
+            <Button
+              type="button"
+              variant="outline"
+              disabled={mode === 'forms' && !canImportForms}
+              onClick={() => fileRef.current?.click()}
+            >
+              <Upload className="size-4 mr-2" />
+              {t('common.chooseFile')}
+            </Button>
+            {fileName && <p className="text-sm mt-2">{t('import.fileLabel', { fileName })}</p>}
           </div>
 
-          {!fileName && (
+          {!fileName && mode === 'excel' && (
             <div className="rounded-lg border bg-muted/30 p-3">
               <ImportHelpContent />
             </div>
+          )}
+          {!fileName && mode === 'forms' && blueprint && (
+            <p className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
+              {t('import.formsFileHint')}
+            </p>
           )}
 
           {showSheetPicker && (
             <div className="grid gap-1.5">
               <label className="text-sm font-medium">
-                Mappe wählen ({sheetNames.length} verfügbar)
+                {t('import.sheetLabel', { count: sheetNames.length })}
               </label>
               <Select value={sheetName} onValueChange={handleSheetChange}>
-                <SelectTrigger className="w-72"><SelectValue /></SelectTrigger>
+                <SelectTrigger
+                  aria-label={t('import.sheetLabel', { count: sheetNames.length })}
+                  className="w-full sm:w-72"
+                >
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {sheetNames.map((n) => (
-                    <SelectItem key={n} value={n}>{n}</SelectItem>
+                    <SelectItem key={n} value={n}>
+                      {n}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                Datei enthält mehrere Mappen. Wähle die mit den Schülerdaten.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('import.sheetHint')}</p>
             </div>
           )}
 
-          {projects.length === 0 && (
-            <p className="text-sm text-destructive">
-              Noch keine Projekte angelegt. Lege erst Projekte an, sonst können Prioritäten nicht zugeordnet werden.
+          {loading && <p role="status">{t('common.loadingFile')}</p>}
+          {blockingErrors && (
+            <p role="alert" className="text-sm text-destructive">
+              {t('import.fixErrors')}
             </p>
+          )}
+          {projects.length === 0 && (
+            <p className="text-sm text-destructive">{t('import.noProjectsWarning')}</p>
           )}
           {result && result.missingColumns.length > 0 && (
             <div className="text-sm text-destructive">
-              <p>Pflichtspalten fehlen{showSheetPicker ? ' in dieser Mappe' : ' im Excel'}:</p>
+              <p>
+                {t(showSheetPicker ? 'import.missingColumnsSheet' : 'import.missingColumnsFile')}
+              </p>
               <ul className="list-disc pl-5">
-                {result.missingColumns.map((c) => <li key={c}>{c}</li>)}
+                {result.missingColumns.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
               </ul>
               <p className="mt-2 text-muted-foreground">
-                Erwartet: Vorname, Nachname, Klasse, Jahrgang, Prio1-5 (auch englische Namen unterstützt).
+                {mode === 'forms' && blueprint
+                  ? t('import.expectedFormColumns', {
+                      priorities: blueprint.priorities.map((q) => q.title).join(', '),
+                    })
+                  : t('import.expectedExcelColumns')}
               </p>
             </div>
           )}
           {result && result.missingColumns.length === 0 && (
             <>
               <p className="text-sm">
-                Gefunden: <strong>{result.students.length}</strong> gültige Schüler-Zeile{result.students.length === 1 ? '' : 'n'}
-                {result.errors.length > 0 && <>, <strong className="text-destructive">{result.errors.length}</strong> Fehler/Warnungen</>}
+                {t('import.foundPrefix')} <strong>{result.students.length}</strong>{' '}
+                {t('import.validRow', { count: result.students.length })}
+                {result.errors.length > 0 && (
+                  <>
+                    , <strong className="text-destructive">{result.errors.length}</strong>{' '}
+                    {t('import.errorsWarnings')}
+                  </>
+                )}
               </p>
               {result.errors.length > 0 && (
                 <div className="max-h-48 overflow-y-auto border rounded p-2 text-xs">
                   {result.errors.map((e, i) => (
-                    <div key={i}>Zeile {e.rowIndex + 1}: {e.message}</div>
+                    <div
+                      key={i}
+                      className={e.severity === 'error' ? 'text-destructive' : 'text-amber-700'}
+                    >
+                      <strong>
+                        {t(e.severity === 'error' ? 'import.errorLabel' : 'import.warningLabel')}
+                        :{' '}
+                      </strong>
+                      {t('import.rowPrefix', { row: e.rowIndex + 1 })}{' '}
+                      {t(`import.errors.${e.code}`, e.values)}
+                    </div>
                   ))}
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">
-                Achtung: Import ersetzt alle bisherigen Schüler und setzt die Verteilung zurück.
-              </p>
+              {'warnings' in result && result.warnings.length > 0 && (
+                <div className="text-xs text-amber-600 space-y-0.5">
+                  {result.warnings.map((warning, i) => (
+                    <div key={i}>{t(`import.warnings.${warning.code}`, warning.values)}</div>
+                  ))}
+                </div>
+              )}
+              {'duplicatesRemoved' in result && result.duplicatesRemoved > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {t('import.duplicatesRemoved', { count: result.duplicatesRemoved })}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">{t('import.replaceWarning')}</p>
             </>
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Abbrechen</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            {t('common.cancel')}
+          </Button>
           <Button
-            disabled={!result || result.missingColumns.length > 0 || result.students.length === 0}
+            disabled={
+              loading ||
+              blockingErrors ||
+              !result ||
+              result.missingColumns.length > 0 ||
+              result.students.length === 0
+            }
             onClick={handleConfirm}
           >
-            {result?.students.length ?? 0} importieren
+            {t('import.confirm', { count: result?.students.length ?? 0 })}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -213,14 +326,15 @@ export function ImportDialog({ open: externalOpen, onOpenChange, externalFile }:
 }
 
 function ImportHelp() {
+  const { t } = useTranslation('app');
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
           className="inline-flex text-muted-foreground hover:text-foreground"
-          title="Excel-Format anzeigen"
-          aria-label="Hilfe"
+          title={t('import.help.buttonTitle')}
+          aria-label={t('import.help.ariaLabel')}
         >
           <HelpCircle className="size-4" />
         </button>
@@ -233,64 +347,77 @@ function ImportHelp() {
 }
 
 function ImportHelpContent() {
+  const { t } = useTranslation('app');
   return (
     <div className="space-y-3 text-xs">
       <div>
-        <div className="font-medium text-sm">Excel-Format für Schüler-Import</div>
-        <p className="text-muted-foreground mt-1">
-          Erste Zeile = Spaltenüberschriften. Reihenfolge egal, Erkennung case-insensitiv.
-        </p>
+        <div className="font-medium text-sm">{t('import.help.heading')}</div>
+        <p className="text-muted-foreground mt-1">{t('import.help.intro')}</p>
       </div>
 
       <div>
-        <div className="font-medium mb-1">Pflichtspalten</div>
-        <table className="w-full">
+        <div className="font-medium mb-1">{t('import.help.requiredHeading')}</div>
+        <table className="w-full table-fixed [&_td:first-child]:w-1/3 [&_th:first-child]:w-1/3">
           <thead>
             <tr className="text-muted-foreground">
-              <th className="text-left font-normal">Spalte</th>
-              <th className="text-left font-normal">Akzeptierte Namen</th>
+              <th className="text-left font-normal">{t('import.help.columnHeader')}</th>
+              <th className="text-left font-normal">{t('import.help.acceptedNamesHeader')}</th>
             </tr>
           </thead>
           <tbody className="font-mono text-[11px]">
-            <tr><td className="pr-2 align-top">Vorname</td><td>Vorname · First Name · FirstName</td></tr>
-            <tr><td className="pr-2 align-top">Nachname</td><td>Nachname · Last Name · LastName · Name</td></tr>
-            <tr><td className="pr-2 align-top">Klasse</td><td>Klasse · Class</td></tr>
-            <tr><td className="pr-2 align-top">Jahrgang</td><td>Jahrgang · Grade · Stufe · Jahrgangsstufe</td></tr>
-            <tr><td className="pr-2 align-top">Prio 1-5</td><td>Prio1, Prio 1, Priorität 1, Priority 1 …</td></tr>
+            <tr>
+              <td className="pr-2 align-top">{t('import.help.columns.firstName')}</td>
+              <td>Vorname · First Name · FirstName</td>
+            </tr>
+            <tr>
+              <td className="pr-2 align-top">{t('import.help.columns.lastName')}</td>
+              <td>Nachname · Last Name · LastName · Name</td>
+            </tr>
+            <tr>
+              <td className="pr-2 align-top">{t('import.help.columns.class')}</td>
+              <td>Klasse · Class</td>
+            </tr>
+            <tr>
+              <td className="pr-2 align-top">{t('import.help.columns.grade')}</td>
+              <td>Jahrgang · Grade · Stufe · Jahrgangsstufe</td>
+            </tr>
+            <tr>
+              <td className="pr-2 align-top">{t('import.help.columns.priorities')}</td>
+              <td>Prio1, Prio 1, Priorität 1, Priority 1 …</td>
+            </tr>
           </tbody>
         </table>
       </div>
 
       <div>
-        <div className="font-medium mb-1">Optionale Spalten</div>
-        <table className="w-full">
+        <div className="font-medium mb-1">{t('import.help.optionalHeading')}</div>
+        <table className="w-full table-fixed [&_td:first-child]:w-1/3 [&_th:first-child]:w-1/3">
           <tbody className="font-mono text-[11px]">
-            <tr><td className="pr-2 align-top">Gruppe</td><td>Gruppe · Group</td></tr>
+            <tr>
+              <td className="pr-2 align-top">{t('import.help.columns.group')}</td>
+              <td>Gruppe · Group</td>
+            </tr>
           </tbody>
         </table>
-        <p className="text-muted-foreground mt-1">
-          Schüler mit gleichem Wert in der „Gruppe"-Spalte bilden eine Gruppe.
-          „-" oder leer = keine Gruppe. Prios werden auf den ersten Gruppen-Schüler synchronisiert.
-        </p>
+        <p className="text-muted-foreground mt-1">{t('import.help.groupNote')}</p>
       </div>
 
       <div>
-        <div className="font-medium mb-1">Beispiel</div>
-        <pre className="rounded border bg-background p-2 text-[10px] leading-relaxed overflow-x-auto">{`Vorname  | Nachname  | Klasse | Jahrgang | Gruppe | Prio1   | Prio2 | Prio3 | Prio4   | Prio5
-Anna     | Müller    | 7a     | 7        | 1      | Schach  | Yoga  | Comic | Theater | Kochen
-Ben      | Schmidt   | 7b     | 7        | 1      | Schach  | Yoga  | Comic | Theater | Kochen
-Carla    | Weber     | 7a     | 7        | -      | Theater | Yoga  | Comic | Schach  | Kochen`}</pre>
+        <div className="font-medium mb-1">{t('import.help.exampleHeading')}</div>
+        <pre className="rounded border bg-background p-2 text-[10px] leading-relaxed overflow-x-auto">
+          {t('import.help.example')}
+        </pre>
       </div>
 
       <div>
-        <div className="font-medium mb-1">Regeln</div>
+        <div className="font-medium mb-1">{t('import.help.rulesHeading')}</div>
         <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-          <li>Jahrgang muss eine Zahl zwischen 5 und 13 sein.</li>
-          <li>Prio-Werte müssen exakt den Projektnamen aus dem Reiter „Projekte" entsprechen (case-insensitiv).</li>
-          <li>Prios untereinander müssen verschieden sein.</li>
-          <li>Leere Prio-Zellen sind OK (≤5 Prios möglich). Auch „-", „–" oder „—" gilt als leer.</li>
-          <li>Gruppe mit nur einem Mitglied wird als Einzel-Schüler behandelt.</li>
-          <li>Mehrere Mappen → Auswahl-Dropdown erscheint.</li>
+          <li>{t('import.help.rule1')}</li>
+          <li>{t('import.help.rule2')}</li>
+          <li>{t('import.help.rule3')}</li>
+          <li>{t('import.help.rule4')}</li>
+          <li>{t('import.help.rule5')}</li>
+          <li>{t('import.help.rule6')}</li>
         </ul>
       </div>
     </div>

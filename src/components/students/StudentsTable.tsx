@@ -1,48 +1,83 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
-  Popover, PopoverContent, PopoverTrigger,
-} from '@/components/ui/popover';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { StudentFormDialog } from './StudentFormDialog';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ArrowDown, ArrowUp, ArrowUpDown, Check, MoreHorizontal, Pencil, Pipette, Trash2, Users, UserMinus } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Check,
+  MoreHorizontal,
+  Pencil,
+  Pipette,
+  Trash2,
+  Users,
+  UserMinus,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { getGroupColor, PALETTE, isHex } from '@/lib/groups';
 import type { Student } from '@/types';
 import { cn } from '@/lib/utils';
 
-type SortKey = 'name' | 'className' | 'grade' | 'group' | 'prio1' | 'prio2' | 'prio3' | 'prio4' | 'prio5';
+type SortKey =
+  'name' | 'className' | 'grade' | 'group' | 'prio1' | 'prio2' | 'prio3' | 'prio4' | 'prio5';
 type SortDir = 'asc' | 'desc';
 
-function compareStrings(a: string, b: string): number {
-  return a.localeCompare(b, 'de', { sensitivity: 'base', numeric: true });
+function compareStrings(a: string, b: string, language: string): number {
+  return a.localeCompare(b, language, { sensitivity: 'base', numeric: true });
 }
 
 function sortValue(s: Student, key: SortKey, projectName: (id: string) => string): string | number {
   switch (key) {
-    case 'name': return `${s.lastName} ${s.firstName}`;
-    case 'className': return s.className;
-    case 'grade': return s.grade;
-    case 'group': return s.groupId ?? '';
-    case 'prio1': return s.priorities[0] ? projectName(s.priorities[0]) : '';
-    case 'prio2': return s.priorities[1] ? projectName(s.priorities[1]) : '';
-    case 'prio3': return s.priorities[2] ? projectName(s.priorities[2]) : '';
-    case 'prio4': return s.priorities[3] ? projectName(s.priorities[3]) : '';
-    case 'prio5': return s.priorities[4] ? projectName(s.priorities[4]) : '';
+    case 'name':
+      return `${s.lastName} ${s.firstName}`;
+    case 'className':
+      return s.className;
+    case 'grade':
+      return s.grade;
+    case 'group':
+      return s.groupId ?? '';
+    case 'prio1':
+      return s.priorities[0] ? projectName(s.priorities[0]) : '';
+    case 'prio2':
+      return s.priorities[1] ? projectName(s.priorities[1]) : '';
+    case 'prio3':
+      return s.priorities[2] ? projectName(s.priorities[2]) : '';
+    case 'prio4':
+      return s.priorities[3] ? projectName(s.priorities[3]) : '';
+    case 'prio5':
+      return s.priorities[4] ? projectName(s.priorities[4]) : '';
   }
 }
 
 export function StudentsTable() {
+  const { t, i18n } = useTranslation('app');
   const students = useStudentsStore((s) => s.students);
   const groupColors = useStudentsStore((s) => s.groupColors);
   const updateStudent = useStudentsStore((s) => s.updateStudent);
@@ -51,7 +86,11 @@ export function StudentsTable() {
   const removeFromGroup = useStudentsStore((s) => s.removeFromGroup);
   const setGroupColor = useStudentsStore((s) => s.setGroupColor);
   const projects = useProjectsStore((s) => s.projects);
-  const projectName = (id: string) => projects.find((p) => p.id === id)?.name ?? '?';
+  const projectNames = useMemo(
+    () => new Map(projects.map((project) => [project.id, project.name])),
+    [projects],
+  );
+  const projectName = useCallback((id: string) => projectNames.get(id) ?? '?', [projectNames]);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sortKey, setSortKey] = useState<SortKey>('name');
@@ -75,13 +114,12 @@ export function StudentsTable() {
       if (typeof va === 'number' && typeof vb === 'number') {
         cmp = va - vb;
       } else {
-        cmp = compareStrings(String(va), String(vb));
+        cmp = compareStrings(String(va), String(vb), i18n.resolvedLanguage ?? i18n.language);
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
     return copy;
-    // projectName depends on `projects` already in deps via students reference; include explicitly:
-  }, [students, sortKey, sortDir, projects]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [students, sortKey, sortDir, projectName, i18n.resolvedLanguage, i18n.language]);
 
   function toggle(id: string) {
     const next = new Set(selected);
@@ -106,13 +144,13 @@ export function StudentsTable() {
     const ids = [...selected];
     const result = createGroup(ids, templateId);
     if (!result.ok) {
-      toast.error(result.error);
+      toast.error(t(`students.groupErrors.${result.error}`));
       return;
     }
     clearSelection();
     setTemplateDialogOpen(false);
     setTemplateChoice(null);
-    toast.success(`Gruppe mit ${ids.length} Schülern gebildet`);
+    toast.success(t('students.groupFormed', { count: ids.length }));
   }
 
   function handleCreateGroup() {
@@ -128,22 +166,21 @@ export function StudentsTable() {
     }
   }
 
-  // Pre-validate the "Gruppe bilden" button state
   const selectedStudents = students.filter((s) => selected.has(s.id));
   const canForm = (() => {
     if (selectedStudents.length < 2) return null;
-    if (selectedStudents.some((s) => s.groupId)) return 'Schüler bereits in Gruppe';
+    if (selectedStudents.some((s) => s.groupId)) return t('students.alreadyInGroup');
     return 'ok';
   })();
 
   if (students.length === 0) {
-    return <p className="text-muted-foreground">Noch keine Schüler. Importiere Excel-Datei oder lege einen neuen Schüler an.</p>;
+    return <p className="text-muted-foreground">{t('students.emptyHint')}</p>;
   }
 
   const hint = (() => {
-    if (selected.size === 0) return 'Mind. 2 Schüler ankreuzen, um eine Gruppe zu bilden';
+    if (selected.size === 0) return t('students.hintMinTwo');
     if (canForm && canForm !== 'ok') return canForm;
-    if (canForm === null && selectedStudents.length === 1) return 'Mindestens 2 Schüler ankreuzen';
+    if (canForm === null && selectedStudents.length === 1) return t('students.hintAtLeastTwo');
     return null;
   })();
 
@@ -151,20 +188,18 @@ export function StudentsTable() {
     <div className="space-y-3">
       <div className="flex items-center gap-3 border rounded-lg p-3 bg-card">
         <span className="text-sm">
-          {selected.size === 0 ? 'Keine Auswahl' : `${selected.size} ausgewählt`}
+          {selected.size === 0
+            ? t('students.noSelection')
+            : t('students.selectedCount', { count: selected.size })}
         </span>
-        <Button
-          size="sm"
-          disabled={canForm !== 'ok'}
-          onClick={handleCreateGroup}
-        >
+        <Button size="sm" disabled={canForm !== 'ok'} onClick={handleCreateGroup}>
           <Users className="size-4 mr-2" />
-          Gruppe bilden
+          {t('students.formGroup')}
         </Button>
         {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
         {selected.size > 0 && (
           <Button size="sm" variant="ghost" className="ml-auto" onClick={clearSelection}>
-            Auswahl löschen
+            {t('students.clearSelection')}
           </Button>
         )}
       </div>
@@ -173,15 +208,69 @@ export function StudentsTable() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[40px]"></TableHead>
-              <SortHead label="Name" col="name" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
-              <SortHead label="Klasse" col="className" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
-              <SortHead label="Jg." col="grade" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
-              <SortHead label="Gruppe" col="group" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
-              <SortHead label="Prio 1" col="prio1" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
-              <SortHead label="Prio 2" col="prio2" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
-              <SortHead label="Prio 3" col="prio3" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
-              <SortHead label="Prio 4" col="prio4" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
-              <SortHead label="Prio 5" col="prio5" sortKey={sortKey} sortDir={sortDir} onClick={handleSort} />
+              <SortHead
+                label={t('students.table.name')}
+                col="name"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onClick={handleSort}
+              />
+              <SortHead
+                label={t('students.table.class')}
+                col="className"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onClick={handleSort}
+              />
+              <SortHead
+                label={t('students.table.grade')}
+                col="grade"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onClick={handleSort}
+              />
+              <SortHead
+                label={t('students.table.group')}
+                col="group"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onClick={handleSort}
+              />
+              <SortHead
+                label={t('students.prioLabel', { n: 1 })}
+                col="prio1"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onClick={handleSort}
+              />
+              <SortHead
+                label={t('students.prioLabel', { n: 2 })}
+                col="prio2"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onClick={handleSort}
+              />
+              <SortHead
+                label={t('students.prioLabel', { n: 3 })}
+                col="prio3"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onClick={handleSort}
+              />
+              <SortHead
+                label={t('students.prioLabel', { n: 4 })}
+                col="prio4"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onClick={handleSort}
+              />
+              <SortHead
+                label={t('students.prioLabel', { n: 5 })}
+                col="prio5"
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onClick={handleSort}
+              />
               <TableHead className="sticky right-0 bg-background w-[60px] xl:w-[140px]"></TableHead>
             </TableRow>
           </TableHeader>
@@ -192,9 +281,9 @@ export function StudentsTable() {
                 color?.kind === 'custom'
                   ? ({
                       borderLeftColor: color.hex,
-                      ['--row-bg' as string]: color.hex + '14', // ~8%
-                      ['--row-bg-h' as string]: color.hex + '2e', // ~18%
-                      ['--btn-hover' as string]: color.hex + '4d', // ~30%
+                      ['--row-bg' as string]: color.hex + '14',
+                      ['--row-bg-h' as string]: color.hex + '2e',
+                      ['--btn-hover' as string]: color.hex + '4d',
                     } as React.CSSProperties)
                   : undefined;
               const actionBtnClass =
@@ -216,12 +305,11 @@ export function StudentsTable() {
                   style={rowStyle}
                 >
                   <TableCell>
-                    <Checkbox
-                      checked={selected.has(s.id)}
-                      onCheckedChange={() => toggle(s.id)}
-                    />
+                    <Checkbox checked={selected.has(s.id)} onCheckedChange={() => toggle(s.id)} />
                   </TableCell>
-                  <TableCell className="font-medium">{s.lastName}, {s.firstName}</TableCell>
+                  <TableCell className="font-medium">
+                    {s.lastName}, {s.firstName}
+                  </TableCell>
                   <TableCell>{s.className}</TableCell>
                   <TableCell>{s.grade}</TableCell>
                   <TableCell>
@@ -249,7 +337,9 @@ export function StudentsTable() {
                         <span className="block break-words leading-tight">
                           {projectName(s.priorities[i])}
                         </span>
-                      ) : '—'}
+                      ) : (
+                        '—'
+                      )}
                     </TableCell>
                   ))}
                   <TableCell className="sticky right-0 z-10 bg-inherit w-[60px] xl:w-[140px]">
@@ -258,16 +348,22 @@ export function StudentsTable() {
                       actionBtnClass={actionBtnClass}
                       onEditSave={(data) => {
                         updateStudent(s.id, data);
-                        toast.success(s.groupId ? 'Schüler + Gruppe aktualisiert' : 'Schüler aktualisiert');
+                        toast.success(
+                          s.groupId ? t('students.updatedWithGroup') : t('students.updated'),
+                        );
                       }}
                       onRemoveFromGroup={() => {
                         removeFromGroup(s.id);
-                        toast.success('Aus Gruppe entfernt');
+                        toast.success(t('students.removedFromGroup'));
                       }}
                       onDelete={() => {
-                        if (confirm(`${s.firstName} ${s.lastName} löschen?`)) {
+                        if (
+                          confirm(
+                            t('students.confirmDelete', { name: `${s.firstName} ${s.lastName}` }),
+                          )
+                        ) {
                           removeStudent(s.id);
-                          toast.success('Schüler gelöscht');
+                          toast.success(t('students.deleted'));
                         }
                       }}
                     />
@@ -282,11 +378,10 @@ export function StudentsTable() {
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Wessen Prioritäten gelten für die Gruppe?</DialogTitle>
+            <DialogTitle>{t('students.templateDialog.title')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Die ausgewählten Schüler haben unterschiedliche Prios. Wähle eine Vorlage —
-            alle Gruppen-Mitglieder bekommen diese Prios.
+            {t('students.templateDialog.description')}
           </p>
           <div className="grid gap-2 max-h-[50vh] overflow-y-auto">
             {selectedStudents.map((s) => (
@@ -307,11 +402,17 @@ export function StudentsTable() {
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium">
-                    {s.lastName}, {s.firstName} <span className="text-muted-foreground font-normal">({s.className}, Jg. {s.grade})</span>
+                    {s.lastName}, {s.firstName}{' '}
+                    <span className="text-muted-foreground font-normal">
+                      {t('students.templateDialog.classGrade', {
+                        className: s.className,
+                        grade: s.grade,
+                      })}
+                    </span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     {s.priorities.length === 0
-                      ? '(keine Prios)'
+                      ? t('students.templateDialog.noPrios')
                       : s.priorities.map((id, i) => `${i + 1}. ${projectName(id)}`).join(' · ')}
                   </div>
                 </div>
@@ -319,12 +420,14 @@ export function StudentsTable() {
             ))}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>Abbrechen</Button>
+            <Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>
+              {t('common.cancel')}
+            </Button>
             <Button
               disabled={!templateChoice}
               onClick={() => templateChoice && commitGroup(templateChoice)}
             >
-              Gruppe bilden
+              {t('students.formGroup')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -370,14 +473,11 @@ type GroupColorBadgeProps = {
 };
 
 function GroupColorBadge({ currentKey, color, usedByOthers, onPick }: GroupColorBadgeProps) {
+  const { t } = useTranslation('app');
+  const colorLabel = color.kind === 'custom' ? color.label : t(`students.colors.${color.key}`);
   const badgeStyle =
-    color.kind === 'custom'
-      ? { backgroundColor: color.hex + '33', color: color.hex }
-      : undefined;
-  const badgeClass =
-    color.kind === 'palette'
-      ? cn(color.bgClass, color.textClass)
-      : '';
+    color.kind === 'custom' ? { backgroundColor: color.hex + '33', color: color.hex } : undefined;
+  const badgeClass = color.kind === 'palette' ? cn(color.bgClass, color.textClass) : '';
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -388,18 +488,21 @@ function GroupColorBadge({ currentKey, color, usedByOthers, onPick }: GroupColor
             badgeClass,
           )}
           style={badgeStyle}
-          title="Farbe ändern"
+          title={t('students.colorChange')}
         >
           <Users className="size-3" />
-          {color.label}
+          {colorLabel}
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2">
-        <div className="text-xs text-muted-foreground mb-2 px-1">Gruppen-Farbe wählen</div>
+        <div className="text-xs text-muted-foreground mb-2 px-1">
+          {t('students.pickGroupColor')}
+        </div>
         <div className="grid grid-cols-8 gap-1">
           {PALETTE.map((c) => {
             const active = currentKey === c.key;
             const taken = !active && usedByOthers.has(c.key);
+            const label = t(`students.colors.${c.key}`);
             return (
               <button
                 key={c.key}
@@ -411,7 +514,7 @@ function GroupColorBadge({ currentKey, color, usedByOthers, onPick }: GroupColor
                   active && 'ring-2 ring-offset-2 ring-foreground',
                   taken && 'opacity-25 cursor-not-allowed',
                 )}
-                title={taken ? `${c.label} — bereits vergeben` : c.label}
+                title={taken ? t('students.colorTaken', { label }) : label}
                 onClick={() => !taken && onPick(c.key)}
               >
                 {active && <Check className="size-3.5 text-white drop-shadow" />}
@@ -422,16 +525,19 @@ function GroupColorBadge({ currentKey, color, usedByOthers, onPick }: GroupColor
         <div className="mt-3 border-t pt-2 flex items-center gap-2">
           <label className="text-xs text-muted-foreground inline-flex items-center gap-1 cursor-pointer">
             <Pipette className="size-3.5" />
-            Eigene Farbe
+            {t('students.customColor')}
           </label>
           <input
             type="color"
+            aria-label={t('students.customColor')}
             value={isHex(currentKey) ? currentKey : '#888888'}
             onChange={(e) => onPick(e.target.value)}
             className="h-7 w-12 cursor-pointer border rounded"
           />
           {isHex(currentKey) && (
-            <span className="text-xs font-mono text-muted-foreground">{currentKey.toUpperCase()}</span>
+            <span className="text-xs font-mono text-muted-foreground">
+              {currentKey.toUpperCase()}
+            </span>
           )}
         </div>
       </PopoverContent>
@@ -448,18 +554,23 @@ type StudentRowActionsProps = {
 };
 
 function StudentRowActions({
-  student, actionBtnClass, onEditSave, onRemoveFromGroup, onDelete,
+  student,
+  actionBtnClass,
+  onEditSave,
+  onRemoveFromGroup,
+  onDelete,
 }: StudentRowActionsProps) {
+  const { t } = useTranslation('app');
   const [editOpen, setEditOpen] = useState(false);
   return (
     <>
-      {/* Inline icon buttons on wide screens */}
       <div className="hidden xl:flex gap-1">
         <Button
           variant="ghost"
           size="icon"
           className={actionBtnClass}
-          title="Bearbeiten"
+          title={t('common.edit')}
+          aria-label={t('common.editNamed', { name: `${student.firstName} ${student.lastName}` })}
           onClick={() => setEditOpen(true)}
         >
           <Pencil className="size-4" />
@@ -469,7 +580,7 @@ function StudentRowActions({
             variant="ghost"
             size="icon"
             className={actionBtnClass}
-            title="Aus Gruppe entfernen"
+            title={t('students.removeFromGroup')}
             onClick={onRemoveFromGroup}
           >
             <UserMinus className="size-4" />
@@ -479,28 +590,28 @@ function StudentRowActions({
           variant="ghost"
           size="icon"
           className={actionBtnClass}
-          title="Löschen"
+          title={t('common.delete')}
+          aria-label={t('common.deleteNamed', { name: `${student.firstName} ${student.lastName}` })}
           onClick={onDelete}
         >
           <Trash2 className="size-4" />
         </Button>
       </div>
 
-      {/* Dropdown on narrower screens — visible outline button */}
       <div className="xl:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" title="Aktionen">
+            <Button variant="outline" size="icon" title={t('students.actions')}>
               <MoreHorizontal className="size-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setEditOpen(true)}>
-              <Pencil className="size-4 mr-2" /> Bearbeiten
+              <Pencil className="size-4 mr-2" /> {t('common.edit')}
             </DropdownMenuItem>
             {student.groupId && (
               <DropdownMenuItem onClick={onRemoveFromGroup}>
-                <UserMinus className="size-4 mr-2" /> Aus Gruppe entfernen
+                <UserMinus className="size-4 mr-2" /> {t('students.removeFromGroup')}
               </DropdownMenuItem>
             )}
             <DropdownMenuSeparator />
@@ -508,7 +619,7 @@ function StudentRowActions({
               onClick={onDelete}
               className="text-destructive focus:text-destructive"
             >
-              <Trash2 className="size-4 mr-2" /> Löschen
+              <Trash2 className="size-4 mr-2" /> {t('common.delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

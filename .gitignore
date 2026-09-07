@@ -10,3 +10,10 @@ coverage
 playwright-report
 test-results
 docs/
+design-explorations/
+.agents/
+.codex/
+.env
+.env.*
+!.env.example
+src/assets/workspace-backgrounds.md
