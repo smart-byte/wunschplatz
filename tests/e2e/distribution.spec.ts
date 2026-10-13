@@ -49,6 +49,8 @@ test('the board narrows to projects that need attention or to one student', asyn
   await page.getByRole('searchbox', { name: 'Schüler suchen' }).fill('ada');
   await expect(card('Beta')).toContainText('Beispiel, Ada');
   await expect(card('Alpha')).toHaveCount(0);
+  // The unassign drop zone stays available while searching.
+  await expect(page.getByRole('heading', { name: /Unverteilt/ })).toBeVisible();
 });
 
 test('the distribution table loads long lists in pages', async ({ page }) => {

@@ -20,7 +20,9 @@ test('the step navigation shows progress through the workflow', async ({ page })
   await page.getByLabel(/Jahrgänge/).fill('7');
   await page.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(step('Projekte')).toHaveAttribute('data-state', 'done');
+  await expect(step('Projekte')).toHaveAccessibleDescription('erledigt');
   await expect(step('Schüler')).toHaveAttribute('data-state', 'open');
+  await expect(step('Schüler')).toHaveAccessibleDescription('noch offen');
 
   await step('Schüler').click();
   await addStudent(page, 'Anna');
@@ -37,6 +39,7 @@ test('the step navigation shows progress through the workflow', async ({ page })
   await step('Schüler').click();
   await addStudent(page, 'Ben');
   await expect(step('Verteilung')).toHaveAttribute('data-state', 'attention');
+  await expect(step('Verteilung')).toHaveAccessibleDescription(/veraltet/);
 });
 
 test('the navigation is already visible while the workspace loads', async ({ page }) => {

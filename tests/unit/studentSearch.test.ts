@@ -36,6 +36,11 @@ describe('matchesStudent', () => {
   it('ignores accents in the name', () => {
     expect(matchesStudent(ben, 'ozturk')).toBe(true);
   });
+
+  it('treats ß and ss alike', () => {
+    expect(matchesStudent({ ...anna, lastName: 'Strauß' }, 'strauss')).toBe(true);
+    expect(matchesStudent({ ...anna, lastName: 'Strauss' }, 'strauß')).toBe(true);
+  });
 });
 
 describe('filterStudents', () => {

@@ -36,7 +36,13 @@ export function BoardView({ sortKey }: Props) {
   const { rows, projects } = useDistributionData();
   const move = useManualAssignment(rows, projects);
   const updateStudent = useStudentsStore((s) => s.updateStudent);
+  // `editing` outlives `editOpen` so the closing dialog keeps its title and content.
   const [editing, setEditing] = useState<Student | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const edit = (student: Student) => {
+    setEditing(student);
+    setEditOpen(true);
+  };
   const [query, setQuery] = useState('');
   const [attentionOnly, setAttentionOnly] = useState(false);
 
@@ -126,9 +132,6 @@ export function BoardView({ sortKey }: Props) {
   const unassignedListed = query
     ? unassigned.filter((r) => matchesStudent(r.student, query))
     : unassigned;
-  const showUnassigned = query
-    ? unassignedListed.length > 0
-    : !attentionOnly || unassigned.length > 0;
 
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
@@ -161,21 +164,20 @@ export function BoardView({ sortKey }: Props) {
           {t('distribution.board.help')}
         </p>
       </div>
-      {showUnassigned && (
-        <UnassignedDroppable count={unassigned.length}>
-          {unassignedListed.map((r) => (
-            <StudentChip
-              key={r.student.id}
-              student={r.student}
-              assignment={r.assignment}
-              projects={projects}
-              onClick={() => setEditing(r.student)}
-            />
-          ))}
-        </UnassignedDroppable>
-      )}
+      {/* Always rendered: it is the only drop target that unassigns a student. */}
+      <UnassignedDroppable total={unassigned.length}>
+        {unassignedListed.map((r) => (
+          <StudentChip
+            key={r.student.id}
+            student={r.student}
+            assignment={r.assignment}
+            projects={projects}
+            onClick={() => edit(r.student)}
+          />
+        ))}
+      </UnassignedDroppable>
       {cards.length === 0 && (
-        <p className="py-12 text-center text-sm text-prose-soft">
+        <p role="status" className="py-12 text-center text-sm text-prose-soft">
           {t('distribution.board.noMatches')}
         </p>
       )}
@@ -189,27 +191,27 @@ export function BoardView({ sortKey }: Props) {
             popularityRanking={popularityRanking}
             students={assigned}
             listed={listed}
-            onStudentClick={setEditing}
+            onStudentClick={edit}
           />
         ))}
       </div>
 
       <StudentFormDialog
-        open={!!editing}
-        onOpenChange={(o) => !o && setEditing(null)}
+        open={editOpen}
+        onOpenChange={setEditOpen}
         initial={editing ?? undefined}
         onSave={(data) => {
           if (!editing) return;
           updateStudent(editing.id, data);
           toast.success(t('distribution.studentUpdated'));
-          setEditing(null);
         }}
       />
     </DndContext>
   );
 }
 
-function UnassignedDroppable({ children, count }: { children: React.ReactNode; count: number }) {
+/** `total` is everyone unassigned; children may be narrowed by a search. */
+function UnassignedDroppable({ children, total }: { children: React.ReactNode; total: number }) {
   const { t } = useTranslation('app');
   const { setNodeRef, isOver } = useDroppable({ id: UNASSIGNED_ID });
   const [expanded, setExpanded] = useState(false);
@@ -217,16 +219,16 @@ function UnassignedDroppable({ children, count }: { children: React.ReactNode; c
   return (
     <div
       ref={setNodeRef}
-      className={`mb-6 rounded-lg border border-dashed p-5 ${isOver ? 'border-mark bg-mark/[0.04]' : count ? 'border-amber-400 bg-amber-50/40' : 'border-rule bg-white'}`}
+      className={`mb-6 rounded-lg border border-dashed p-5 ${isOver ? 'border-mark bg-mark/[0.04]' : total ? 'border-amber-400 bg-amber-50/40' : 'border-rule bg-white'}`}
     >
       <h3 className="font-serif text-xl text-mark-ink">
         {t('distribution.board.unassignedHeading')}{' '}
-        <span className="ml-2 font-sans text-sm tabular-nums text-prose-soft">{count}</span>
+        <span className="ml-2 font-sans text-sm tabular-nums text-prose-soft">{total}</span>
       </h3>
       <div className="mt-3 grid gap-x-6 sm:grid-cols-2 xl:grid-cols-3">
         {expanded ? items : items.slice(0, 6)}
       </div>
-      {count > 6 && (
+      {items.length > 6 && (
         <Button
           variant="ghost"
           size="sm"
@@ -234,10 +236,12 @@ function UnassignedDroppable({ children, count }: { children: React.ReactNode; c
           aria-expanded={expanded}
           onClick={() => setExpanded(!expanded)}
         >
-          {expanded ? t('distribution.board.showLess') : t('distribution.board.showAll', { count })}
+          {expanded
+            ? t('distribution.board.showLess')
+            : t('distribution.board.showAll', { count: items.length })}
         </Button>
       )}
-      {count === 0 && (
+      {total === 0 && (
         <p className="text-xs text-prose-soft">{t('distribution.board.allAssigned')}</p>
       )}
     </div>

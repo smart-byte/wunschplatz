@@ -14,7 +14,11 @@
       "students": "Continue to students",
       "optimize": "Continue to optimization"
     },
-    "outdated": "The distribution is out of date. Recalculate it under “Optimization”."
+    "outdated": "The distribution is out of date. Recalculate it under “Optimization”.",
+    "state": {
+      "done": "done",
+      "open": "to do"
+    }
   },
   "gate": {
     "loading": "Loading…",
@@ -344,7 +348,9 @@
     },
     "noResults": "No students match this search or filter.",
     "showMore": "Show {{count}} more",
-    "selectionLabel": "Selection"
+    "selectionLabel": "Selection",
+    "selectNamed": "Select {{name}}",
+    "selectionMore": "+{{count}} more"
   },
   "import": {
     "imported": "{{count}} students imported",

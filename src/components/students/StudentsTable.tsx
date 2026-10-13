@@ -106,7 +106,9 @@ export function StudentsTable() {
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
   // One shared dialog and one action variant per row keep large classes cheap to render.
+  // `editing` outlives `editOpen` so the closing dialog keeps its title and content.
   const [editing, setEditing] = useState<Student | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const wide = useMediaQuery('(min-width: 1280px)');
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<StudentFilter>('all');
@@ -166,7 +168,7 @@ export function StudentsTable() {
   }
 
   function commitGroup(templateId?: string) {
-    const ids = [...selected];
+    const ids = selectedStudents.map((s) => s.id);
     const result = createGroup(ids, templateId);
     if (!result.ok) {
       toast.error(t(`students.groupErrors.${result.error}`));
@@ -244,10 +246,10 @@ export function StudentsTable() {
             <SelectItem value="grouped">{t('students.filter.grouped')}</SelectItem>
           </SelectContent>
         </Select>
-        {selected.size === 0 && (
+        {selectedStudents.length === 0 && (
           <span className="text-xs text-prose-soft">{t('students.hintMinTwo')}</span>
         )}
-        <span className="ml-auto text-xs tabular-nums text-prose-soft">
+        <span aria-live="polite" className="ml-auto text-xs tabular-nums text-prose-soft">
           {shownStudents.length} / {students.length}
         </span>
       </div>
@@ -360,7 +362,13 @@ export function StudentsTable() {
                   style={rowStyle}
                 >
                   <TableCell>
-                    <Checkbox checked={selected.has(s.id)} onCheckedChange={() => toggle(s.id)} />
+                    <Checkbox
+                      aria-label={t('students.selectNamed', {
+                        name: `${s.firstName} ${s.lastName}`,
+                      })}
+                      checked={selected.has(s.id)}
+                      onCheckedChange={() => toggle(s.id)}
+                    />
                   </TableCell>
                   <TableCell className="font-medium">
                     {s.lastName}, {s.firstName}
@@ -402,7 +410,10 @@ export function StudentsTable() {
                       student={s}
                       wide={wide}
                       actionBtnClass={actionBtnClass}
-                      onEdit={() => setEditing(s)}
+                      onEdit={() => {
+                        setEditing(s);
+                        setEditOpen(true);
+                      }}
                       onRemoveFromGroup={() => {
                         removeFromGroup(s.id);
                         toast.success(t('students.removedFromGroup'));
@@ -434,14 +445,22 @@ export function StudentsTable() {
           </Button>
         </div>
       )}
-      {selected.size > 0 && (
+      {selectedStudents.length > 0 && (
         <div
           role="region"
           aria-label={t('students.selectionLabel')}
-          className="sticky bottom-4 z-20 mx-auto flex w-fit max-w-full flex-wrap items-center gap-3 rounded-lg border border-rule bg-white px-4 py-2 shadow-lg"
+          className="sticky bottom-4 z-20 mx-auto flex w-fit max-w-full flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-rule bg-white px-4 py-2 shadow-lg"
         >
           <span className="text-sm font-medium">
-            {t('students.selectedCount', { count: selected.size })}
+            {t('students.selectedCount', { count: selectedStudents.length })}
+          </span>
+          <span className="max-w-md truncate text-xs text-prose-soft">
+            {selectedStudents
+              .slice(0, 3)
+              .map((st) => `${st.lastName}, ${st.firstName}`)
+              .join(' · ')}
+            {selectedStudents.length > 3 &&
+              ` ${t('students.selectionMore', { count: selectedStudents.length - 3 })}`}
           </span>
           <Button size="sm" disabled={canForm !== 'ok'} onClick={handleCreateGroup}>
             <Users />
@@ -455,8 +474,8 @@ export function StudentsTable() {
       )}
 
       <StudentFormDialog
-        open={!!editing}
-        onOpenChange={(open) => !open && setEditing(null)}
+        open={editOpen}
+        onOpenChange={setEditOpen}
         initial={editing ?? undefined}
         onSave={(data) => {
           if (!editing) return;

@@ -39,7 +39,13 @@ export function TableView() {
   const updateStudent = useStudentsStore((s) => s.updateStudent);
   const [filter, setFilter] = useState<'all' | 'unassigned' | 'notInTop5' | 'manual'>('all');
   const [search, setSearch] = useState('');
+  // `editing` outlives `editOpen` so the closing dialog keeps its title and content.
   const [editing, setEditing] = useState<Student | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const edit = (student: Student) => {
+    setEditing(student);
+    setEditOpen(true);
+  };
   const [visible, setVisible] = useState(PAGE_SIZE);
 
   const filtered = useMemo(() => {
@@ -114,7 +120,7 @@ export function TableView() {
             <SelectItem value="manual">{t('distribution.table.filterManual')}</SelectItem>
           </SelectContent>
         </Select>
-        <span className="ml-auto text-xs tabular-nums text-prose-soft">
+        <span aria-live="polite" className="ml-auto text-xs tabular-nums text-prose-soft">
           {filtered.length} / {rows.length}
         </span>
       </div>
@@ -153,7 +159,7 @@ export function TableView() {
                     <button
                       type="button"
                       className="rounded-sm text-left hover:text-mark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      onClick={() => setEditing(r.student)}
+                      onClick={() => edit(r.student)}
                     >
                       {r.student.lastName}, {r.student.firstName}
                     </button>
@@ -234,14 +240,13 @@ export function TableView() {
       )}
 
       <StudentFormDialog
-        open={!!editing}
-        onOpenChange={(o) => !o && setEditing(null)}
+        open={editOpen}
+        onOpenChange={setEditOpen}
         initial={editing ?? undefined}
         onSave={(data) => {
           if (!editing) return;
           updateStudent(editing.id, data);
           toast.success(t('distribution.studentUpdated'));
-          setEditing(null);
         }}
       />
     </div>

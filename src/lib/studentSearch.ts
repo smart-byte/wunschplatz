@@ -6,7 +6,8 @@ function fold(text: string): string {
   return text
     .normalize('NFD')
     .replace(/\p{Diacritic}/gu, '')
-    .toLocaleLowerCase('de');
+    .toLocaleLowerCase('de')
+    .replace(/ß/g, 'ss');
 }
 
 /** Every word of the query must appear in the name or class ("müller 7a", "anna mül"). */

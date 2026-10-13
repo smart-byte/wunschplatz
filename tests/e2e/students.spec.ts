@@ -72,3 +72,25 @@ test('row menu edits a student on narrower screens', async ({ page }) => {
   await expect(page.getByRole('cell', { name: 'Beispiel, Anne', exact: true })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
+
+test('the selection bar names the selected students across searches', async ({ page }) => {
+  await page.goto('/students');
+  await addStudent(page, 'Anna');
+  await addStudent(page, 'Ben');
+  await page.getByRole('checkbox', { name: 'Anna Beispiel auswählen', exact: true }).click();
+  await page.getByRole('searchbox', { name: 'Schüler suchen' }).fill('ben');
+  await page.getByRole('checkbox', { name: 'Ben Beispiel auswählen', exact: true }).click();
+  const bar = page.getByRole('region', { name: 'Auswahl' });
+  await expect(bar).toContainText('2 ausgewählt');
+  await expect(bar).toContainText('Beispiel, Anna');
+  await expect(bar).toContainText('Beispiel, Ben');
+});
+
+test('the import button opens Excel until the round has a form template', async ({ page }) => {
+  await page.goto('/students');
+  await addStudent(page, 'Anna');
+  await page.getByRole('button', { name: 'Importieren', exact: true }).click();
+  await expect(
+    page.getByRole('dialog').getByRole('tab', { name: 'Excel', exact: true }),
+  ).toHaveAttribute('aria-selected', 'true');
+});

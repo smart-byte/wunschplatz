@@ -14,7 +14,11 @@
       "students": "Weiter zu den Schülern",
       "optimize": "Weiter zur Optimierung"
     },
-    "outdated": "Die Verteilung ist veraltet. Bitte unter „Optimierung“ neu berechnen."
+    "outdated": "Die Verteilung ist veraltet. Bitte unter „Optimierung“ neu berechnen.",
+    "state": {
+      "done": "erledigt",
+      "open": "noch offen"
+    }
   },
   "gate": {
     "loading": "Lädt…",
@@ -344,7 +348,9 @@
     },
     "noResults": "Keine Schüler passen zu dieser Suche oder diesem Filter.",
     "showMore": "Weitere {{count}} anzeigen",
-    "selectionLabel": "Auswahl"
+    "selectionLabel": "Auswahl",
+    "selectNamed": "{{name}} auswählen",
+    "selectionMore": "+{{count}} weitere"
   },
   "import": {
     "imported": "{{count}} Schüler importiert",

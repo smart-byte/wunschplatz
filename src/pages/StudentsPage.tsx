@@ -7,6 +7,7 @@ import { StudentFormDialog } from '@/components/students/StudentFormDialog';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useAssignmentsStore } from '@/store/useAssignmentsStore';
+import { useRoundsStore } from '@/store/useRoundsStore';
 import { usePageFileDrop } from '@/hooks/usePageFileDrop';
 import { toast } from 'sonner';
 import { WorkspaceBackdrop } from '@/components/layout/WorkspaceBackdrop';
@@ -36,6 +37,11 @@ export default function StudentsPage() {
   const addStudent = useStudentsStore((s) => s.addStudent);
   const removeAll = useStudentsStore((s) => s.removeAll);
   const clearAssignments = useAssignmentsStore((s) => s.clear);
+  // Form results need the round's form template; without one, Excel is the useful default.
+  const hasFormTemplate = useRoundsStore((s) => {
+    const round = s.rounds.find((r) => r.id === s.activeRoundId);
+    return !!(round?.blueprint || round?.blueprintHistory?.length);
+  });
 
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -144,7 +150,10 @@ export default function StudentsPage() {
         description={t('students.description')}
         actions={
           <>
-            <Button variant="outline" onClick={() => openImport('forms')}>
+            <Button
+              variant="outline"
+              onClick={() => openImport(hasFormTemplate ? 'forms' : 'excel')}
+            >
               <Upload />
               {t('students.import')}
             </Button>

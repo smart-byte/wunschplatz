@@ -32,7 +32,7 @@ export function LanguageToggle({ quiet = false }: { quiet?: boolean }) {
               quiet
                 ? current === l
                   ? 'font-semibold text-foreground'
-                  : 'text-quiet hover:text-foreground'
+                  : 'text-prose-soft hover:text-foreground'
                 : cn(
                     'px-2.5 py-1',
                     current === l

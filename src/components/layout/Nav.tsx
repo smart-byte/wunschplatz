@@ -147,6 +147,7 @@ export function Nav() {
               <NavLink
                 to={step.to}
                 data-state={step.state}
+                aria-describedby={`nav-step-state-${index}`}
                 title={step.state === 'attention' ? t('nav.outdated') : undefined}
                 className={({ isActive }) =>
                   cn(
@@ -162,8 +163,9 @@ export function Nav() {
                   className={cn(
                     'hidden size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-medium tabular-nums sm:inline-flex',
                     step.state === 'done' && 'bg-mark text-white',
-                    step.state === 'attention' && 'bg-amber-500 text-white',
-                    step.state === 'open' && 'border border-rule text-quiet',
+                    step.state === 'attention' &&
+                      'bg-amber-100 text-amber-900 ring-1 ring-inset ring-amber-400',
+                    step.state === 'open' && 'border border-rule text-prose-soft',
                   )}
                 >
                   {index + 1}
@@ -175,12 +177,16 @@ export function Nav() {
                 {step.count ? (
                   <span
                     aria-hidden
-                    className="hidden text-xs font-normal tabular-nums text-quiet xl:inline"
+                    className="hidden text-xs font-normal tabular-nums text-prose-soft xl:inline"
                   >
                     {step.count}
                   </span>
                 ) : null}
               </NavLink>
+              {/* The step state, for screen readers; colour alone carries it visually. */}
+              <span id={`nav-step-state-${index}`} hidden>
+                {step.state === 'attention' ? t('nav.outdated') : t(`nav.state.${step.state}`)}
+              </span>
             </li>
           ))}
         </ol>

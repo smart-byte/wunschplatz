@@ -104,4 +104,11 @@
     @apply fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-mark;
     animation: nav-progress 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
   }
+
+  /* After the base rule so it wins: keep the delay, skip the growth. */
+  @media (prefers-reduced-motion: reduce) {
+    .nav-progress {
+      animation-duration: 1ms;
+    }
+  }
 }
