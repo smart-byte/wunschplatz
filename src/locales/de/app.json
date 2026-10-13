@@ -9,7 +9,11 @@
     "manageRounds": "Wunschrunden verwalten…",
     "roundSwitched": "Wunschrunde gewechselt",
     "switchFailed": "Die Wunschrunde konnte nicht gewechselt werden. Bitte versuche es erneut.",
-    "mainLabel": "Hauptnavigation"
+    "mainLabel": "Hauptnavigation",
+    "next": {
+      "students": "Weiter zu den Schülern",
+      "optimize": "Weiter zur Optimierung"
+    }
   },
   "gate": {
     "loading": "Lädt…",
@@ -116,7 +120,8 @@
     "loadFailedDescription": "Bitte prüfe deine Internetverbindung und lade die Seite erneut.",
     "editConflict": "Diese Angaben wurden in einem anderen Tab geändert. Deine Eingaben sind noch da. Bitte prüfe sie und speichere erneut.",
     "exportFailed": "Der Export ist fehlgeschlagen. Bitte prüfe deine Internetverbindung und versuche es erneut.",
-    "itemDeleted": "Dieser Eintrag wurde in einem anderen Tab gelöscht."
+    "itemDeleted": "Dieser Eintrag wurde in einem anderen Tab gelöscht.",
+    "moreActions": "Weitere Aktionen"
   },
   "projects": {
     "newProject": "Neues Projekt",
@@ -225,7 +230,8 @@
       "importedReplace": "{{count}} Projekte importiert (ersetzt)",
       "importedAppend": "{{count}} Projekte hinzugefügt"
     },
-    "removalEffects": "Wunschlisten mit entfernten Projekten werden vollständig geleert, damit kein nachfolgender Wunsch aufrückt. Alle Verteilungen werden gelöscht. Frühere Formularvorlagen bleiben erhalten und melden entfernte Projekte beim Import als Fehler."
+    "removalEffects": "Wunschlisten mit entfernten Projekten werden vollständig geleert, damit kein nachfolgender Wunsch aufrückt. Alle Verteilungen werden gelöscht. Frühere Formularvorlagen bleiben erhalten und melden entfernte Projekte beim Import als Fehler.",
+    "description": "Lege die Projekte deiner Projektwoche an oder importiere sie aus Excel. Aus dieser Liste entsteht auch die Formular-Vorlage."
   },
   "students": {
     "newStudent": "Neuer Schüler",
@@ -323,7 +329,9 @@
       "none": "— keine —",
       "gradeIncompatible": "Jahrgang nicht passend:",
       "projectRemoved": "Ein ausgewähltes Projekt wurde inzwischen gelöscht. Bitte aktualisiere die Wünsche."
-    }
+    },
+    "description": "Importiere die Wünsche aus deinem Formular oder aus Excel. Schüler, die zusammenbleiben möchten, kannst du ankreuzen und als Gruppe zusammenfassen.",
+    "import": "Importieren"
   },
   "import": {
     "imported": "{{count}} Schüler importiert",
@@ -463,7 +471,6 @@
       "button": "Standardwerte wiederherstellen"
     },
     "solveCancelled": "Die Berechnung wurde abgebrochen, weil sich die Daten oder die Wunschrunde geändert haben. Bitte starte sie erneut.",
-    "kicker": "Verteilung vorbereiten",
     "description": "Lege fest, wie Wünsche und Gruppen berücksichtigt werden. Wunschplatz berechnet daraus eine Verteilung für deine Schule.",
     "settings": "Einstellungen für die Verteilung",
     "overview": "Deine Wunschrunde",
@@ -632,7 +639,6 @@
       "assignmentLabel": "Projekt für {{name}}",
       "noResults": "Keine Schüler passen zu dieser Suche oder diesem Filter."
     },
-    "kicker": "Das Ergebnis im Überblick",
     "description": "Prüfe die Zuteilungen, passe einzelne Plätze an und exportiere die fertige Verteilung."
   }
 }

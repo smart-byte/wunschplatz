@@ -26,13 +26,9 @@ export default function OptimizePage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
-      <PageHeader
-        title={t('optimize.title')}
-        kicker={t('optimize.kicker')}
-        description={t('optimize.description')}
-      />
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-12">
+    <>
+      <PageHeader title={t('optimize.title')} description={t('optimize.description')} />
+      <div className="grid max-w-6xl items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-12">
         <fieldset disabled={running} className="min-w-0 disabled:opacity-60">
           <legend className="sr-only">{t('optimize.settings')}</legend>
           <SolverConfigForm disabled={running} />
@@ -103,6 +99,6 @@ export default function OptimizePage() {
           </div>
         </aside>
       </div>
-    </div>
+    </>
   );
 }

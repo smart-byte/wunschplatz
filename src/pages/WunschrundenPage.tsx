@@ -86,7 +86,7 @@ export default function WunschrundenPage() {
   }
 
   return (
-    <div className="max-w-screen-lg mx-auto space-y-7">
+    <>
       <PageHeader
         title={t('rounds.title')}
         description={t('rounds.description')}
@@ -97,7 +97,7 @@ export default function WunschrundenPage() {
         }
       />
 
-      <ul className="space-y-2">
+      <ul className="max-w-screen-lg space-y-2">
         {rounds.map((r) => {
           const isSelected = r.id === activeRoundId;
           const projectCount = isSelected ? liveProjectCount : (r.data?.projects.length ?? 0);
@@ -183,6 +183,6 @@ export default function WunschrundenPage() {
         })}
       </ul>
       {renaming && <RenameRoundDialog round={renaming} onClose={() => setRenaming(null)} />}
-    </div>
+    </>
   );
 }

@@ -32,7 +32,7 @@ test('UTF-8 forms import preserves names and rejects bad wishes without replacin
   await addProject(page, 'Töpfern');
   await addProject(page, 'Schach');
   await page.getByRole('button', { name: 'Vorlage erstellen', exact: true }).click();
-  await page.getByRole('link', { name: 'Schüler' }).click();
+  await page.getByRole('navigation').getByRole('link', { name: 'Schüler' }).click();
   await page.getByRole('button', { name: 'Formular-Ergebnisse importieren' }).click();
   const csv = 'Vorname,Nachname,Klasse,Jahrgang,1. Wahl,2. Wahl\nAnna,Müller,7a,7,Töpfern,Schach';
   await page
@@ -40,7 +40,8 @@ test('UTF-8 forms import preserves names and rejects bad wishes without replacin
     .setInputFiles({ name: 'responses.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
   await page.getByRole('button', { name: '1 importieren', exact: true }).click();
   await expect(page.getByRole('cell', { name: /Müller/ }).first()).toBeVisible();
-  await page.getByRole('button', { name: 'Formular-Ergebnisse importieren' }).click();
+  // With students present, one import button opens the dialog on the forms tab.
+  await page.getByRole('button', { name: 'Importieren', exact: true }).click();
   await page.locator('input[type=file]').setInputFiles({
     name: 'invalid.csv',
     mimeType: 'text/csv',
@@ -50,7 +51,7 @@ test('UTF-8 forms import preserves names and rejects bad wishes without replacin
   await expect(page.getByRole('button', { name: 'Importieren', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Abbrechen', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Schüler (1)', exact: true })).toBeVisible();
-  await page.getByRole('link', { name: 'Verteilung' }).click();
+  await page.getByRole('navigation').getByRole('link', { name: 'Verteilung' }).click();
   await expect(page.getByText(/Verteilt:.*0\/1/)).toBeVisible();
   await page.getByRole('tab', { name: 'Tabelle', exact: true }).click();
   await page.getByRole('combobox', { name: 'Verteilung filtern', exact: true }).click();

@@ -10,7 +10,24 @@ import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { usePageFileDrop } from '@/hooks/usePageFileDrop';
 import { toast } from 'sonner';
 import { WorkspaceBackdrop } from '@/components/layout/WorkspaceBackdrop';
-import { ClipboardCheck, Download, Plus, Trash2, Upload, Users } from 'lucide-react';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { NextStep } from '@/components/layout/NextStep';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  ClipboardCheck,
+  Download,
+  MoreHorizontal,
+  Plus,
+  Trash2,
+  Upload,
+  Users,
+} from 'lucide-react';
 
 export default function StudentsPage() {
   const { t, i18n } = useTranslation('app');
@@ -122,45 +139,55 @@ export default function StudentsPage() {
       <WorkspaceBackdrop page="students" state="filled" />
       {dragOverlay}
       {importDialog}
-      <div className="max-w-screen-2xl mx-auto">
-        <div className="flex items-end justify-between gap-4 flex-wrap mb-7 border-b border-rule pb-6">
-          <h1 className="page-title">{t('students.title', { count: students.length })}</h1>
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button variant="outline" onClick={handleExport}>
-              <Download className="size-4 mr-2" />
-              {t('students.exportExcel')}
-            </Button>
+      <PageHeader
+        title={t('students.title', { count: students.length })}
+        description={t('students.description')}
+        actions={
+          <>
             <Button variant="outline" onClick={() => openImport('forms')}>
-              <ClipboardCheck className="size-4 mr-2" />
-              {t('students.importFormResults')}
+              <Upload />
+              {t('students.import')}
             </Button>
-            <Button variant="outline" onClick={() => openImport('excel')}>
-              <Upload className="size-4 mr-2" />
-              {t('students.importExcel')}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label={t('common.moreActions')}
+                  title={t('common.moreActions')}
+                >
+                  <MoreHorizontal />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={handleExport}>
+                  <Download className="size-4 mr-2" />
+                  {t('students.exportExcel')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onSelect={() => {
+                    if (confirm(t('students.confirmDeleteAll'))) {
+                      removeAll();
+                      clearAssignments();
+                      toast.success(t('students.allDeleted'));
+                    }
+                  }}
+                >
+                  <Trash2 className="size-4 mr-2" />
+                  {t('students.deleteAll')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {addStudentTrigger}
-          </div>
-        </div>
-        <div className="bg-background">
-          <StudentsTable />
-        </div>
-        <div className="mt-8 flex justify-end border-t pt-4">
-          <Button
-            variant="outline"
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={() => {
-              if (confirm(t('students.confirmDeleteAll'))) {
-                removeAll();
-                clearAssignments();
-                toast.success(t('students.allDeleted'));
-              }
-            }}
-          >
-            <Trash2 className="size-4 mr-2" />
-            {t('students.deleteAll')}
-          </Button>
-        </div>
+          </>
+        }
+      />
+      <div className="bg-background">
+        <StudentsTable />
       </div>
+      <NextStep to="/optimize" label={t('nav.next.optimize')} />
     </>
   );
 }

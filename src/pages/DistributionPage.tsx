@@ -133,10 +133,9 @@ export default function DistributionPage() {
   }
 
   return (
-    <div className="max-w-screen-2xl mx-auto space-y-6">
+    <div className="space-y-6">
       <PageHeader
         title={t('distribution.title')}
-        kicker={t('distribution.kicker')}
         description={t('distribution.description')}
         actions={
           <Button

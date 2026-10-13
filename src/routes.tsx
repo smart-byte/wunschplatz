@@ -56,7 +56,9 @@ function Root() {
   const loading = useNavigation().state === 'loading';
   return (
     <>
-      {loading && <div role="progressbar" aria-label={t('gate.loading')} className="nav-progress" />}
+      {loading && (
+        <div role="progressbar" aria-label={t('gate.loading')} className="nav-progress" />
+      )}
       <Outlet />
     </>
   );

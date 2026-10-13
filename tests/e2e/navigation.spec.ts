@@ -8,7 +8,10 @@ test('app pages are preloaded, so switching pages fetches no scripts', async ({ 
   page.on('request', (request) => {
     if (request.resourceType() === 'script') scripts.push(request.url());
   });
-  await page.getByRole('link', { name: /App starten/ }).first().click();
+  await page
+    .getByRole('link', { name: /App starten/ })
+    .first()
+    .click();
   await expect(page.locator('main h1')).toContainText('Projekte');
   for (const [link, heading] of [
     ['Schüler', 'Schüler'],

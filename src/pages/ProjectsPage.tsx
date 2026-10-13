@@ -11,7 +11,16 @@ import { commitProjects } from '@/store/commitProjects';
 import { usePageFileDrop } from '@/hooks/usePageFileDrop';
 import { toast } from 'sonner';
 import { WorkspaceBackdrop } from '@/components/layout/WorkspaceBackdrop';
-import { Download, FolderPlus, Plus, Trash2, Upload } from 'lucide-react';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { NextStep } from '@/components/layout/NextStep';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Download, FolderPlus, MoreHorizontal, Plus, Sparkles, Trash2, Upload } from 'lucide-react';
 
 export default function ProjectsPage() {
   const { t, i18n } = useTranslation('app');
@@ -20,6 +29,7 @@ export default function ProjectsPage() {
 
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
+  const [sampleOpen, setSampleOpen] = useState(false);
   const { isDragging } = usePageFileDrop((file) => {
     setImportFile(file);
     setImportOpen(true);
@@ -107,44 +117,66 @@ export default function ProjectsPage() {
       <WorkspaceBackdrop page="projects" state="filled" />
       {dragOverlay}
       {importDialog}
-      <div className="max-w-screen-2xl mx-auto">
-        <div className="flex items-end justify-between gap-4 flex-wrap mb-7 border-b border-rule pb-6">
-          <h1 className="page-title">{t('projects.title', { count: projects.length })}</h1>
-          <div className="flex flex-wrap justify-end gap-2">
-            <SampleDataDialog />
+      <SampleDataDialog open={sampleOpen} onOpenChange={setSampleOpen} />
+      <PageHeader
+        title={t('projects.title', { count: projects.length })}
+        description={t('projects.description')}
+        actions={
+          <>
             <Button variant="outline" onClick={() => setImportOpen(true)}>
-              <Upload className="size-4 mr-2" />
+              <Upload />
               {t('projects.importExcel')}
             </Button>
-            <Button variant="outline" onClick={handleExport}>
-              <Download className="size-4 mr-2" />
-              {t('projects.exportExcel')}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label={t('common.moreActions')}
+                  title={t('common.moreActions')}
+                >
+                  <MoreHorizontal />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={handleExport}>
+                  <Download className="size-4 mr-2" />
+                  {t('projects.exportExcel')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSampleOpen(true)}>
+                  <Sparkles className="size-4 mr-2" />
+                  {t('projects.sample.trigger')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onSelect={() => {
+                    if (
+                      confirm(
+                        t('projects.confirmDeleteAll') + '\n\n' + t('projects.removalEffects'),
+                      )
+                    ) {
+                      commitProjects([]);
+                      toast.success(t('projects.allDeleted'));
+                    }
+                  }}
+                >
+                  <Trash2 className="size-4 mr-2" />
+                  {t('projects.deleteAll')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {addProjectTrigger}
-          </div>
-        </div>
-        <div className="mb-6">
-          <BlueprintPanel />
-        </div>
-        <div className="bg-background">
-          <ProjectsTable />
-        </div>
-        <div className="mt-8 flex justify-end border-t pt-4">
-          <Button
-            variant="outline"
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={() => {
-              if (confirm(t('projects.confirmDeleteAll') + '\n\n' + t('projects.removalEffects'))) {
-                commitProjects([]);
-                toast.success(t('projects.allDeleted'));
-              }
-            }}
-          >
-            <Trash2 className="size-4 mr-2" />
-            {t('projects.deleteAll')}
-          </Button>
-        </div>
+          </>
+        }
+      />
+      <div className="mb-6">
+        <BlueprintPanel />
       </div>
+      <div className="bg-background">
+        <ProjectsTable />
+      </div>
+      <NextStep to="/students" label={t('nav.next.students')} />
     </>
   );
 }

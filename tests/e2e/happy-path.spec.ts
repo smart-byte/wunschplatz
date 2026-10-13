@@ -24,7 +24,7 @@ test('happy path: create projects, import students, optimize, edit, export', asy
     await expect(page.getByRole('cell', { name, exact: true })).toBeVisible();
   }
 
-  await page.getByRole('link', { name: 'Schüler' }).click();
+  await page.getByRole('navigation').getByRole('link', { name: 'Schüler' }).click();
   // Both pages have an "Excel importieren" button; wait until the students page is shown.
   await expect(page.locator('h1')).toContainText('Schüler');
   await page.getByRole('button', { name: 'Excel importieren' }).click();
@@ -35,7 +35,7 @@ test('happy path: create projects, import students, optimize, edit, export', asy
   await page.getByRole('button', { name: /3 importieren/ }).click();
   await expect(page.locator('h1')).toContainText('Schüler (3)');
 
-  await page.getByRole('link', { name: 'Optimierung' }).click();
+  await page.getByRole('navigation').getByRole('link', { name: 'Optimierung' }).click();
   await page.getByRole('button', { name: /Verteilung berechnen/ }).click();
   await expect(page).toHaveURL(/\/distribution/);
 

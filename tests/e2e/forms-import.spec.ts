@@ -21,7 +21,7 @@ async function setupProjectsAndBlueprint(page: Page) {
 test('imports the Google Forms response CSV via the blueprint', async ({ page }) => {
   await setupProjectsAndBlueprint(page);
 
-  await page.getByRole('link', { name: 'Schüler' }).click();
+  await page.getByRole('navigation').getByRole('link', { name: 'Schüler' }).click();
   await page.getByRole('button', { name: 'Formular-Ergebnisse importieren' }).click();
   await page
     .locator('input[type="file"]')
@@ -33,7 +33,7 @@ test('imports the Google Forms response CSV via the blueprint', async ({ page })
 test('imports the Microsoft Forms response CSV (extra MS columns ignored)', async ({ page }) => {
   await setupProjectsAndBlueprint(page);
 
-  await page.getByRole('link', { name: 'Schüler' }).click();
+  await page.getByRole('navigation').getByRole('link', { name: 'Schüler' }).click();
   await page.getByRole('button', { name: 'Formular-Ergebnisse importieren' }).click();
   await page
     .locator('input[type="file"]')

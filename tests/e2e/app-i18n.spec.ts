@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('app language toggle switches the whole UI and persists', async ({ page }) => {
   await page.goto('/projects');
-  await expect(page.getByRole('link', { name: 'Projekte' })).toBeVisible();
+  await expect(page.getByRole('navigation').getByRole('link', { name: 'Projekte' })).toBeVisible();
 
   await page.getByRole('button', { name: 'EN', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Projects' })).toBeVisible();

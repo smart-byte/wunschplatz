@@ -30,9 +30,18 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-export function SampleDataDialog() {
+type Props = {
+  /** Controlled mode renders no trigger; the caller opens the dialog (e.g. from a menu). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+export function SampleDataDialog({ open: controlledOpen, onOpenChange }: Props) {
   const { t, i18n } = useTranslation('app');
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const controlled = controlledOpen !== undefined;
+  const open = controlled ? controlledOpen : internalOpen;
+  const setOpen = (next: boolean) => (controlled ? onOpenChange?.(next) : setInternalOpen(next));
   const [projectCount, setProjectCount] = useState('10');
   const [studentCount, setStudentCount] = useState('200');
   const setProjects = useProjectsStore((s) => s.setProjects);
@@ -78,12 +87,14 @@ export function SampleDataDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <Sparkles className="size-4 mr-2" />
-          {t('projects.sample.trigger')}
-        </Button>
-      </DialogTrigger>
+      {!controlled && (
+        <DialogTrigger asChild>
+          <Button variant="outline">
+            <Sparkles className="size-4 mr-2" />
+            {t('projects.sample.trigger')}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('projects.sample.title')}</DialogTitle>

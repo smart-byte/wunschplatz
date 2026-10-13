@@ -9,7 +9,11 @@
     "manageRounds": "Manage rounds…",
     "roundSwitched": "Round switched",
     "switchFailed": "The round could not be switched. Please try again.",
-    "mainLabel": "Main navigation"
+    "mainLabel": "Main navigation",
+    "next": {
+      "students": "Continue to students",
+      "optimize": "Continue to optimization"
+    }
   },
   "gate": {
     "loading": "Loading…",
@@ -116,7 +120,8 @@
     "loadFailedDescription": "Check your internet connection and reload the page.",
     "editConflict": "These details changed in another tab. Your edits are still here. Please review them and save again.",
     "exportFailed": "The export failed. Check your internet connection and try again.",
-    "itemDeleted": "This item was deleted in another tab."
+    "itemDeleted": "This item was deleted in another tab.",
+    "moreActions": "More actions"
   },
   "projects": {
     "newProject": "New project",
@@ -225,7 +230,8 @@
       "importedReplace": "{{count}} projects imported (replaced)",
       "importedAppend": "{{count}} projects added"
     },
-    "removalEffects": "Wish lists containing removed projects will be cleared completely so later wishes are not promoted. All distributions will be deleted. Previous form templates are retained and reject removed projects on import."
+    "removalEffects": "Wish lists containing removed projects will be cleared completely so later wishes are not promoted. All distributions will be deleted. Previous form templates are retained and reject removed projects on import.",
+    "description": "Add the projects for your project week or import them from Excel. The form template is built from this list."
   },
   "students": {
     "newStudent": "New student",
@@ -323,7 +329,9 @@
       "none": "— none —",
       "gradeIncompatible": "Grade doesn't match:",
       "projectRemoved": "A selected project has since been deleted. Please update the wishes."
-    }
+    },
+    "description": "Import the wishes from your form or from Excel. Tick students who want to stay together to form a group.",
+    "import": "Import"
   },
   "import": {
     "imported": "{{count}} students imported",
@@ -463,7 +471,6 @@
       "button": "Restore defaults"
     },
     "solveCancelled": "Calculation was cancelled because its data or round changed. Please run it again.",
-    "kicker": "Prepare the assignment",
     "description": "Choose how wishes and groups are considered. Wunschplatz uses these settings to find an assignment for your school.",
     "settings": "Assignment settings",
     "overview": "Your wish round",
@@ -632,7 +639,6 @@
       "assignmentLabel": "Project for {{name}}",
       "noResults": "No students match this search or filter."
     },
-    "kicker": "Your results at a glance",
     "description": "Review the assignments, adjust individual places, and export the finished result."
   }
 }
