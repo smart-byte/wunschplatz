@@ -42,16 +42,13 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getGroupColor, PALETTE, isHex } from '@/lib/groups';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import type { Student } from '@/types';
 import { cn } from '@/lib/utils';
 
 type SortKey =
   'name' | 'className' | 'grade' | 'group' | 'prio1' | 'prio2' | 'prio3' | 'prio4' | 'prio5';
 type SortDir = 'asc' | 'desc';
-
-function compareStrings(a: string, b: string, language: string): number {
-  return a.localeCompare(b, language, { sensitivity: 'base', numeric: true });
-}
 
 function sortValue(s: Student, key: SortKey, projectName: (id: string) => string): string | number {
   switch (key) {
@@ -95,6 +92,9 @@ export function StudentsTable() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
+  // One shared dialog and one action variant per row keep large classes cheap to render.
+  const [editing, setEditing] = useState<Student | null>(null);
+  const wide = useMediaQuery('(min-width: 1280px)');
 
   function handleSort(key: SortKey) {
     if (key === sortKey) {
@@ -106,6 +106,10 @@ export function StudentsTable() {
   }
 
   const sortedStudents = useMemo(() => {
+    const collator = new Intl.Collator(i18n.resolvedLanguage ?? i18n.language, {
+      sensitivity: 'base',
+      numeric: true,
+    });
     const copy = [...students];
     copy.sort((a, b) => {
       const va = sortValue(a, sortKey, projectName);
@@ -114,7 +118,7 @@ export function StudentsTable() {
       if (typeof va === 'number' && typeof vb === 'number') {
         cmp = va - vb;
       } else {
-        cmp = compareStrings(String(va), String(vb), i18n.resolvedLanguage ?? i18n.language);
+        cmp = collator.compare(String(va), String(vb));
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
@@ -345,13 +349,9 @@ export function StudentsTable() {
                   <TableCell className="sticky right-0 z-10 bg-inherit w-[60px] xl:w-[140px]">
                     <StudentRowActions
                       student={s}
+                      wide={wide}
                       actionBtnClass={actionBtnClass}
-                      onEditSave={(data) => {
-                        updateStudent(s.id, data);
-                        toast.success(
-                          s.groupId ? t('students.updatedWithGroup') : t('students.updated'),
-                        );
-                      }}
+                      onEdit={() => setEditing(s)}
                       onRemoveFromGroup={() => {
                         removeFromGroup(s.id);
                         toast.success(t('students.removedFromGroup'));
@@ -374,6 +374,17 @@ export function StudentsTable() {
           </TableBody>
         </Table>
       </div>
+
+      <StudentFormDialog
+        open={!!editing}
+        onOpenChange={(open) => !open && setEditing(null)}
+        initial={editing ?? undefined}
+        onSave={(data) => {
+          if (!editing) return;
+          updateStudent(editing.id, data);
+          toast.success(editing.groupId ? t('students.updatedWithGroup') : t('students.updated'));
+        }}
+      />
 
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
         <DialogContent className="max-w-xl">
@@ -547,31 +558,32 @@ function GroupColorBadge({ currentKey, color, usedByOthers, onPick }: GroupColor
 
 type StudentRowActionsProps = {
   student: Student;
+  wide: boolean;
   actionBtnClass: string;
-  onEditSave: (data: Omit<Student, 'id'>) => void;
+  onEdit: () => void;
   onRemoveFromGroup: () => void;
   onDelete: () => void;
 };
 
 function StudentRowActions({
   student,
+  wide,
   actionBtnClass,
-  onEditSave,
+  onEdit,
   onRemoveFromGroup,
   onDelete,
 }: StudentRowActionsProps) {
   const { t } = useTranslation('app');
-  const [editOpen, setEditOpen] = useState(false);
-  return (
-    <>
-      <div className="hidden xl:flex gap-1">
+  if (wide) {
+    return (
+      <div className="flex gap-1">
         <Button
           variant="ghost"
           size="icon"
           className={actionBtnClass}
           title={t('common.edit')}
           aria-label={t('common.editNamed', { name: `${student.firstName} ${student.lastName}` })}
-          onClick={() => setEditOpen(true)}
+          onClick={onEdit}
         >
           <Pencil className="size-4" />
         </Button>
@@ -597,40 +609,29 @@ function StudentRowActions({
           <Trash2 className="size-4" />
         </Button>
       </div>
-
-      <div className="xl:hidden">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" title={t('students.actions')}>
-              <MoreHorizontal className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => setEditOpen(true)}>
-              <Pencil className="size-4 mr-2" /> {t('common.edit')}
-            </DropdownMenuItem>
-            {student.groupId && (
-              <DropdownMenuItem onClick={onRemoveFromGroup}>
-                <UserMinus className="size-4 mr-2" /> {t('students.removeFromGroup')}
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={onDelete}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="size-4 mr-2" /> {t('common.delete')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      <StudentFormDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        initial={student}
-        onSave={onEditSave}
-      />
-    </>
+    );
+  }
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="icon" title={t('students.actions')}>
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onEdit}>
+          <Pencil className="size-4 mr-2" /> {t('common.edit')}
+        </DropdownMenuItem>
+        {student.groupId && (
+          <DropdownMenuItem onClick={onRemoveFromGroup}>
+            <UserMinus className="size-4 mr-2" /> {t('students.removeFromGroup')}
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+          <Trash2 className="size-4 mr-2" /> {t('common.delete')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
