@@ -2,6 +2,14 @@ import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +44,7 @@ import {
   MoreHorizontal,
   Pencil,
   Pipette,
+  Search,
   Trash2,
   Users,
   UserMinus,
@@ -43,12 +52,16 @@ import {
 import { toast } from 'sonner';
 import { getGroupColor, PALETTE, isHex } from '@/lib/groups';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { filterStudents, type StudentFilter } from '@/lib/studentSearch';
 import type { Student } from '@/types';
 import { cn } from '@/lib/utils';
 
 type SortKey =
   'name' | 'className' | 'grade' | 'group' | 'prio1' | 'prio2' | 'prio3' | 'prio4' | 'prio5';
 type SortDir = 'asc' | 'desc';
+
+// ponytail: plain paging instead of virtualization; rows render in steps of 100.
+const PAGE_SIZE = 100;
 
 function sortValue(s: Student, key: SortKey, projectName: (id: string) => string): string | number {
   switch (key) {
@@ -95,8 +108,12 @@ export function StudentsTable() {
   // One shared dialog and one action variant per row keep large classes cheap to render.
   const [editing, setEditing] = useState<Student | null>(null);
   const wide = useMediaQuery('(min-width: 1280px)');
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<StudentFilter>('all');
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   function handleSort(key: SortKey) {
+    setVisible(PAGE_SIZE);
     if (key === sortKey) {
       setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -124,6 +141,10 @@ export function StudentsTable() {
     });
     return copy;
   }, [students, sortKey, sortDir, projectName, i18n.resolvedLanguage, i18n.language]);
+  const shownStudents = useMemo(
+    () => filterStudents(sortedStudents, query, filter),
+    [sortedStudents, query, filter],
+  );
 
   function toggle(id: string) {
     const next = new Set(selected);
@@ -182,33 +203,56 @@ export function StudentsTable() {
   }
 
   const hint = (() => {
-    if (selected.size === 0) return t('students.hintMinTwo');
     if (canForm && canForm !== 'ok') return canForm;
     if (canForm === null && selectedStudents.length === 1) return t('students.hintAtLeastTwo');
     return null;
   })();
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3 border rounded-lg p-3 bg-card">
-        <span className="text-sm">
-          {selected.size === 0
-            ? t('students.noSelection')
-            : t('students.selectedCount', { count: selected.size })}
-        </span>
-        <Button size="sm" disabled={canForm !== 'ok'} onClick={handleCreateGroup}>
-          <Users className="size-4 mr-2" />
-          {t('students.formGroup')}
-        </Button>
-        {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
-        {selected.size > 0 && (
-          <Button size="sm" variant="ghost" className="ml-auto" onClick={clearSelection}>
-            {t('students.clearSelection')}
-          </Button>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-full sm:max-w-xs">
+          <Search
+            aria-hidden
+            className="pointer-events-none absolute left-3 top-3 size-4 text-prose-soft"
+          />
+          <Input
+            type="search"
+            aria-label={t('students.search.label')}
+            placeholder={t('students.search.placeholder')}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setVisible(PAGE_SIZE);
+            }}
+            className="bg-white pl-9"
+          />
+        </div>
+        <Select
+          value={filter}
+          onValueChange={(value) => {
+            setFilter(value as StudentFilter);
+            setVisible(PAGE_SIZE);
+          }}
+        >
+          <SelectTrigger aria-label={t('students.filter.label')} className="w-48 bg-white">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('students.filter.all')}</SelectItem>
+            <SelectItem value="noWishes">{t('students.filter.noWishes')}</SelectItem>
+            <SelectItem value="grouped">{t('students.filter.grouped')}</SelectItem>
+          </SelectContent>
+        </Select>
+        {selected.size === 0 && (
+          <span className="text-xs text-prose-soft">{t('students.hintMinTwo')}</span>
         )}
+        <span className="ml-auto text-xs tabular-nums text-prose-soft">
+          {shownStudents.length} / {students.length}
+        </span>
       </div>
       <div className="overflow-x-auto">
-        <Table>
+        <Table className="[&_td]:py-2.5">
           <TableHeader>
             <TableRow>
               <TableHead className="w-[40px]"></TableHead>
@@ -279,7 +323,14 @@ export function StudentsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedStudents.map((s) => {
+            {shownStudents.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={11} className="py-12 text-center text-prose-soft">
+                  {t('students.noResults')}
+                </TableCell>
+              </TableRow>
+            )}
+            {shownStudents.slice(0, visible).map((s) => {
               const color = s.groupId ? getGroupColor(s.groupId, groupColors) : null;
               const rowStyle =
                 color?.kind === 'custom'
@@ -374,6 +425,34 @@ export function StudentsTable() {
           </TableBody>
         </Table>
       </div>
+      {shownStudents.length > visible && (
+        <div className="flex justify-center">
+          <Button variant="outline" onClick={() => setVisible((count) => count + PAGE_SIZE)}>
+            {t('students.showMore', {
+              count: Math.min(PAGE_SIZE, shownStudents.length - visible),
+            })}
+          </Button>
+        </div>
+      )}
+      {selected.size > 0 && (
+        <div
+          role="region"
+          aria-label={t('students.selectionLabel')}
+          className="sticky bottom-4 z-20 mx-auto flex w-fit max-w-full flex-wrap items-center gap-3 rounded-lg border border-rule bg-white px-4 py-2 shadow-lg"
+        >
+          <span className="text-sm font-medium">
+            {t('students.selectedCount', { count: selected.size })}
+          </span>
+          <Button size="sm" disabled={canForm !== 'ok'} onClick={handleCreateGroup}>
+            <Users />
+            {t('students.formGroup')}
+          </Button>
+          {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
+          <Button size="sm" variant="ghost" onClick={clearSelection}>
+            {t('students.clearSelection')}
+          </Button>
+        </div>
+      )}
 
       <StudentFormDialog
         open={!!editing}

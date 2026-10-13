@@ -265,7 +265,6 @@
     "emptyHint": "Noch keine Schüler. Importiere Excel-Datei oder lege einen neuen Schüler an.",
     "hintMinTwo": "Mind. 2 Schüler ankreuzen, um eine Gruppe zu bilden",
     "hintAtLeastTwo": "Mindestens 2 Schüler ankreuzen",
-    "noSelection": "Keine Auswahl",
     "selectedCount": "{{count}} ausgewählt",
     "clearSelection": "Auswahl löschen",
     "prioLabel": "Prio {{n}}",
@@ -332,7 +331,20 @@
       "projectRemoved": "Ein ausgewähltes Projekt wurde inzwischen gelöscht. Bitte aktualisiere die Wünsche."
     },
     "description": "Importiere die Wünsche aus deinem Formular oder aus Excel. Schüler, die zusammenbleiben möchten, kannst du ankreuzen und als Gruppe zusammenfassen.",
-    "import": "Importieren"
+    "import": "Importieren",
+    "search": {
+      "label": "Schüler suchen",
+      "placeholder": "Name oder Klasse…"
+    },
+    "filter": {
+      "label": "Schüler filtern",
+      "all": "Alle Schüler",
+      "noWishes": "Ohne Wünsche",
+      "grouped": "In Gruppen"
+    },
+    "noResults": "Keine Schüler passen zu dieser Suche oder diesem Filter.",
+    "showMore": "Weitere {{count}} anzeigen",
+    "selectionLabel": "Auswahl"
   },
   "import": {
     "imported": "{{count}} Schüler importiert",

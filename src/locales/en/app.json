@@ -265,7 +265,6 @@
     "emptyHint": "No students yet. Import an Excel file or create a new student.",
     "hintMinTwo": "Check at least 2 students to form a group",
     "hintAtLeastTwo": "Check at least 2 students",
-    "noSelection": "No selection",
     "selectedCount": "{{count}} selected",
     "clearSelection": "Clear selection",
     "prioLabel": "Priority {{n}}",
@@ -332,7 +331,20 @@
       "projectRemoved": "A selected project has since been deleted. Please update the wishes."
     },
     "description": "Import the wishes from your form or from Excel. Tick students who want to stay together to form a group.",
-    "import": "Import"
+    "import": "Import",
+    "search": {
+      "label": "Search students",
+      "placeholder": "Name or class…"
+    },
+    "filter": {
+      "label": "Filter students",
+      "all": "All students",
+      "noWishes": "Without wishes",
+      "grouped": "In groups"
+    },
+    "noResults": "No students match this search or filter.",
+    "showMore": "Show {{count}} more",
+    "selectionLabel": "Selection"
   },
   "import": {
     "imported": "{{count}} students imported",
