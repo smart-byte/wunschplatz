@@ -633,7 +633,6 @@
       "fullConfirm": "Project \"{{name}}\" is full ({{current}}/{{max}}). Assign anyway?",
       "assignmentChanged": "Assignment changed",
       "emptyMessage": "No students. Import students first and run the calculation.",
-      "searchPlaceholder": "Search…",
       "filterAll": "Show all",
       "filterUnassigned": "Unassigned only",
       "filterNotInTop5": "Not in top 5",

@@ -633,7 +633,6 @@
       "fullConfirm": "Projekt \"{{name}}\" ist voll ({{current}}/{{max}}). Trotzdem zuweisen?",
       "assignmentChanged": "Zuweisung geändert",
       "emptyMessage": "Keine Schüler. Importiere zuerst Schüler und starte die Berechnung.",
-      "searchPlaceholder": "Suche…",
       "filterAll": "Alle anzeigen",
       "filterUnassigned": "Nur unverteilt",
       "filterNotInTop5": "Nicht in Top5",

@@ -25,7 +25,12 @@ import { toast } from 'sonner';
 import { AssignmentBadge } from './AssignmentBadge';
 import { Badge } from '@/components/ui/badge';
 import { StudentFormDialog } from '@/components/students/StudentFormDialog';
+import { matchesStudent } from '@/lib/studentSearch';
+import { Button } from '@/components/ui/button';
 import type { Project, Student } from '@/types';
+
+// ponytail: plain paging instead of virtualization; rows render in steps of 100.
+const PAGE_SIZE = 100;
 
 export function TableView() {
   const { t } = useTranslation('app');
@@ -35,6 +40,7 @@ export function TableView() {
   const [filter, setFilter] = useState<'all' | 'unassigned' | 'notInTop5' | 'manual'>('all');
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<Student | null>(null);
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
@@ -42,15 +48,7 @@ export function TableView() {
       if (filter === 'notInTop5' && (!r.assignment.projectId || r.assignment.priorityRank !== null))
         return false;
       if (filter === 'manual' && !r.assignment.manuallyEdited) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        return (
-          r.student.firstName.toLowerCase().includes(q) ||
-          r.student.lastName.toLowerCase().includes(q) ||
-          r.student.className.toLowerCase().includes(q)
-        );
-      }
-      return true;
+      return matchesStudent(r.student, search);
     });
   }, [rows, filter, search]);
 
@@ -88,16 +86,23 @@ export function TableView() {
             className="pointer-events-none absolute left-3 top-3 size-4 text-prose-soft"
           />
           <Input
-            aria-label={t('distribution.table.searchPlaceholder')}
-            placeholder={t('distribution.table.searchPlaceholder')}
+            type="search"
+            aria-label={t('students.search.label')}
+            placeholder={t('students.search.placeholder')}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setVisible(PAGE_SIZE);
+            }}
             className="pl-9 bg-white"
           />
         </div>
         <Select
           value={filter}
-          onValueChange={(v) => setFilter(v as 'all' | 'unassigned' | 'notInTop5' | 'manual')}
+          onValueChange={(v) => {
+            setFilter(v as 'all' | 'unassigned' | 'notInTop5' | 'manual');
+            setVisible(PAGE_SIZE);
+          }}
         >
           <SelectTrigger aria-label={t('distribution.table.filterLabel')} className="w-48">
             <SelectValue />
@@ -137,7 +142,7 @@ export function TableView() {
                 </TableCell>
               </TableRow>
             )}
-            {filtered.map((r) => {
+            {filtered.slice(0, visible).map((r) => {
               const { compatible, incompatible } = optionsForGrade(r.student.grade);
               return (
                 <TableRow
@@ -220,6 +225,13 @@ export function TableView() {
           </TableBody>
         </Table>
       </div>
+      {filtered.length > visible && (
+        <div className="flex justify-center">
+          <Button variant="outline" onClick={() => setVisible((count) => count + PAGE_SIZE)}>
+            {t('students.showMore', { count: Math.min(PAGE_SIZE, filtered.length - visible) })}
+          </Button>
+        </div>
+      )}
 
       <StudentFormDialog
         open={!!editing}
