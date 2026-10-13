@@ -1,4 +1,43 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+async function addStudent(page: Page, firstName: string) {
+  await page.getByRole('button', { name: 'Neuer Schüler', exact: true }).click();
+  await page.getByLabel('Vorname', { exact: true }).fill(firstName);
+  await page.getByLabel('Nachname', { exact: true }).fill('Beispiel');
+  await page.getByLabel('Klasse', { exact: true }).fill('7a');
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByRole('cell', { name: `Beispiel, ${firstName}` })).toBeVisible();
+}
+
+test('the step navigation shows progress through the workflow', async ({ page }) => {
+  const step = (name: string) =>
+    page.getByRole('navigation').getByRole('link', { name, exact: true });
+  await page.goto('/projects');
+  await expect(step('Projekte')).toHaveAttribute('data-state', 'open');
+
+  await page.getByRole('button', { name: 'Neues Projekt', exact: true }).click();
+  await page.getByLabel('Name', { exact: true }).fill('Schach');
+  await page.getByLabel(/Jahrgänge/).fill('7');
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(step('Projekte')).toHaveAttribute('data-state', 'done');
+  await expect(step('Schüler')).toHaveAttribute('data-state', 'open');
+
+  await step('Schüler').click();
+  await addStudent(page, 'Anna');
+  await expect(step('Schüler')).toHaveAttribute('data-state', 'done');
+  await expect(step('Verteilung')).toHaveAttribute('data-state', 'open');
+
+  await step('Optimierung').click();
+  await page.getByRole('button', { name: 'Verteilung berechnen' }).click();
+  await expect(page).toHaveURL(/\/distribution/);
+  await expect(step('Optimierung')).toHaveAttribute('data-state', 'done');
+  await expect(step('Verteilung')).toHaveAttribute('data-state', 'done');
+
+  // A new student makes the computed distribution outdated.
+  await step('Schüler').click();
+  await addStudent(page, 'Ben');
+  await expect(step('Verteilung')).toHaveAttribute('data-state', 'attention');
+});
 
 test('app pages are preloaded, so switching pages fetches no scripts', async ({ page }) => {
   await page.goto('/');

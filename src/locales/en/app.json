@@ -13,7 +13,8 @@
     "next": {
       "students": "Continue to students",
       "optimize": "Continue to optimization"
-    }
+    },
+    "outdated": "The distribution is out of date. Recalculate it under “Optimization”."
   },
   "gate": {
     "loading": "Loading…",

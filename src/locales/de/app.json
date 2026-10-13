@@ -13,7 +13,8 @@
     "next": {
       "students": "Weiter zu den Schülern",
       "optimize": "Weiter zur Optimierung"
-    }
+    },
+    "outdated": "Die Verteilung ist veraltet. Bitte unter „Optimierung“ neu berechnen."
   },
   "gate": {
     "loading": "Lädt…",

@@ -1,16 +1,31 @@
+import { useMemo } from 'react';
 import { useSolverConfigStore } from '@/store/useSolverConfigStore';
 import { solverInputSignature } from '@/lib/distribution';
 import { useActiveDistribution } from '@/store/useAssignmentsStore';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
+import type { Distribution, Project, SolverConfig, Student } from '@/types';
 
-export function useStaleAssignments(): { stale: boolean; reasonKey: string | null } {
+type Staleness = { stale: boolean; reasonKey: string | null };
+
+export function useStaleAssignments(): Staleness {
   const activeDist = useActiveDistribution();
   const students = useStudentsStore((s) => s.students);
   const projects = useProjectsStore((s) => s.projects);
-
   const config = useSolverConfigStore((s) => s.config);
+  // The navigation asks on every render; the signature check serializes all students.
+  return useMemo(
+    () => staleness(activeDist, students, projects, config),
+    [activeDist, students, projects, config],
+  );
+}
 
+function staleness(
+  activeDist: Distribution | null,
+  students: Student[],
+  projects: Project[],
+  config: SolverConfig,
+): Staleness {
   if (!activeDist) return { stale: false, reasonKey: null };
 
   const { assignments, run: lastRun } = activeDist;
