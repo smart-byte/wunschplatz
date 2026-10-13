@@ -551,7 +551,9 @@
       "help": "Schüler zwischen Projekten ziehen oder in der Tabelle zuweisen. Ein Klick auf einen Namen öffnet die Schülerdaten.",
       "allAssigned": "Alle Schüler haben einen Platz. Ziehe einen Namen hierher, um eine Zuteilung aufzuheben.",
       "showAll": "Alle {{count}} Schüler anzeigen",
-      "showLess": "Weniger anzeigen"
+      "showLess": "Weniger anzeigen",
+      "attentionOnly": "Nur Projekte mit Hinweisen",
+      "noMatches": "Keine Projekte passen zu dieser Auswahl."
     },
     "info": {
       "triggerTitle": "Parameter & Details anzeigen",
@@ -622,8 +624,8 @@
       "overCapacity": "Maximale Kapazität überschritten"
     },
     "stats": {
-      "assignedLabel": "Verteilt:",
-      "unassignedLabel": "Unverteilt:",
+      "assignedLabel": "Verteilt",
+      "unassignedLabel": "Unverteilt",
       "heading": "Ergebnisübersicht",
       "firstWish": "Erstwunsch erfüllt",
       "wished": "In einem Wunschprojekt"

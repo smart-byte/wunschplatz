@@ -39,7 +39,7 @@ test('happy path: create projects, import students, optimize, edit, export', asy
   await page.getByRole('button', { name: /Verteilung berechnen/ }).click();
   await expect(page).toHaveURL(/\/distribution/);
 
-  await expect(page.getByText(/Verteilt:.*3\/3/)).toBeVisible();
+  await expect(page.getByText(/Verteilt.*3\/3/)).toBeVisible();
 
   await page.getByRole('tab', { name: 'Projekte' }).click();
   await expect(page.getByRole('heading', { name: 'Alpha' })).toBeVisible();

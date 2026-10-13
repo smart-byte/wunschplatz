@@ -200,9 +200,6 @@ export default function DistributionPage() {
           )}
         </div>
         <TabsContent value="board">
-          <p className="mb-5 text-xs leading-relaxed text-prose-soft">
-            {t('distribution.board.help')}
-          </p>
           <BoardView sortKey={sortKey} />
         </TabsContent>
         <TabsContent value="table">

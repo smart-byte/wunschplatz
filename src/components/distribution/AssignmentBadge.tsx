@@ -11,6 +11,8 @@ type Props = {
   projects: Project[];
   size?: 'sm' | 'xs';
   disableTooltip?: boolean;
+  /** Boards stay quiet for the common case and only badge the exceptions. */
+  hideFirstChoice?: boolean;
 };
 
 export function AssignmentBadge({
@@ -19,11 +21,13 @@ export function AssignmentBadge({
   projects,
   size = 'sm',
   disableTooltip = false,
+  hideFirstChoice = false,
 }: Props) {
   const { t } = useTranslation('app');
   const project = projects.find((p) => p.id === assignment.projectId);
   if (!project) return null;
   const rank = priorityRank(student, project);
+  if (hideFirstChoice && rank === 1) return null;
   const badge = (
     <Badge
       variant={rank !== null ? 'secondary' : 'outline'}

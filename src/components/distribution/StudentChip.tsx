@@ -33,16 +33,19 @@ export function StudentChip({ student, assignment, projects, onClick }: Props) {
         assignment.manuallyEdited && 'border-l-2 border-dashed border-mark/40',
       )}
     >
-      <span className="min-w-0 flex-1 truncate text-prose">
-        {student.lastName}, {student.firstName}
+      <span className="flex min-w-0 flex-1 items-baseline gap-2">
+        <span className="min-w-0 truncate text-prose">
+          {student.lastName}, {student.firstName}
+        </span>
+        <span className="shrink-0 text-prose-soft">{student.className}</span>
       </span>
-      <span className="shrink-0 text-prose-soft">{student.className}</span>
       <AssignmentBadge
         student={student}
         assignment={assignment}
         projects={projects}
         size="xs"
         disableTooltip={isDragging}
+        hideFirstChoice
       />
     </button>
   );

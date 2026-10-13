@@ -13,7 +13,10 @@ import type { DistributionRow } from '@/lib/distribution';
 
 type Props = {
   project: Project;
+  /** Everyone assigned to the project; drives the counts. */
   students: DistributionRow[];
+  /** The subset to list, e.g. search matches. Defaults to everyone. */
+  listed?: DistributionRow[];
   allProjects: Project[];
   allRows: DistributionRow[];
   popularityRanking: { project: Project; score: number }[];
@@ -23,6 +26,7 @@ type Props = {
 export function ProjectCard({
   project,
   students,
+  listed = students,
   allProjects,
   allRows,
   popularityRanking,
@@ -32,7 +36,7 @@ export function ProjectCard({
   const { isOver, setNodeRef } = useDroppable({ id: project.id });
   const count = students.length;
   const [expanded, setExpanded] = useState(false);
-  const visibleStudents = expanded ? students : students.slice(0, 6);
+  const visibleStudents = expanded ? listed : listed.slice(0, 6);
   const overMax = count > project.maxCapacity;
   const utilization =
     project.maxCapacity > 0 ? Math.min(100, (count / project.maxCapacity) * 100) : 0;
@@ -99,7 +103,7 @@ export function ProjectCard({
             onClick={() => onStudentClick?.(student)}
           />
         ))}
-        {students.length > 6 && (
+        {listed.length > 6 && (
           <Button
             variant="ghost"
             size="sm"
@@ -109,7 +113,7 @@ export function ProjectCard({
           >
             {expanded
               ? t('distribution.board.showLess')
-              : t('distribution.board.showAll', { count: students.length })}
+              : t('distribution.board.showAll', { count: listed.length })}
           </Button>
         )}
         {students.length === 0 && (

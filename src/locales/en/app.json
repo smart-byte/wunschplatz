@@ -551,7 +551,9 @@
       "help": "Drag students between projects or assign them in the table. Click a name to edit the student’s details.",
       "allAssigned": "Every student has a place. Drag a name here to remove their assignment.",
       "showAll": "Show all {{count}} students",
-      "showLess": "Show fewer"
+      "showLess": "Show fewer",
+      "attentionOnly": "Only projects that need attention",
+      "noMatches": "No projects match this selection."
     },
     "info": {
       "triggerTitle": "Show parameters & details",
@@ -622,8 +624,8 @@
       "overCapacity": "Maximum capacity exceeded"
     },
     "stats": {
-      "assignedLabel": "Assigned:",
-      "unassignedLabel": "Unassigned:",
+      "assignedLabel": "Assigned",
+      "unassignedLabel": "Unassigned",
       "heading": "Assignment overview",
       "firstWish": "First choice fulfilled",
       "wished": "In a chosen project"

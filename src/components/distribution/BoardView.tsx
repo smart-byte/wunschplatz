@@ -1,5 +1,9 @@
 import { Children, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Search, TriangleAlert } from 'lucide-react';
+import { needsAttention } from '@/lib/distribution';
+import { matchesStudent } from '@/lib/studentSearch';
 import {
   DndContext,
   PointerSensor,
@@ -33,6 +37,8 @@ export function BoardView({ sortKey }: Props) {
   const move = useManualAssignment(rows, projects);
   const updateStudent = useStudentsStore((s) => s.updateStudent);
   const [editing, setEditing] = useState<Student | null>(null);
+  const [query, setQuery] = useState('');
+  const [attentionOnly, setAttentionOnly] = useState(false);
 
   // Leave room for clicks before starting a drag.
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -103,28 +109,86 @@ export function BoardView({ sortKey }: Props) {
     return copy;
   }, [projects, byProject, sortKey, popularityRanking, i18n.resolvedLanguage, i18n.language]);
 
+  const attention = useMemo(
+    () =>
+      new Set(
+        projects.filter((p) => needsAttention(p, byProject.get(p.id) ?? [])).map((p) => p.id),
+      ),
+    [projects, byProject],
+  );
+  // Cards keep their full counts; a search only narrows which students they list.
+  const cards = sortedProjects.flatMap((project) => {
+    const assigned = byProject.get(project.id) ?? [];
+    if (attentionOnly && !attention.has(project.id)) return [];
+    const listed = query ? assigned.filter((r) => matchesStudent(r.student, query)) : assigned;
+    return query && !listed.length ? [] : [{ project, assigned, listed }];
+  });
+  const unassignedListed = query
+    ? unassigned.filter((r) => matchesStudent(r.student, query))
+    : unassigned;
+  const showUnassigned = query
+    ? unassignedListed.length > 0
+    : !attentionOnly || unassigned.length > 0;
+
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <UnassignedDroppable count={unassigned.length}>
-        {unassigned.map((r) => (
-          <StudentChip
-            key={r.student.id}
-            student={r.student}
-            assignment={r.assignment}
-            projects={projects}
-            onClick={() => setEditing(r.student)}
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div className="relative w-full sm:max-w-xs">
+          <Search
+            aria-hidden
+            className="pointer-events-none absolute left-3 top-3 size-4 text-prose-soft"
           />
-        ))}
-      </UnassignedDroppable>
+          <Input
+            type="search"
+            aria-label={t('students.search.label')}
+            placeholder={t('students.search.placeholder')}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="bg-white pl-9"
+          />
+        </div>
+        <Button
+          variant="outline"
+          aria-pressed={attentionOnly}
+          onClick={() => setAttentionOnly((on) => !on)}
+          className="aria-pressed:border-amber-400 aria-pressed:bg-amber-50 aria-pressed:text-amber-900"
+        >
+          <TriangleAlert />
+          {t('distribution.board.attentionOnly')}
+          <span className="tabular-nums text-prose-soft">{attention.size}</span>
+        </Button>
+        <p className="w-full text-xs leading-relaxed text-prose-soft">
+          {t('distribution.board.help')}
+        </p>
+      </div>
+      {showUnassigned && (
+        <UnassignedDroppable count={unassigned.length}>
+          {unassignedListed.map((r) => (
+            <StudentChip
+              key={r.student.id}
+              student={r.student}
+              assignment={r.assignment}
+              projects={projects}
+              onClick={() => setEditing(r.student)}
+            />
+          ))}
+        </UnassignedDroppable>
+      )}
+      {cards.length === 0 && (
+        <p className="py-12 text-center text-sm text-prose-soft">
+          {t('distribution.board.noMatches')}
+        </p>
+      )}
       <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {sortedProjects.map((p) => (
+        {cards.map(({ project, assigned, listed }) => (
           <ProjectCard
-            key={p.id}
-            project={p}
+            key={project.id}
+            project={project}
             allProjects={projects}
             allRows={rows}
             popularityRanking={popularityRanking}
-            students={byProject.get(p.id) ?? []}
+            students={assigned}
+            listed={listed}
             onStudentClick={setEditing}
           />
         ))}

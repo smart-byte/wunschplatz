@@ -69,6 +69,14 @@ export function solverInputSignature(
   });
 }
 
+/** A project card needs a look when it is over capacity or holds students outside their wishes. */
+export function needsAttention(project: Project, assigned: DistributionRow[]): boolean {
+  return (
+    assigned.length > project.maxCapacity ||
+    assigned.some((row) => row.assignment.priorityRank === null)
+  );
+}
+
 export function assignmentConflicts(student: Student, target: Project, rows: DistributionRow[]) {
   const load = rows.filter(
     (r) => r.student.id !== student.id && r.assignment.projectId === target.id,
