@@ -1,41 +1,47 @@
 import { useTranslation } from 'react-i18next';
-import { createBrowserRouter } from 'react-router-dom';
+import { Outlet, createBrowserRouter, useNavigation } from 'react-router-dom';
 import LandingPage from '@/pages/LandingPage';
 
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined;
+
+const loadApp = () => import('@/pages/app');
+
+// Warm the app chunk once the browser is idle, so entering the app never waits on the network.
+const prefetchApp = () => void loadApp().catch(() => {});
+if ('requestIdleCallback' in window) requestIdleCallback(prefetchApp);
+else setTimeout(prefetchApp, 1500);
 
 export const router = createBrowserRouter(
   [
     {
       path: '/',
+      Component: Root,
       HydrateFallback: RouteLoading,
       ErrorBoundary: RouteError,
       children: [
         { index: true, element: <LandingPage /> },
         {
-          lazy: async () => ({
-            Component: (await import('@/components/layout/AppShell')).AppShell,
-          }),
+          lazy: async () => ({ Component: (await loadApp()).AppShell }),
           children: [
             {
               path: 'projects',
-              lazy: async () => ({ Component: (await import('@/pages/ProjectsPage')).default }),
+              lazy: async () => ({ Component: (await loadApp()).ProjectsPage }),
             },
             {
               path: 'students',
-              lazy: async () => ({ Component: (await import('@/pages/StudentsPage')).default }),
+              lazy: async () => ({ Component: (await loadApp()).StudentsPage }),
             },
             {
               path: 'optimize',
-              lazy: async () => ({ Component: (await import('@/pages/OptimizePage')).default }),
+              lazy: async () => ({ Component: (await loadApp()).OptimizePage }),
             },
             {
               path: 'distribution',
-              lazy: async () => ({ Component: (await import('@/pages/DistributionPage')).default }),
+              lazy: async () => ({ Component: (await loadApp()).DistributionPage }),
             },
             {
               path: 'wunschrunden',
-              lazy: async () => ({ Component: (await import('@/pages/WunschrundenPage')).default }),
+              lazy: async () => ({ Component: (await loadApp()).WunschrundenPage }),
             },
           ],
         },
@@ -45,10 +51,24 @@ export const router = createBrowserRouter(
   { basename },
 );
 
+function Root() {
+  const { t } = useTranslation('app');
+  const loading = useNavigation().state === 'loading';
+  return (
+    <>
+      {loading && <div role="progressbar" aria-label={t('gate.loading')} className="nav-progress" />}
+      <Outlet />
+    </>
+  );
+}
+
 function RouteLoading() {
   const { t } = useTranslation('app');
   return (
-    <div role="status" className="flex min-h-screen items-center justify-center p-6 text-sm">
+    <div
+      role="status"
+      className="flex min-h-screen items-center justify-center p-6 text-sm animate-delayed-in"
+    >
       {t('gate.loading')}
     </div>
   );

@@ -76,4 +76,32 @@
       animation: none;
     }
   }
+
+  /* Loading hints appear only when a wait is long enough to notice. */
+  @keyframes delayed-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-delayed-in {
+    animation: delayed-in 0.2s ease-out 0.4s both;
+  }
+
+  @keyframes nav-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(0.85);
+    }
+  }
+
+  .nav-progress {
+    @apply fixed inset-x-0 top-0 z-[60] h-0.5 origin-left bg-mark;
+    animation: nav-progress 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  }
 }
