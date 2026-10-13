@@ -39,6 +39,18 @@ test('the step navigation shows progress through the workflow', async ({ page })
   await expect(step('Verteilung')).toHaveAttribute('data-state', 'attention');
 });
 
+test('the navigation is already visible while the workspace loads', async ({ page }) => {
+  // An IndexedDB open request that never settles keeps the app in its loading state.
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'indexedDB', { value: { open: () => ({}) } });
+  });
+  await page.goto('/students');
+  await expect(
+    page.getByRole('navigation').getByRole('link', { name: 'Projekte', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('status')).toContainText('Lädt');
+});
+
 test('app pages are preloaded, so switching pages fetches no scripts', async ({ page }) => {
   await page.goto('/');
   await page.waitForLoadState('networkidle');

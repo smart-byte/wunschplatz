@@ -5,7 +5,13 @@ import { useSessionStore } from '@/store/session';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
-export function RoundsGate({ children }: { children: ReactNode }) {
+type Props = {
+  /** Rendered in every state, so the app frame stands while storage loads. */
+  nav: ReactNode;
+  children: ReactNode;
+};
+
+export function RoundsGate({ nav, children }: Props) {
   const { t } = useTranslation('app');
   const phase = useSessionStore((s) => s.phase);
   const error = useSessionStore((s) => s.error);
@@ -21,32 +27,39 @@ export function RoundsGate({ children }: { children: ReactNode }) {
     });
   }, [t]);
 
+  const shell = (content: ReactNode) => (
+    <div className="relative isolate flex min-h-screen flex-col bg-paper">
+      {nav}
+      {content}
+    </div>
+  );
+
   if (phase === 'error') {
-    return (
-      <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 p-6 text-center">
+    return shell(
+      <main className="mx-auto flex max-w-lg flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
         <h1 className="text-xl font-semibold">{t(`gate.${error ?? 'storage'}Title`)}</h1>
         <p role="alert" className="text-sm text-muted-foreground">
           {t(`gate.${error ?? 'storage'}Description`)}
         </p>
         <Button onClick={() => window.location.reload()}>{t('gate.retry')}</Button>
-      </main>
+      </main>,
     );
   }
   if (phase === 'loading') {
-    return (
+    return shell(
       <div
         role="status"
-        className="flex h-screen items-center justify-center text-sm text-muted-foreground"
+        className="flex flex-1 items-center justify-center text-sm text-muted-foreground animate-delayed-in"
       >
         {t('gate.loading')}
-      </div>
+      </div>,
     );
   }
   const switching = phase === 'switching';
   return (
     <>
       <div {...(switching ? { inert: '' } : {})} aria-busy={switching}>
-        {children}
+        {shell(children)}
       </div>
       {switching && (
         <div
