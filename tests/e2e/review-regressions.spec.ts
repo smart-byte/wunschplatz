@@ -47,7 +47,7 @@ test('UTF-8 forms import preserves names and rejects bad wishes without replacin
     buffer: Buffer.from(csv.replace('Töpfern,Schach', 'Unknown,Schach')),
   });
   await expect(page.getByRole('alert')).toContainText('Bitte korrigiere');
-  await expect(page.getByRole('button', { name: '0 importieren', exact: true })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Importieren', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Abbrechen', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Schüler (1)', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Verteilung' }).click();

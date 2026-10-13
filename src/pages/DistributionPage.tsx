@@ -116,13 +116,14 @@ export default function DistributionPage() {
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">
+          {/* The earliest missing step is the primary action. */}
           {!hasProjects && (
-            <Button asChild variant={hasStudents ? 'default' : 'outline'}>
+            <Button asChild>
               <Link to="/projects">{t('distribution.empty.goToProjects')}</Link>
             </Button>
           )}
           {!hasStudents && (
-            <Button asChild>
+            <Button asChild variant={hasProjects ? 'default' : 'outline'}>
               <Link to="/students">{t('distribution.empty.goToStudents')}</Link>
             </Button>
           )}

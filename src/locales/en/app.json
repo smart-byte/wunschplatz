@@ -366,6 +366,7 @@
     "duplicatesRemoved_other": "{{count}} duplicate submissions removed (kept most recent).",
     "replaceWarning": "Warning: import replaces all existing students and resets the distribution.",
     "confirm": "Import {{count}}",
+    "confirm_zero": "Import",
     "help": {
       "buttonTitle": "Show Excel format",
       "ariaLabel": "Help",

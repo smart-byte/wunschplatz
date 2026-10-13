@@ -366,6 +366,7 @@
     "duplicatesRemoved_other": "{{count}} Doppel-Einreichungen entfernt (neueste behalten).",
     "replaceWarning": "Achtung: Import ersetzt alle bisherigen Schüler und setzt die Verteilung zurück.",
     "confirm": "{{count}} importieren",
+    "confirm_zero": "Importieren",
     "help": {
       "buttonTitle": "Excel-Format anzeigen",
       "ariaLabel": "Hilfe",
