@@ -25,6 +25,8 @@ test('happy path: create projects, import students, optimize, edit, export', asy
   }
 
   await page.getByRole('link', { name: 'Schüler' }).click();
+  // Both pages have an "Excel importieren" button; wait until the students page is shown.
+  await expect(page.locator('h1')).toContainText('Schüler');
   await page.getByRole('button', { name: 'Excel importieren' }).click();
   await page
     .locator('input[type="file"]')
@@ -44,10 +46,9 @@ test('happy path: create projects, import students, optimize, edit, export', asy
 
   await page.getByRole('tab', { name: 'Tabelle', exact: true }).click();
   const assignment = page.getByRole('combobox', { name: 'Projekt für Anna Müller', exact: true });
-  await expect(assignment).toContainText('Alpha');
-  await assignment.click();
-  await page.getByRole('option', { name: 'Beta', exact: true }).click();
-  await expect(assignment).toContainText('Beta');
+  await expect(assignment.locator('option:checked')).toHaveText('Alpha');
+  await assignment.selectOption({ label: 'Beta' });
+  await expect(assignment.locator('option:checked')).toHaveText('Beta');
   await expect(page.getByRole('row').filter({ hasText: 'Müller, Anna' })).toContainText('2.');
 
   const downloadPromise = page.waitForEvent('download');

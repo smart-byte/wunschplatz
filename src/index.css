@@ -35,6 +35,15 @@
   .section-label {
     @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-mark;
   }
+
+  /* Native <select> styled like the Radix trigger, for places that render many of them. */
+  .select-native {
+    @apply h-10 appearance-none rounded-md border border-input bg-background py-2 pl-3 pr-8 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a6472' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.625rem center;
+    background-repeat: no-repeat;
+    background-size: 1rem;
+  }
 }
 
 @layer base {

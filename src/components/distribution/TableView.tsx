@@ -25,7 +25,7 @@ import { toast } from 'sonner';
 import { AssignmentBadge } from './AssignmentBadge';
 import { Badge } from '@/components/ui/badge';
 import { StudentFormDialog } from '@/components/students/StudentFormDialog';
-import type { Student } from '@/types';
+import type { Project, Student } from '@/types';
 
 export function TableView() {
   const { t } = useTranslation('app');
@@ -53,6 +53,23 @@ export function TableView() {
       return true;
     });
   }, [rows, filter, search]);
+
+  const projectName = useMemo(() => new Map(projects.map((p) => [p.id, p.name])), [projects]);
+  // Rows share option lists per grade instead of filtering all projects for every row.
+  const optionsForGrade = useMemo(() => {
+    const cache = new Map<number, { compatible: Project[]; incompatible: Project[] }>();
+    return (grade: number) => {
+      let options = cache.get(grade);
+      if (!options) {
+        options = {
+          compatible: projects.filter((p) => p.grades.includes(grade)),
+          incompatible: projects.filter((p) => !p.grades.includes(grade)),
+        };
+        cache.set(grade, options);
+      }
+      return options;
+    };
+  }, [projects]);
 
   function handleChange(studentId: string, projectId: string) {
     move(studentId, projectId === '__none__' ? null : projectId);
@@ -121,8 +138,7 @@ export function TableView() {
               </TableRow>
             )}
             {filtered.map((r) => {
-              const compatProjects = projects.filter((p) => p.grades.includes(r.student.grade));
-              const incompatible = projects.filter((p) => !p.grades.includes(r.student.grade));
+              const { compatible, incompatible } = optionsForGrade(r.student.grade);
               return (
                 <TableRow
                   key={r.student.id}
@@ -142,7 +158,7 @@ export function TableView() {
                   <TableCell className="hidden max-w-[320px] xl:table-cell">
                     <div className="flex flex-wrap gap-1">
                       {r.student.priorities.map((id, i) => {
-                        const name = projects.find((p) => p.id === id)?.name ?? '?';
+                        const name = projectName.get(id) ?? '?';
                         const assigned = r.assignment.projectId === id;
                         return (
                           <Badge
@@ -164,41 +180,32 @@ export function TableView() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Select
+                    {/* ponytail: native select on purpose — a Radix Select mounts all of its items
+                        even while closed, which costs rows × projects components. */}
+                    <select
                       value={r.assignment.projectId ?? '__none__'}
-                      onValueChange={(v) => handleChange(r.student.id, v)}
+                      onChange={(e) => handleChange(r.student.id, e.target.value)}
+                      aria-label={t('distribution.table.assignmentLabel', {
+                        name: `${r.student.firstName} ${r.student.lastName}`,
+                      })}
+                      className="select-native w-44 truncate border-transparent bg-transparent hover:border-input hover:bg-white focus:border-mark lg:w-56"
                     >
-                      <SelectTrigger
-                        aria-label={t('distribution.table.assignmentLabel', {
-                          name: `${r.student.firstName} ${r.student.lastName}`,
-                        })}
-                        className="w-44 border-transparent bg-transparent hover:border-input hover:bg-white focus:border-mark lg:w-56"
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__none__">
-                          {t('distribution.table.unassignedOption')}
-                        </SelectItem>
-                        {compatProjects.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name}
-                          </SelectItem>
-                        ))}
-                        {incompatible.length > 0 && (
-                          <>
-                            <div className="px-2 py-1 text-xs text-muted-foreground">
-                              {t('distribution.table.gradeIncompatible')}
-                            </div>
-                            {incompatible.map((p) => (
-                              <SelectItem key={p.id} value={p.id}>
-                                {p.name} ⚠
-                              </SelectItem>
-                            ))}
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
+                      <option value="__none__">{t('distribution.table.unassignedOption')}</option>
+                      {compatible.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                      {incompatible.length > 0 && (
+                        <optgroup label={t('distribution.table.gradeIncompatible')}>
+                          {incompatible.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name} ⚠
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
                   </TableCell>
                   <TableCell>
                     <AssignmentBadge
