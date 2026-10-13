@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { utils, type WorkBook } from 'xlsx';
+import type * as XLSX from 'xlsx';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { readWorkbook } from '@/excel/readWorkbook';
@@ -7,7 +7,8 @@ import { readWorkbook } from '@/excel/readWorkbook';
 export function useImportWorkbook(open: boolean, externalFile?: File | null) {
   const { t } = useTranslation('app');
   const [fileName, setFileName] = useState('');
-  const [workbook, setWorkbook] = useState<WorkBook | null>(null);
+  const [workbook, setWorkbook] = useState<XLSX.WorkBook | null>(null);
+  const [sheetUtils, setSheetUtils] = useState<typeof XLSX.utils | null>(null);
   const [sheetName, setSheetName] = useState('');
   const [loading, setLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -30,9 +31,11 @@ export function useImportWorkbook(open: boolean, externalFile?: File | null) {
       setWorkbook(null);
       setLoading(true);
       try {
-        const next = await readWorkbook(file);
+        // readWorkbook already loaded SheetJS, so this import resolves from cache.
+        const [next, { utils }] = await Promise.all([readWorkbook(file), import('xlsx')]);
         if (request.current !== token) return;
         if (!next.SheetNames.length) throw new Error('Empty workbook');
+        setSheetUtils(utils);
         setWorkbook(next);
         setSheetName(next.SheetNames[0]);
       } catch {
@@ -52,10 +55,13 @@ export function useImportWorkbook(open: boolean, externalFile?: File | null) {
   }, [open, externalFile, handleFile, reset, invalidate]);
   const rows = useMemo(
     () =>
-      workbook && workbook.Sheets[sheetName]
-        ? utils.sheet_to_json<unknown[]>(workbook.Sheets[sheetName], { header: 1, defval: '' })
+      sheetUtils && workbook && workbook.Sheets[sheetName]
+        ? sheetUtils.sheet_to_json<unknown[]>(workbook.Sheets[sheetName], {
+            header: 1,
+            defval: '',
+          })
         : null,
-    [workbook, sheetName],
+    [sheetUtils, workbook, sheetName],
   );
   return { rows, workbook, fileName, sheetName, setSheetName, loading, fileRef, handleFile, reset };
 }

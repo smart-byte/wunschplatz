@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { writeFile } from 'xlsx';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ProjectFormDialog } from '@/components/projects/ProjectFormDialog';
@@ -9,7 +8,6 @@ import { SampleDataDialog } from '@/components/projects/SampleDataDialog';
 import { BlueprintPanel } from '@/components/rounds/BlueprintPanel';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { commitProjects } from '@/store/commitProjects';
-import { buildProjectsWorkbook } from '@/excel/exportProjects';
 import { usePageFileDrop } from '@/hooks/usePageFileDrop';
 import { toast } from 'sonner';
 import { WorkspaceBackdrop } from '@/components/layout/WorkspaceBackdrop';
@@ -27,11 +25,20 @@ export default function ProjectsPage() {
     setImportOpen(true);
   });
 
-  function handleExport() {
-    const wb = buildProjectsWorkbook(projects, i18n.resolvedLanguage ?? i18n.language);
-    const date = new Date().toISOString().slice(0, 10);
-    writeFile(wb, `${t('projects.exportFilePrefix')}-${date}.xlsx`);
-    toast.success(t('projects.exportStarted'));
+  async function handleExport() {
+    try {
+      // SheetJS is large; load it only when someone actually exports.
+      const [{ writeFile }, { buildProjectsWorkbook }] = await Promise.all([
+        import('xlsx'),
+        import('@/excel/exportProjects'),
+      ]);
+      const wb = buildProjectsWorkbook(projects, i18n.resolvedLanguage ?? i18n.language);
+      const date = new Date().toISOString().slice(0, 10);
+      writeFile(wb, `${t('projects.exportFilePrefix')}-${date}.xlsx`);
+      toast.success(t('projects.exportStarted'));
+    } catch {
+      toast.error(t('common.exportFailed'));
+    }
   }
 
   const importDialog = (

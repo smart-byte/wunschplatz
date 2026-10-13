@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { writeFile } from 'xlsx';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,7 +22,6 @@ import { TableView } from '@/components/distribution/TableView';
 import { BoardView } from '@/components/distribution/BoardView';
 import { StatsPanel } from '@/components/distribution/StatsPanel';
 import { DistributionSelector } from '@/components/distribution/DistributionSelector';
-import { buildExportWorkbook } from '@/excel/exportDistribution';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useActiveDistribution } from '@/store/useAssignmentsStore';
@@ -64,24 +62,33 @@ export default function DistributionPage() {
   const hasProjects = projects.length > 0;
   const hasStudents = students.length > 0;
 
-  function handleExport() {
+  async function handleExport() {
     if (!activeDist) return;
-    const wb = buildExportWorkbook(
-      students,
-      projects,
-      activeDist.assignments,
-      i18n.resolvedLanguage ?? i18n.language,
-    );
-    const date = new Date().toISOString().slice(0, 10);
-    const slug = activeDist.name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .replace(/ß/g, 'ss')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-    writeFile(wb, `wunschplatz-${slug || t('distribution.exportFileFallback')}-${date}.xlsx`);
-    toast.success(t('distribution.exportStarted'));
+    try {
+      // SheetJS is large; load it only when someone actually exports.
+      const [{ writeFile }, { buildExportWorkbook }] = await Promise.all([
+        import('xlsx'),
+        import('@/excel/exportDistribution'),
+      ]);
+      const wb = buildExportWorkbook(
+        students,
+        projects,
+        activeDist.assignments,
+        i18n.resolvedLanguage ?? i18n.language,
+      );
+      const date = new Date().toISOString().slice(0, 10);
+      const slug = activeDist.name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/ß/g, 'ss')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      writeFile(wb, `wunschplatz-${slug || t('distribution.exportFileFallback')}-${date}.xlsx`);
+      toast.success(t('distribution.exportStarted'));
+    } catch {
+      toast.error(t('common.exportFailed'));
+    }
   }
 
   if (!hasProjects || !hasStudents) {

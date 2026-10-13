@@ -1,7 +1,8 @@
-import { read, type WorkBook } from 'xlsx';
+import type { WorkBook } from 'xlsx';
 
 export async function readWorkbook(file: Pick<File, 'name' | 'arrayBuffer'>): Promise<WorkBook> {
-  const bytes = await file.arrayBuffer();
+  // SheetJS is large; load it only once a file is actually read.
+  const [{ read }, bytes] = await Promise.all([import('xlsx'), file.arrayBuffer()]);
   if (!/\.csv$/i.test(file.name)) return read(bytes);
   // Decode CSV explicitly: SheetJS assumes a legacy code page for bytes without a BOM.
   const prefix = new Uint8Array(bytes, 0, Math.min(2, bytes.byteLength));

@@ -115,6 +115,7 @@
     "loadFailedTitle": "Die App konnte nicht geladen werden",
     "loadFailedDescription": "Bitte prüfe deine Internetverbindung und lade die Seite erneut.",
     "editConflict": "Diese Angaben wurden in einem anderen Tab geändert. Deine Eingaben sind noch da. Bitte prüfe sie und speichere erneut.",
+    "exportFailed": "Der Export ist fehlgeschlagen. Bitte prüfe deine Internetverbindung und versuche es erneut.",
     "itemDeleted": "Dieser Eintrag wurde in einem anderen Tab gelöscht."
   },
   "projects": {
