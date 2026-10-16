@@ -14,12 +14,12 @@
   display: flow-root;
 }
 
-.school-garden-backdrop {
+.landing-backdrop {
   display: none;
 }
 
 @media (min-width: 768px) {
-  .school-garden-backdrop {
+  .landing-backdrop {
     display: block;
     position: absolute;
     z-index: -1;
@@ -35,46 +35,41 @@
     mask-image: linear-gradient(to bottom, #000 0%, #000 48%, transparent 100%);
   }
 
-  .school-garden-scene {
-    position: absolute;
-    inset: 0;
-    mask-image: linear-gradient(
-      to right,
-      #000,
-      #000 calc(50% - 500px),
-      #00000008 calc(50% - 300px),
-      #00000008 calc(50% + 300px),
-      #000 calc(50% + 500px),
-      #000
-    );
-  }
-
-  .school-garden-scene::before,
-  .school-garden-scene::after {
+  .landing-backdrop::before {
     content: '';
     position: absolute;
     top: 0;
+    left: 50%;
+    width: clamp(1280px, 100vw, 2200px);
     height: 100%;
-    aspect-ratio: 3 / 4;
-    max-width: 50%;
-    background-image: url('../../assets/school-garden.webp');
+    transform: translateX(-50%);
+    background-image: url('../../assets/project-week-fair.webp');
     background-repeat: no-repeat;
-    background-size: auto 100%;
-  }
-
-  .school-garden-scene::before {
-    left: 0;
-    background-position: left top;
-  }
-
-  .school-garden-scene::after {
-    right: 0;
-    background-position: right top;
+    background-position: center top;
+    background-size: 100% auto;
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 4%,
+      #000 calc(50% - 480px),
+      #0000000a calc(50% - 340px),
+      #0000000a calc(50% + 340px),
+      #000 calc(50% + 480px),
+      #000 96%,
+      transparent
+    );
   }
 }
 
 @media (min-width: 768px) and (max-width: 1100px) {
-  .school-garden-backdrop {
+  .landing-backdrop {
     opacity: 0.32;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-steps {
+    /* ponytail: breaks out to the right only, so the left text edge and the rail stay aligned */
+    margin-right: calc(-1 * min(200px, (100vw - 768px) / 2));
   }
 }

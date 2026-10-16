@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { Trans, useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
 
 export function HeroSection() {
   const { t } = useTranslation('landing');
 
   return (
-    <section className="mx-auto max-w-[720px] px-6 pb-5 pt-14 sm:px-11 sm:pt-[60px]">
+    <section className="mx-auto max-w-[720px] px-6 pb-2 pt-14 sm:px-11 sm:pt-[60px]">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-mark">
         {t('hero.kicker')}
       </p>
@@ -24,14 +25,16 @@ export function HeroSection() {
         />
       </p>
 
-      <div className="mt-7 flex flex-wrap items-baseline gap-x-[18px] gap-y-2">
-        <Link
-          to="/projects"
-          className="border-b-2 border-mark-soft pb-0.5 text-[16px] font-semibold text-mark transition-colors hover:border-mark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      <div className="mt-7 flex flex-wrap items-center gap-x-[18px] gap-y-3">
+        <Button
+          asChild
+          className="h-auto gap-1.5 rounded-lg px-5 py-[11px] text-[15px] font-semibold shadow-[0_1px_2px_rgba(38,48,110,0.25)]"
         >
-          {t('hero.cta')}
-          <span aria-hidden> →</span>
-        </Link>
+          <Link to="/projects">
+            {t('hero.cta')}
+            <span aria-hidden>→</span>
+          </Link>
+        </Button>
         <span className="text-[13px] text-quiet">{t('hero.ctaHint')}</span>
       </div>
     </section>

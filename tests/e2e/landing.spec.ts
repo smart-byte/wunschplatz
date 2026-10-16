@@ -16,6 +16,15 @@ test('landing renders German by default, CTA enters the app', async ({ page }) =
   await expect(page.locator('h1')).toContainText('Projekte');
 });
 
+test('steps switch the app excerpt', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('img', { name: 'Projekte → Formular-Vorlage' })).toBeVisible();
+  await expect(page.getByText('Fragen (9)')).toBeVisible();
+  await page.getByRole('tab', { name: /Optimal verteilen/ }).click();
+  await expect(page.getByRole('img', { name: 'Optimierung → Verteilung' })).toBeVisible();
+  await expect(page.getByText('Erstwunsch erfüllt')).toBeVisible();
+});
+
 test('language toggle switches to English and persists across reload', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'EN', exact: true }).click();
