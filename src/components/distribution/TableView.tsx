@@ -29,7 +29,7 @@ import { matchesStudent } from '@/lib/studentSearch';
 import { Button } from '@/components/ui/button';
 import type { Project, Student } from '@/types';
 
-// ponytail: plain paging instead of virtualization; rows render in steps of 100.
+// Plain paging instead of virtualization; rows render in steps of 100.
 const PAGE_SIZE = 100;
 
 export function TableView() {
@@ -191,7 +191,7 @@ export function TableView() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {/* ponytail: native select on purpose — a Radix Select mounts all of its items
+                    {/* Native select on purpose — a Radix Select mounts all of its items
                         even while closed, which costs rows × projects components. */}
                     <select
                       value={r.assignment.projectId ?? '__none__'}

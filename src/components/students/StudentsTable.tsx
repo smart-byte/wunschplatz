@@ -60,7 +60,7 @@ type SortKey =
   'name' | 'className' | 'grade' | 'group' | 'prio1' | 'prio2' | 'prio3' | 'prio4' | 'prio5';
 type SortDir = 'asc' | 'desc';
 
-// ponytail: plain paging instead of virtualization; rows render in steps of 100.
+// Plain paging instead of virtualization; rows render in steps of 100.
 const PAGE_SIZE = 100;
 
 function sortValue(s: Student, key: SortKey, projectName: (id: string) => string): string | number {

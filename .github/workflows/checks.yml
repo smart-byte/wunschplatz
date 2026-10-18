@@ -3,6 +3,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  # The deploy workflow runs these checks before every release.
+  workflow_call:
 permissions:
   contents: read
 concurrency:

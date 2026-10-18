@@ -69,7 +69,7 @@
 
 @media (min-width: 1024px) {
   .landing-steps {
-    /* ponytail: breaks out to the right only, so the left text edge and the rail stay aligned */
+    /* Breaks out to the right only, so the left text edge and the rail stay aligned */
     margin-right: calc(-1 * min(200px, (100vw - 768px) / 2));
   }
 }

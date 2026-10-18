@@ -7,7 +7,7 @@ import type { BlueprintQuestion } from '@/types';
 
 export type Step = 'form' | 'import' | 'result';
 
-// ponytail: frozen from one solver run on the app's sample data (18 projects, 248 students),
+// Frozen from one solver run on the app's sample data (18 projects, 248 students),
 // 2026-09-23. Import counts are illustrative. Refresh by re-running "Beispieldaten" + solver.
 const PROJECT_COUNT = 18;
 const IMPORT = { found: 248, duplicates: 3 };

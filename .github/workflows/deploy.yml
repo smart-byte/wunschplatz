@@ -19,7 +19,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Release only what passes the same checks as pull requests.
+  checks:
+    uses: ./.github/workflows/checks.yml
+
   build:
+    needs: checks
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
