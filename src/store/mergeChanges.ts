@@ -59,8 +59,8 @@ export function mergeChanges<T>(
         ...Object.keys(ours),
         ...Object.keys(theirs),
       ])) {
-        const value = merge(before[key], ours[key], theirs[key], key);
-        if (value !== undefined) result[key] = value;
+        // Keep cleared fields as undefined, so applying the result as a patch clears them too.
+        result[key] = merge(before[key], ours[key], theirs[key], key);
       }
       return result;
     }

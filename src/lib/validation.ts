@@ -9,7 +9,7 @@ export function parseGrades(raw: string): number[] {
   const cleaned = raw
     .trim()
     .replace(/^\[(.*)\]$/, '$1')
-    .replace(/^Kl\.?\s*/i, '')
+    .replace(/^Kl(?:\.|asse)?\s*/i, '')
     .trim();
   const range = cleaned.match(/^(\d+)\s*[-–—]\s*(\d+)$/);
   const valid = (n: number | null): n is number => n !== null && n >= 5 && n <= 13;

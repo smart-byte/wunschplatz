@@ -35,6 +35,21 @@ describe('i18n', () => {
     expect(document.documentElement.lang).toBe('de');
   });
 
+  it('uses singular forms for a count of one', async () => {
+    await i18n.changeLanguage('de');
+    const de = (key: string) => i18n.t(`app:${key}`, { count: 1 });
+    expect(de('rounds.projectCount')).toBe('1 Projekt');
+    expect(de('optimize.capacityHint')).toMatch(/^Es fehlt insgesamt 1 Platz\./);
+    expect(de('distribution.card.interestedTooltip')).toMatch(/^1 Schüler hat /);
+    expect(de('blueprint.description')).toMatch(/aus deinem Projekt\.$/);
+    await i18n.changeLanguage('en');
+    const en = (key: string) => i18n.t(`app:${key}`, { count: 1 });
+    expect(en('rounds.studentCount')).toBe('1 student');
+    expect(en('distribution.card.totalInterested')).toBe('1 student total');
+    expect(en('optimize.capacityHint')).toMatch(/^There is 1 fewer place /);
+    await i18n.changeLanguage('de');
+  });
+
   it('keeps all app translation keys in sync', () => {
     expect(leafKeys(appEn).sort()).toEqual(leafKeys(appDe).sort());
   });

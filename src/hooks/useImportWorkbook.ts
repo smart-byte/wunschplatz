@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type * as XLSX from 'xlsx';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
+import { toastFailure } from '@/lib/toastFailure';
 import { readWorkbook } from '@/excel/readWorkbook';
 
 export function useImportWorkbook(open: boolean, externalFile?: File | null) {
@@ -38,10 +38,10 @@ export function useImportWorkbook(open: boolean, externalFile?: File | null) {
         setSheetUtils(utils);
         setWorkbook(next);
         setSheetName(next.SheetNames[0]);
-      } catch {
+      } catch (error) {
         if (request.current !== token) return;
         reset();
-        toast.error(t('common.fileReadFailed'));
+        toastFailure(error, t('common.fileReadFailed'));
       } finally {
         if (request.current === token) setLoading(false);
       }

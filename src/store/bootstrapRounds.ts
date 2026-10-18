@@ -8,19 +8,28 @@ import { failSession, notifySession, useSessionStore } from './session';
 const SELECTION_KEY = 'wunschplatz-active-round';
 const CHANGE_KEY = 'wunschplatz-workspace-revision';
 
+// Each tab keeps its own round; a new session reopens the round last used in any tab.
+const selectionStores = [() => sessionStorage, () => localStorage];
+
 function selectedRound(): string | null {
-  try {
-    return sessionStorage.getItem(SELECTION_KEY);
-  } catch {
-    return null;
+  for (const storage of selectionStores) {
+    try {
+      const id = storage().getItem(SELECTION_KEY);
+      if (id) return id;
+    } catch {
+      /* Fall through to the next store. */
+    }
   }
+  return null;
 }
 
-function rememberSelection() {
+/** `tabOnly` skips the shared "last used" entry, for changes that came from another tab. */
+function rememberSelection(tabOnly = false) {
   const id = useRoundsStore.getState().activeRoundId;
-  if (id) {
+  if (!id) return;
+  for (const storage of tabOnly ? selectionStores.slice(0, 1) : selectionStores) {
     try {
-      sessionStorage.setItem(SELECTION_KEY, id);
+      storage().setItem(SELECTION_KEY, id);
     } catch {
       /* Selection can remain in memory. */
     }
@@ -62,7 +71,7 @@ async function initialize(createdAt: string, defaultName: string): Promise<void>
         applying = true;
         try {
           applySavedRounds(rounds);
-          rememberSelection();
+          rememberSelection(true);
         } finally {
           applying = false;
         }

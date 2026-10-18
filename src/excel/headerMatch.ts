@@ -22,10 +22,11 @@ function normalize(s: string): string {
   return s.trim();
 }
 
+// Patterns are tried in order, so "Nachname" wins over a bare "Name" in any column.
 function findColumn(headers: string[], regexes: RegExp[]): number {
-  for (let i = 0; i < headers.length; i++) {
-    const h = normalize(headers[i]);
-    if (regexes.some((r) => r.test(h))) return i;
+  for (const r of regexes) {
+    const i = headers.findIndex((h) => r.test(normalize(h)));
+    if (i !== -1) return i;
   }
   return -1;
 }

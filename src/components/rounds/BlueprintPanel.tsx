@@ -12,7 +12,7 @@ import { buildFormGeneratorPrompt } from '@/forms/buildFormGeneratorPrompt';
 import type { BlueprintQuestion, FormBlueprint, Project } from '@/types';
 
 export function BlueprintPanel() {
-  const { t, i18n } = useTranslation('app');
+  const { t } = useTranslation('app');
   const projects = useProjectsStore((s) => s.projects);
   const activeRoundId = useRoundsStore((s) => s.activeRoundId);
   const activeRound = useRoundsStore((s) => s.rounds.find((r) => r.id === s.activeRoundId));
@@ -23,11 +23,7 @@ export function BlueprintPanel() {
 
   function onGenerate() {
     if (blueprint && !confirm(t('blueprint.regenerateConfirm'))) return;
-    const res = buildBlueprint(
-      projects,
-      new Date().toISOString(),
-      i18n.resolvedLanguage ?? i18n.language,
-    );
+    const res = buildBlueprint(projects, new Date().toISOString());
     if (!res.ok) {
       const message = t(`blueprint.errors.${res.error.code}`, res.error.values);
       setError(message);
@@ -101,20 +97,14 @@ function BlueprintView({
   projects: Project[];
   roundName: string;
 }) {
-  const { t, i18n } = useTranslation('app');
+  const { t } = useTranslation('app');
   const optionsText = useMemo(
     () => blueprint.priorities[0]?.options?.join('\n') ?? '',
     [blueprint],
   );
   const generatorPrompt = useMemo(
-    () =>
-      buildFormGeneratorPrompt({
-        blueprint,
-        projects,
-        roundName,
-        language: i18n.resolvedLanguage ?? i18n.language,
-      }),
-    [blueprint, projects, roundName, i18n.resolvedLanguage, i18n.language],
+    () => buildFormGeneratorPrompt({ blueprint, projects, roundName }),
+    [blueprint, projects, roundName],
   );
   const allQuestions = [...blueprint.identity, ...blueprint.priorities];
   const [copied, setCopied] = useState<'prompt' | 'options' | null>(null);

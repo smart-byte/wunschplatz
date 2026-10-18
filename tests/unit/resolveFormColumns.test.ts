@@ -56,6 +56,13 @@ describe('resolveFormColumns', () => {
     expect(c.missingRequired).toEqual([]);
   });
 
+  it('never reads the MS Forms account Name column as the last name', () => {
+    const headers = ['Name', 'Vorname', 'Familienname', 'Klasse', 'Jahrgang'];
+    const c = resolveFormColumns(headers.concat(bp.priorities.map((q) => q.title)), bp);
+    expect(c.lastName).toBe(-1);
+    expect(c.missingRequired).toContain('lastName');
+  });
+
   it('reports a required column missing when neither exact nor fuzzy matches', () => {
     const headers = ['Rufname', 'Nachname', 'Klasse', 'Jahrgang', '1. Wahl'];
     const c = resolveFormColumns(headers, bp);

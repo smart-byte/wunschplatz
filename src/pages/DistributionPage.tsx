@@ -28,6 +28,7 @@ import { useActiveDistribution } from '@/store/useAssignmentsStore';
 import { useStaleAssignments } from '@/hooks/useStaleAssignments';
 import { Download, ListChecks } from 'lucide-react';
 import { toast } from 'sonner';
+import { toastFailure } from '@/lib/toastFailure';
 
 const TAB_STORAGE_KEY = 'distribution.activeTab.v2';
 
@@ -86,8 +87,8 @@ export default function DistributionPage() {
         .replace(/^-+|-+$/g, '');
       writeFile(wb, `wunschplatz-${slug || t('distribution.exportFileFallback')}-${date}.xlsx`);
       toast.success(t('distribution.exportStarted'));
-    } catch {
-      toast.error(t('common.exportFailed'));
+    } catch (error) {
+      toastFailure(error, t('common.exportFailed'));
     }
   }
 

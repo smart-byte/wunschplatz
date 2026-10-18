@@ -7,6 +7,9 @@ import {
 import { reconcileWorkspace } from './reconcileWorkspace';
 import { sameValue } from './mergeChanges';
 
+// Storage can fail briefly, for example while another tab holds the database; retry first.
+const RETRY_DELAYS_MS = [200, 1000];
+
 type Options = {
   capture: () => SavedRound[];
   apply: (rounds: SavedRound[]) => void;
@@ -30,13 +33,19 @@ export function createWorkspaceSync(
 
   function enqueue(task: () => Promise<void>) {
     chain = chain.then(async () => {
-      if (failed || stopped) return;
-      try {
-        await task();
-      } catch (error) {
-        failed = true;
-        failure = error;
-        options.onError();
+      for (let attempt = 0; !failed && !stopped; attempt++) {
+        try {
+          await task();
+          return;
+        } catch (error) {
+          if (attempt < RETRY_DELAYS_MS.length) {
+            await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+            continue;
+          }
+          failed = true;
+          failure = error;
+          options.onError();
+        }
       }
     });
   }
@@ -58,17 +67,23 @@ export function createWorkspaceSync(
       if (sameValue(baseline.rounds, local)) continue;
       const base = baseline;
       let conflict = false;
-      const saved = await storage.transact((value) => {
-        if (!value) throw new Error('The saved workspace is missing');
-        const latest = validateWorkspace(value);
-        const merged = reconcileWorkspace(base.rounds, local, latest.rounds);
-        conflict = merged.conflict;
-        return validateWorkspace({
-          version: 1,
-          revision: latest.revision + 1,
-          rounds: merged.value,
+      let saved: Workspace;
+      try {
+        saved = await storage.transact((value) => {
+          if (!value) throw new Error('The saved workspace is missing');
+          const latest = validateWorkspace(value);
+          const merged = reconcileWorkspace(base.rounds, local, latest.rounds);
+          conflict = merged.conflict;
+          return validateWorkspace({
+            version: 1,
+            revision: latest.revision + 1,
+            rounds: merged.value,
+          });
         });
-      });
+      } catch (error) {
+        dirty = true; // Still unsaved, so a retry writes it again.
+        throw error;
+      }
       if (stopped) return;
       accept(saved, local);
       if (conflict) options.onConflict();

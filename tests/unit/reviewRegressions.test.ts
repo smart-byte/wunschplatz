@@ -52,6 +52,17 @@ describe('import regressions', () => {
       priorities: ['p1', 'p2'],
     });
   });
+  it('decodes a Windows-1252 CSV, the default of German Excel', async () => {
+    const text = 'Vorname,Nachname,Klasse,Jahrgang,Prio1,Prio2\nAnna,Müller,7a,7,Töpfern,Schach';
+    // ü and ö are single bytes (0xFC, 0xF6) in Windows-1252, which strict UTF-8 rejects.
+    const bytes = Uint8Array.from(text, (char) => char.charCodeAt(0));
+    const wb = await readWorkbook({ name: 'answers.csv', arrayBuffer: async () => bytes.buffer });
+    const rows = utils.sheet_to_json<unknown[]>(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+    expect(parseStudentRows(rows, projects).students[0]).toMatchObject({
+      lastName: 'Müller',
+      priorities: ['p1', 'p2'],
+    });
+  });
   it.each(['Unknown', 'Schach'])(
     'does not promote second wishes after an invalid or duplicate first wish: %s',
     (first) => {

@@ -162,6 +162,24 @@ it('rebases edits made while an earlier save is still in flight', async () => {
   expect(a.hasUnsavedChanges()).toBe(false);
 });
 
+it('retries a failed save before reporting a storage error', async () => {
+  const storage = createWorkspaceStorage();
+  const initial = await storage.transact(seed);
+  let failures = 1;
+  const a = client(initial, {
+    ...storage,
+    transact: (change) =>
+      failures-- > 0 ? Promise.reject(new Error('Busy')) : storage.transact(change),
+  });
+  a.edit((r) => {
+    r[0].name = 'Saved on retry';
+  });
+  await a.flush();
+  expect(a.error).not.toHaveBeenCalled();
+  expect(a.hasUnsavedChanges()).toBe(false);
+  expect((await storage.read())!.rounds[0].name).toBe('Saved on retry');
+});
+
 it('keeps a storage failure sticky and does not silently claim later edits were saved', async () => {
   const storage = createWorkspaceStorage();
   const initial = await storage.transact(seed);

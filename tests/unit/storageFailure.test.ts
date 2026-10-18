@@ -17,7 +17,8 @@ it('keeps all previously saved rounds intact and blocks further edits after a fa
   const bId = useRoundsStore.getState().activeRoundId!;
   const storage = createWorkspaceStorage();
   const before = await storage.read();
-  const put = vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementationOnce(() => {
+  // A persistent failure: one-off errors are retried and never reach the user.
+  const put = vi.spyOn(IDBObjectStore.prototype, 'put').mockImplementation(() => {
     throw new Error('Disk full');
   });
   useProjectsStore
@@ -30,4 +31,6 @@ it('keeps all previously saved rounds intact and blocks further edits after a fa
   expect(await storage.read()).toEqual(before);
   await expect(flushWorkspace()).rejects.toThrow('Disk full');
   expect(() => useProjectsStore.getState().setProjects([])).toThrow(/Wait/);
+  // The blocked edit is explained instead of failing silently.
+  expect(useSessionStore.getState().notice).toEqual({ key: 'saveBlocked' });
 });

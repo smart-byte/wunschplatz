@@ -24,7 +24,7 @@ import { useStudentsStore } from '@/store/useStudentsStore';
 import { getGroupMembers, getGroupColor } from '@/lib/groups';
 import { Users } from 'lucide-react';
 import type { Student } from '@/types';
-import { mergeChanges } from '@/store/mergeChanges';
+import { mergeChanges, sameValue } from '@/store/mergeChanges';
 
 type Props = {
   trigger?: React.ReactNode;
@@ -35,6 +35,16 @@ type Props = {
 };
 
 const NONE = '__none__';
+
+function formFields(student?: Student) {
+  return {
+    firstName: student?.firstName ?? '',
+    lastName: student?.lastName ?? '',
+    className: student?.className ?? '',
+    grade: String(student?.grade ?? 7),
+    priorities: Array.from({ length: 5 }, (_, i) => student?.priorities[i] ?? null),
+  };
+}
 
 export function StudentFormDialog({
   trigger,
@@ -68,18 +78,23 @@ export function StudentFormDialog({
     const opening = open && !wasOpen.current;
     wasOpen.current = open;
     if (!opening) return;
+    const fields = formFields(initial);
     setBaseline(initial);
-    setFirstName(initial?.firstName ?? '');
-    setLastName(initial?.lastName ?? '');
-    setClassName(initial?.className ?? '');
-    setGrade(String(initial?.grade ?? 7));
-    const initPrios = [null, null, null, null, null] as (string | null)[];
-    initial?.priorities.slice(0, 5).forEach((id, i) => {
-      initPrios[i] = id;
-    });
-    setPriorities(initPrios);
+    setFirstName(fields.firstName);
+    setLastName(fields.lastName);
+    setClassName(fields.className);
+    setGrade(fields.grade);
+    setPriorities(fields.priorities);
     setError(null);
   }, [open, initial]);
+
+  const dirty = !sameValue(formFields(baseline), {
+    firstName,
+    lastName,
+    className,
+    grade,
+    priorities,
+  });
 
   function setPriority(index: number, value: string) {
     const next = [...priorities];
@@ -158,7 +173,10 @@ export function StudentFormDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="max-w-2xl">
+      <DialogContent
+        className="max-w-2xl"
+        confirmDismiss={dirty ? t('common.discardChanges') : undefined}
+      >
         <form
           className="grid gap-4"
           onSubmit={(e) => {
@@ -181,7 +199,7 @@ export function StudentFormDialog({
                 }
                 style={
                   groupColor.kind === 'custom'
-                    ? { backgroundColor: groupColor.hex + '33', color: groupColor.hex }
+                    ? { backgroundColor: groupColor.hex, color: groupColor.textHex }
                     : undefined
                 }
               >

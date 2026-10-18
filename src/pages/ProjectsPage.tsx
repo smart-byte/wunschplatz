@@ -10,6 +10,7 @@ import { useProjectsStore } from '@/store/useProjectsStore';
 import { commitProjects } from '@/store/commitProjects';
 import { usePageFileDrop } from '@/hooks/usePageFileDrop';
 import { toast } from 'sonner';
+import { toastFailure } from '@/lib/toastFailure';
 import { WorkspaceBackdrop } from '@/components/layout/WorkspaceBackdrop';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { NextStep } from '@/components/layout/NextStep';
@@ -46,8 +47,8 @@ export default function ProjectsPage() {
       const date = new Date().toISOString().slice(0, 10);
       writeFile(wb, `${t('projects.exportFilePrefix')}-${date}.xlsx`);
       toast.success(t('projects.exportStarted'));
-    } catch {
-      toast.error(t('common.exportFailed'));
+    } catch (error) {
+      toastFailure(error, t('common.exportFailed'));
     }
   }
 

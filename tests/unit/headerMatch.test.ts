@@ -100,4 +100,13 @@ describe('detectColumns', () => {
     expect(cols.priorities[0]).toBe(4);
     expect(cols.priorities[1]).toBe(5);
   });
+  it('prefers Nachname over the account Name column of an MS Forms export', () => {
+    const cols = detectColumns(
+      'ID,Startzeit,Abschlusszeit,E-Mail,Name,Vorname,Nachname,Klasse,Jahrgang,1. Wahl'.split(','),
+    );
+    expect(cols.lastName).toBe(6);
+  });
+  it('reads a bare Name column as the last name when there is no Nachname', () => {
+    expect(detectColumns(['Name', 'Vorname', 'Klasse', 'Jahrgang', 'Prio1']).lastName).toBe(0);
+  });
 });

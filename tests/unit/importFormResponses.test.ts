@@ -29,6 +29,21 @@ const HEADERS = [
 ];
 
 describe('parseFormResponses', () => {
+  it('warns about wishes outside the student grade but imports them', () => {
+    const mixed = projects.map((p) => (p.id === 'p1' ? { ...p, grades: [9] } : p));
+    const rows = [HEADERS, ['01.06.2026 09:00', 'Ada', 'Lovelace', '7a', '7', 'Schach', 'Yoga']];
+    const res = parseFormResponses(rows, mixed, bp);
+    expect(res.students[0].priorities).toEqual(['p0', 'p1']);
+    expect(res.errors).toEqual([
+      {
+        rowIndex: 1,
+        code: 'gradeMismatch',
+        severity: 'warning',
+        values: { priority: 2, name: 'Yoga', grade: 7 },
+      },
+    ]);
+  });
+
   it('imports a two-choice response from a two-project blueprint', () => {
     const smallProjects = projects.slice(0, 2);
     const built = buildBlueprint(smallProjects, 'x');

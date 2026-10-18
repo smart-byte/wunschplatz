@@ -11,6 +11,39 @@ const projects: Project[] = [
 ];
 
 describe('parseStudentRows', () => {
+  it('keeps only the latest submission of a forms export', () => {
+    const rows = [
+      ['Zeitstempel', 'Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Prio1'],
+      ['01.06.2026 09:30', 'Anna', 'Müller', '7a', '7', 'Beta'],
+      ['01.06.2026 09:00', 'Ben', 'Kaya', '7a', '7', 'Alpha'],
+      ['01.06.2026 09:00', 'Anna', 'Müller', '7a', '7', 'Alpha'],
+    ];
+    const result = parseStudentRows(rows, projects);
+    expect(result.students.map((s) => [s.firstName, s.priorities])).toEqual([
+      ['Anna', ['b']],
+      ['Ben', ['a']],
+    ]);
+    expect(result.duplicatesRemoved).toBe(1);
+  });
+
+  it('warns about wishes outside the student grade but imports them', () => {
+    const rows = [
+      ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Prio1', 'Prio2'],
+      ['Anna', 'Müller', '7a', '7', 'Alpha', 'Senior'],
+    ];
+    const senior = { id: 's', name: 'Senior', grades: [9], maxCapacity: 10, targetCapacity: 8 };
+    const result = parseStudentRows(rows, [...projects, senior]);
+    expect(result.students[0].priorities).toEqual(['a', 's']);
+    expect(result.errors).toEqual([
+      {
+        rowIndex: 1,
+        code: 'gradeMismatch',
+        severity: 'warning',
+        values: { priority: 2, name: 'Senior', grade: 7 },
+      },
+    ]);
+  });
+
   it('parses valid rows', () => {
     const rows = [
       ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Prio1', 'Prio2', 'Prio3', 'Prio4', 'Prio5'],

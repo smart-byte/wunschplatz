@@ -294,7 +294,7 @@ export function ImportDialog({
                   ))}
                 </div>
               )}
-              {'duplicatesRemoved' in result && result.duplicatesRemoved > 0 && (
+              {result.duplicatesRemoved > 0 && (
                 <p className="text-xs text-muted-foreground">
                   {t('import.duplicatesRemoved', { count: result.duplicatesRemoved })}
                 </p>

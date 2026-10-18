@@ -4,20 +4,18 @@ type GeneratorPromptInput = {
   blueprint: FormBlueprint;
   projects: Project[];
   roundName: string;
-  language: string;
 };
 
 function oneLine(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
+// German like the form it describes, so the generated form keeps the exact template titles.
 export function buildFormGeneratorPrompt({
   blueprint,
   projects,
   roundName,
-  language,
 }: GeneratorPromptInput): string {
-  const german = language.toLowerCase().startsWith('de');
   const projectById = new Map(projects.map((project) => [project.id, project]));
   const options = blueprint.projectOptions.map((option) => option.label);
   const optionList = options.map((label) => `   - ${label}`).join('\n');
@@ -26,16 +24,10 @@ export function buildFormGeneratorPrompt({
     .map((question, index) => {
       const type =
         question.type === 'short_text'
-          ? german
-            ? 'Kurzantwort'
-            : 'Short answer'
+          ? 'Kurzantwort'
           : question.type === 'choice'
-            ? german
-              ? 'Auswahl'
-              : 'Multiple choice'
-            : german
-              ? 'Drop-down'
-              : 'Dropdown';
+            ? 'Auswahl'
+            : 'Drop-down';
       const choices = question.key.startsWith('priority')
         ? `\n${optionList}`
         : question.options
@@ -51,15 +43,11 @@ export function buildFormGeneratorPrompt({
       if (!project) return `- ${option.label}`;
       const grades = project.grades.join(', ');
       const description = oneLine(project.description ?? '');
-      if (german) {
-        return `- ${option.label} — Jahrgänge: ${grades}${description ? `; Beschreibung: ${description}` : ''}`;
-      }
-      return `- ${option.label} — grades: ${grades}${description ? `; description: ${description}` : ''}`;
+      return `- ${option.label} — Jahrgänge: ${grades}${description ? `; Beschreibung: ${description}` : ''}`;
     })
     .join('\n');
 
-  if (german) {
-    return `Erstelle ein Google-Formular für eine schulische Projektwahl.
+  return `Erstelle ein Google-Formular für eine schulische Projektwahl.
 
 Formulartitel: "Projektwahl – ${roundName}"
 
@@ -79,26 +67,4 @@ Wichtige Vorgaben:
 - Erstelle kein Quiz, keine Punkte und keine Auswertung.
 - Füge keine weiteren Fragen hinzu und ändere keinen Fragetitel.
 - Halte Gestaltung und Beschreibung klar, freundlich und für Schülerinnen und Schüler leicht verständlich.`;
-  }
-
-  return `Create a Google Form for a school project-choice round.
-
-Form title: "Project choices – ${roundName}"
-
-Purpose of the form:
-Students submit their personal details and ${blueprint.prioritiesCount} ranked project choices. Add a short, friendly introduction explaining that the first choice is their highest preference and that each project should be selected at most once.
-
-Create exactly these required questions in this order. Preserve every question title and option verbatim:
-${questions}
-
-Project context for a concise overview in the form description:
-${projectContext}
-
-Important requirements:
-- Make every question required.
-- Use the same complete project list in the same order for every project-choice question.
-- Clearly tell students not to select the same project more than once.
-- Do not create a quiz, scoring, or answer key.
-- Do not add other questions or change any question title.
-- Keep the design and description clear, friendly, and easy for students to understand.`;
 }

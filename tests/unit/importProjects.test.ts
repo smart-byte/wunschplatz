@@ -36,6 +36,11 @@ describe('parseGrades', () => {
   it('deduplicates and sorts', () => {
     expect(parseGrades('7,5,7,6')).toEqual([5, 6, 7]);
   });
+
+  it('strips a "Kl." or "Klasse" prefix', () => {
+    expect(parseGrades('Kl. 5-7')).toEqual([5, 6, 7]);
+    expect(parseGrades('Klasse 5-7')).toEqual([5, 6, 7]);
+  });
 });
 
 describe('parseProjectRows', () => {

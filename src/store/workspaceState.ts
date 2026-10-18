@@ -73,8 +73,9 @@ export function applySavedRounds(
   const active = rounds.find((r) => r.id === selectedId) ?? rounds[0];
   if (!active) throw new Error('No rounds remain');
   if (selectedId && active.id !== selectedId) {
+    const removed = useRoundsStore.getState().rounds.find((r) => r.id === selectedId);
     useSessionStore.setState((s) => ({ generation: s.generation + 1 }));
-    notifySession('roundRemoved');
+    notifySession('roundRemoved', { name: removed?.name ?? '', current: active.name });
   }
   applyStoreUpdate(() => {
     const next = rounds.map((r) => ({

@@ -43,19 +43,28 @@ export function DistributionSelector() {
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameTarget, setRenameTarget] = useState<{ id: string; name: string } | null>(null);
   const [nameInput, setNameInput] = useState('');
+  const [nameError, setNameError] = useState(false);
   const selected = distributions.find((distribution) => distribution.id === activeId);
 
   function startRename(id: string, currentName: string) {
     setRenameTarget({ id, name: currentName });
     setNameInput(currentName);
+    setNameError(false);
     setRenameOpen(true);
   }
 
-  function commitRename() {
+  function commitRename(event: React.FormEvent) {
+    event.preventDefault();
     if (!renameTarget) return;
-    renameDistribution(renameTarget.id, nameInput);
+    const name = nameInput.trim();
+    if (!name) {
+      setNameError(true);
+      return;
+    }
     setRenameOpen(false);
     setRenameTarget(null);
+    if (name === renameTarget.name) return;
+    renameDistribution(renameTarget.id, name);
     toast.success(t('distribution.selector.renamed'));
   }
 
@@ -152,24 +161,34 @@ export function DistributionSelector() {
 
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('distribution.selector.renameDialogTitle')}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-2">
-            <Label htmlFor="dist-name">{t('distribution.selector.nameLabel')}</Label>
-            <Input
-              id="dist-name"
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRenameOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button onClick={commitRename}>{t('common.save')}</Button>
-          </DialogFooter>
+          <form onSubmit={commitRename} noValidate className="grid gap-4">
+            <DialogHeader>
+              <DialogTitle>{t('distribution.selector.renameDialogTitle')}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-2">
+              <Label htmlFor="dist-name">{t('distribution.selector.nameLabel')}</Label>
+              <Input
+                id="dist-name"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                autoFocus
+                required
+                aria-invalid={nameError}
+                aria-describedby={nameError ? 'dist-name-error' : undefined}
+              />
+              {nameError && (
+                <p id="dist-name-error" role="alert" className="text-sm text-destructive">
+                  {t('distribution.selector.nameRequired')}
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setRenameOpen(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit">{t('common.save')}</Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </>

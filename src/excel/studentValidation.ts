@@ -1,4 +1,4 @@
-import type { Student } from '@/types';
+import type { Project, Student } from '@/types';
 import { parseInteger } from '@/lib/validation';
 
 export type StudentImportErrorCode =
@@ -10,7 +10,8 @@ export type StudentImportErrorCode =
   | 'unknownProject'
   | 'duplicateProject'
   | 'deletedProject'
-  | 'groupPrioritiesMismatch';
+  | 'groupPrioritiesMismatch'
+  | 'gradeMismatch';
 export type ParseError = {
   rowIndex: number;
   code: StudentImportErrorCode;
@@ -26,7 +27,7 @@ export function studentImportError(
     rowIndex,
     code,
     values,
-    severity: code === 'groupPrioritiesMismatch' ? 'warning' : 'error',
+    severity: code === 'groupPrioritiesMismatch' || code === 'gradeMismatch' ? 'warning' : 'error',
   };
 }
 
@@ -99,4 +100,26 @@ export function parsePriorities(
     priorities.push(match.id);
   }
   return invalid ? null : priorities;
+}
+
+/** The solver skips wishes outside the student's grade, so keep them but say so. */
+export function warnGradeMismatches(
+  priorities: string[],
+  grade: number,
+  projects: Project[],
+  rowIndex: number,
+  errors: ParseError[],
+): void {
+  priorities.forEach((id, index) => {
+    const project = projects.find((p) => p.id === id);
+    if (project && !project.grades.includes(grade)) {
+      errors.push(
+        studentImportError(rowIndex, 'gradeMismatch', {
+          priority: index + 1,
+          name: project.name,
+          grade,
+        }),
+      );
+    }
+  });
 }

@@ -60,17 +60,4 @@ describe('buildBlueprint', () => {
     expect(bp.projectOptions).toEqual(projects.map((p) => ({ projectId: p.id, label: p.name })));
     expect(bp.generatedAt).toBe('2026-06-02T00:00:00Z');
   });
-
-  it('uses English question titles when an English template is requested', () => {
-    const r = buildBlueprint(mk(2), '2026-06-02T00:00:00Z', 'en-US');
-    expect(r.ok).toBe(true);
-    if (!r.ok) return;
-    expect(r.blueprint.identity.map((q) => q.title)).toEqual([
-      'First Name',
-      'Last Name',
-      'Class',
-      'Grade',
-    ]);
-    expect(r.blueprint.priorities.map((q) => q.title)).toEqual(['Priority 1', 'Priority 2']);
-  });
 });

@@ -12,6 +12,13 @@ export async function readWorkbook(file: Pick<File, 'name' | 'arrayBuffer'>): Pr
       : prefix[0] === 0xfe && prefix[1] === 0xff
         ? 'utf-16be'
         : 'utf-8';
-  const csv = new TextDecoder(encoding, { fatal: true }).decode(bytes);
+  let csv: string;
+  try {
+    csv = new TextDecoder(encoding, { fatal: true }).decode(bytes);
+  } catch (error) {
+    // German Excel saves "CSV (Trennzeichen-getrennt)" as Windows-1252, which is not valid UTF-8.
+    if (encoding !== 'utf-8') throw error;
+    csv = new TextDecoder('windows-1252').decode(bytes);
+  }
   return read(csv, { type: 'string', raw: true });
 }

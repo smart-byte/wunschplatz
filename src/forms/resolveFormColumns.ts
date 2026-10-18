@@ -38,7 +38,8 @@ export function resolveFormColumns(headers: string[], blueprint: FormBlueprint):
     const exact = findExact(headers, titleByRole[role]);
     if (exact !== -1) return exact;
     const fb = fuzzy[role];
-    if (fb !== -1) {
+    // MS Forms exports hold the respondent's account name in "Name", never the last name.
+    if (fb !== -1 && !(role === 'lastName' && /^name$/i.test(headers[fb].trim()))) {
       warnings.push({
         code: 'heuristicColumn',
         values: { expected: titleByRole[role], actual: headers[fb] },

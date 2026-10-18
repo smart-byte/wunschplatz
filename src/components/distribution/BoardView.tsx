@@ -6,11 +6,14 @@ import { needsAttention } from '@/lib/distribution';
 import { matchesStudent } from '@/lib/studentSearch';
 import {
   DndContext,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useDroppable,
   useSensor,
   useSensors,
+  type Announcements,
   type DragEndEvent,
+  type UniqueIdentifier,
 } from '@dnd-kit/core';
 import { useTranslation } from 'react-i18next';
 import { useDistributionData } from '@/hooks/useDistributionData';
@@ -46,8 +49,36 @@ export function BoardView({ sortKey }: Props) {
   const [query, setQuery] = useState('');
   const [attentionOnly, setAttentionOnly] = useState(false);
 
-  // Leave room for clicks before starting a drag.
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  // Leave room for clicks before starting a drag. On touch screens a drag starts after a short
+  // press, so swiping over the board still scrolls it.
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+  );
+  const nameOf = (id: UniqueIdentifier) => {
+    const student = rows.find((r) => r.student.id === id)?.student;
+    return student ? `${student.firstName} ${student.lastName}` : '';
+  };
+  const targetOf = (id: UniqueIdentifier) =>
+    id === UNASSIGNED_ID
+      ? t('distribution.board.unassignedHeading')
+      : (projects.find((p) => p.id === id)?.name ?? '');
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => t('distribution.board.dnd.start', { name: nameOf(active.id) }),
+    onDragOver: ({ active, over }) =>
+      over
+        ? t('distribution.board.dnd.over', { name: nameOf(active.id), target: targetOf(over.id) })
+        : t('distribution.board.dnd.outside', { name: nameOf(active.id) }),
+    onDragEnd: ({ active, over }) =>
+      over
+        ? t('distribution.board.dnd.dropped', {
+            name: nameOf(active.id),
+            target: targetOf(over.id),
+          })
+        : t('distribution.board.dnd.cancelled', { name: nameOf(active.id) }),
+    onDragCancel: ({ active }) =>
+      t('distribution.board.dnd.cancelled', { name: nameOf(active.id) }),
+  };
 
   function handleDragEnd(e: DragEndEvent) {
     const studentId = e.active.id as string;
@@ -134,7 +165,14 @@ export function BoardView({ sortKey }: Props) {
     : unassigned;
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      onDragEnd={handleDragEnd}
+      accessibility={{
+        announcements,
+        screenReaderInstructions: { draggable: t('distribution.board.dnd.instructions') },
+      }}
+    >
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <div className="relative w-full sm:max-w-xs">
           <Search

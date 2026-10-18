@@ -10,6 +10,7 @@ import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { useRoundsStore } from '@/store/useRoundsStore';
 import { usePageFileDrop } from '@/hooks/usePageFileDrop';
 import { toast } from 'sonner';
+import { toastFailure } from '@/lib/toastFailure';
 import { WorkspaceBackdrop } from '@/components/layout/WorkspaceBackdrop';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { NextStep } from '@/components/layout/NextStep';
@@ -69,8 +70,8 @@ export default function StudentsPage() {
       const date = new Date().toISOString().slice(0, 10);
       writeFile(wb, `${t('students.exportFilePrefix')}-${date}.xlsx`);
       toast.success(t('students.exportStarted'));
-    } catch {
-      toast.error(t('common.exportFailed'));
+    } catch (error) {
+      toastFailure(error, t('common.exportFailed'));
     }
   }
 

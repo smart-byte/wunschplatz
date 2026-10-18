@@ -20,7 +20,7 @@ export function useStaleAssignments(): Staleness {
   );
 }
 
-function staleness(
+export function staleness(
   activeDist: Distribution | null,
   students: Student[],
   projects: Project[],
@@ -29,6 +29,9 @@ function staleness(
   if (!activeDist) return { stale: false, reasonKey: null };
 
   const { assignments, run: lastRun } = activeDist;
+  // Manual distributions only hold the students moved so far, and saving drops rows for deleted
+  // students and projects, so there is nothing to recalculate.
+  if (lastRun.kind === 'manual') return { stale: false, reasonKey: null };
 
   const studentIds = new Set(students.map((s) => s.id));
   const projectIds = new Set(projects.map((p) => p.id));
@@ -47,7 +50,6 @@ function staleness(
     return { stale: true, reasonKey: 'distribution.stale.reasons.newStudentsImported' };
   }
   if (
-    lastRun.kind !== 'manual' &&
     lastRun.stats.totalStudents > 0 &&
     lastRun.inputSignature !== solverInputSignature(students, projects, config)
   ) {

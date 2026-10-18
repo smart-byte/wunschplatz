@@ -585,7 +585,7 @@ function GroupColorBadge({ currentKey, color, usedByOthers, onPick }: GroupColor
   const { t } = useTranslation('app');
   const colorLabel = color.kind === 'custom' ? color.label : t(`students.colors.${color.key}`);
   const badgeStyle =
-    color.kind === 'custom' ? { backgroundColor: color.hex + '33', color: color.hex } : undefined;
+    color.kind === 'custom' ? { backgroundColor: color.hex, color: color.textHex } : undefined;
   const badgeClass = color.kind === 'palette' ? cn(color.bgClass, color.textClass) : '';
   return (
     <Popover>
@@ -672,6 +672,7 @@ function StudentRowActions({
   onDelete,
 }: StudentRowActionsProps) {
   const { t } = useTranslation('app');
+  const name = `${student.firstName} ${student.lastName}`;
   if (wide) {
     return (
       <div className="flex gap-1">
@@ -680,7 +681,7 @@ function StudentRowActions({
           size="icon"
           className={actionBtnClass}
           title={t('common.edit')}
-          aria-label={t('common.editNamed', { name: `${student.firstName} ${student.lastName}` })}
+          aria-label={t('common.editNamed', { name })}
           onClick={onEdit}
         >
           <Pencil className="size-4" />
@@ -691,6 +692,7 @@ function StudentRowActions({
             size="icon"
             className={actionBtnClass}
             title={t('students.removeFromGroup')}
+            aria-label={t('students.removeFromGroupNamed', { name })}
             onClick={onRemoveFromGroup}
           >
             <UserMinus className="size-4" />
@@ -701,7 +703,7 @@ function StudentRowActions({
           size="icon"
           className={actionBtnClass}
           title={t('common.delete')}
-          aria-label={t('common.deleteNamed', { name: `${student.firstName} ${student.lastName}` })}
+          aria-label={t('common.deleteNamed', { name })}
           onClick={onDelete}
         >
           <Trash2 className="size-4" />
@@ -712,7 +714,12 @@ function StudentRowActions({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" title={t('students.actions')}>
+        <Button
+          variant="outline"
+          size="icon"
+          title={t('students.actions')}
+          aria-label={t('students.actionsFor', { name })}
+        >
           <MoreHorizontal className="size-4" />
         </Button>
       </DropdownMenuTrigger>

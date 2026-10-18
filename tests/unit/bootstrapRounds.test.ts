@@ -4,6 +4,9 @@ import { useProjectsStore } from '@/store/useProjectsStore';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useRoundsStore } from '@/store/useRoundsStore';
 import { createRoundsBootstrap } from '@/store/bootstrapRounds';
+import { createRound } from '@/store/roundsTransaction';
+import { flushWorkspace, stopWorkspaceSync } from '@/store/workspaceSync';
+import { createWorkspaceStorage } from '@/store/persist';
 import type { Project } from '@/types';
 
 let ensureRoundsReady = createRoundsBootstrap();
@@ -70,6 +73,35 @@ describe('ensureRoundsReady', () => {
     expect(a).toBe(b);
     await Promise.all([a, b]);
     expect(useRoundsStore.getState().rounds).toHaveLength(1);
+  });
+
+  it('reopens the round used last when a new browser session starts', async () => {
+    localStorage.clear();
+    await ensureRoundsReady('2026-06-02');
+    await createRound('Wunschrunde 2', '2026-06-02');
+    await flushWorkspace();
+    const second = useRoundsStore.getState().activeRoundId;
+    // A new session has neither this tab's selection nor the in-memory stores.
+    stopWorkspaceSync();
+    sessionStorage.clear();
+    useRoundsStore.setState({ rounds: [], activeRoundId: null });
+    await createRoundsBootstrap()('2026-06-02');
+    expect(useRoundsStore.getState().activeRoundId).toBe(second);
+  });
+
+  it('leaves the shared last-used round alone when another tab saves a change', async () => {
+    localStorage.clear();
+    await ensureRoundsReady('2026-06-02');
+    localStorage.setItem('wunschplatz-active-round', 'round-of-another-tab');
+    await createWorkspaceStorage().transact((saved) => ({
+      ...saved!,
+      revision: saved!.revision + 1,
+      rounds: saved!.rounds.map((round) => ({ ...round, name: 'Umbenannt' })),
+    }));
+    window.dispatchEvent(new Event('focus'));
+    await flushWorkspace();
+    expect(useRoundsStore.getState().rounds[0].name).toBe('Umbenannt');
+    expect(localStorage.getItem('wunschplatz-active-round')).toBe('round-of-another-tab');
   });
 
   it('seed round starts in phase "running"', async () => {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { cn } from '@/lib/utils';
+import { cn, nextDefaultName } from '@/lib/utils';
 import { MoreHorizontal } from 'lucide-react';
 import { useRoundsStore } from '@/store/useRoundsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
@@ -54,10 +54,13 @@ export default function WunschrundenPage() {
   }
 
   function onCreate() {
-    const n = rounds.length + 1;
+    const name = nextDefaultName(
+      rounds.map((r) => r.name),
+      (n) => t('rounds.defaultName', { n }),
+    );
     void run(
-      () => createRound(t('rounds.defaultName', { n }), new Date().toISOString()),
-      t('rounds.created', { n }),
+      () => createRound(name, new Date().toISOString()),
+      t('rounds.created', { name }),
       t('rounds.createFailed'),
     );
   }
@@ -124,7 +127,8 @@ export default function WunschrundenPage() {
                   {r.name}
                 </button>
                 <div className="text-xs text-muted-foreground">
-                  {t('rounds.counts', { projectCount, studentCount })}
+                  {t('rounds.projectCount', { count: projectCount })} ·{' '}
+                  {t('rounds.studentCount', { count: studentCount })}
                   {r.blueprint ? t('rounds.formCreated') : ''}
                 </div>
               </div>
@@ -152,7 +156,7 @@ export default function WunschrundenPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      aria-label={t('rounds.actions')}
+                      aria-label={t('rounds.actionsFor', { name: r.name })}
                       title={t('rounds.actions')}
                     >
                       <MoreHorizontal className="size-4" />

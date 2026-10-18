@@ -23,11 +23,13 @@
   "gate": {
     "loading": "Lädt…",
     "storageTitle": "Speichern oder Laden fehlgeschlagen",
-    "storageDescription": "Die Bearbeitung wurde angehalten, damit keine weiteren Daten überschrieben werden. Bereits gespeicherte Wiederherstellungsdaten bleiben erhalten. Prüfe den verfügbaren Speicher und lade die App erneut. Die letzte Änderung wurde möglicherweise nicht gespeichert.",
+    "storageDescription": "Die gespeicherten Daten konnten nicht gelesen werden. Sie bleiben unverändert. Prüfe den verfügbaren Speicher und lade die App erneut.",
     "retry": "Erneut laden",
     "switching": "Wunschrunde wird gespeichert …",
     "conflict": "Ein anderer Tab hat dieselben Daten bearbeitet. Die zuletzt gespeicherte Änderung wird angezeigt; gelöschte Einträge bleiben gelöscht.",
-    "roundRemoved": "Diese Wunschrunde wurde in einem anderen Tab gelöscht. Eine andere Runde wurde geöffnet."
+    "roundRemoved": "„{{name}}“ wurde in einem anderen Tab gelöscht, samt hier noch nicht gespeicherter Änderungen. Geöffnet ist jetzt „{{current}}“.",
+    "saveFailedDescription": "Änderungen werden nicht mehr gespeichert, die letzte fehlt möglicherweise. Zuvor gespeicherte Daten bleiben erhalten. Sichere Wichtiges über den Excel-Export, prüfe den freien Speicher und lade die App neu.",
+    "saveBlocked": "Nicht gespeichert: Das Speichern ist angehalten, siehe Hinweis oben."
   },
   "phase": {
     "planned": "Geplant",
@@ -39,7 +41,7 @@
     "description": "Jede Wunschrunde bündelt Projekte, Schüler und Verteilung. Auswahl über die Navigation oben.",
     "create": "Neue Wunschrunde",
     "defaultName": "Wunschrunde {{n}}",
-    "created": "Wunschrunde {{n}} angelegt",
+    "created": "{{name}} angelegt",
     "createFailed": "Die Wunschrunde konnte nicht erstellt werden. Bitte versuche es erneut.",
     "duplicated": "Wunschrunde dupliziert",
     "duplicateFailed": "Die Wunschrunde konnte nicht dupliziert werden. Bitte versuche es erneut.",
@@ -51,7 +53,6 @@
     "actions": "Aktionen",
     "duplicate": "Duplizieren",
     "delete": "Löschen",
-    "counts": "{{projectCount}} Projekte · {{studentCount}} Schüler",
     "formCreated": " · Formular erstellt",
     "phaseLabel": "Phase von {{name}}",
     "rename": "Umbenennen",
@@ -60,12 +61,16 @@
     "nameRequired": "Bitte gib einen Namen für die Wunschrunde ein.",
     "renamed": "Wunschrunde umbenannt",
     "renameFailed": "Die Wunschrunde konnte nicht umbenannt werden. Bitte versuche es erneut.",
-    "renameConflict": "Die Wunschrunde heißt inzwischen „{{name}}“. Deine Eingabe ist noch da. Speichere erneut, um diesen Namen zu ersetzen."
+    "renameConflict": "Die Wunschrunde heißt inzwischen „{{name}}“. Deine Eingabe ist noch da. Speichere erneut, um diesen Namen zu ersetzen.",
+    "actionsFor": "Aktionen für {{name}}",
+    "projectCount_one": "{{count}} Projekt",
+    "projectCount_other": "{{count}} Projekte",
+    "studentCount_one": "{{count}} Schüler",
+    "studentCount_other": "{{count}} Schüler"
   },
   "blueprint": {
     "created": "Formular-Vorlage erstellt",
     "heading": "Formular-Vorlage",
-    "description": "Erzeuge die Fragen für Google Forms oder Microsoft Forms aus deinen {{count}} Projekten.",
     "minimumProjects": "Lege mindestens 2 Projekte an, um eine Formular-Vorlage zu erstellen (aktuell {{count}}).",
     "generate": "Vorlage erstellen",
     "regenerate": "Neu erstellen",
@@ -107,7 +112,9 @@
       "text": "Kurztext"
     },
     "required": " · Pflicht",
-    "regenerateConfirm": "Neue Formularvorlage erstellen? Die bisherige Vorlage bleibt für ältere Antworten erhalten. Beim Import muss die verwendete Version ausgewählt werden."
+    "regenerateConfirm": "Neue Formularvorlage erstellen? Die bisherige Vorlage bleibt für ältere Antworten erhalten. Beim Import muss die verwendete Version ausgewählt werden.",
+    "description_one": "Erzeuge die Fragen für Google Forms oder Microsoft Forms aus deinem Projekt.",
+    "description_other": "Erzeuge die Fragen für Google Forms oder Microsoft Forms aus deinen {{count}} Projekten."
   },
   "common": {
     "save": "Speichern",
@@ -122,11 +129,19 @@
     "editNamed": "{{name}} bearbeiten",
     "deleteNamed": "{{name}} löschen",
     "loadFailedTitle": "Die App konnte nicht geladen werden",
-    "loadFailedDescription": "Bitte prüfe deine Internetverbindung und lade die Seite erneut.",
+    "loadFailedDescription": "Vermutlich gibt es eine neue Version oder die Verbindung ist unterbrochen. Lade die Seite neu.",
     "editConflict": "Diese Angaben wurden in einem anderen Tab geändert. Deine Eingaben sind noch da. Bitte prüfe sie und speichere erneut.",
-    "exportFailed": "Der Export ist fehlgeschlagen. Bitte prüfe deine Internetverbindung und versuche es erneut.",
+    "exportFailed": "Der Export ist fehlgeschlagen. Bitte versuche es erneut.",
     "itemDeleted": "Dieser Eintrag wurde in einem anderen Tab gelöscht.",
-    "moreActions": "Weitere Aktionen"
+    "moreActions": "Weitere Aktionen",
+    "notFoundTitle": "Seite nicht gefunden",
+    "notFoundDescription": "Diese Adresse gibt es in Wunschplatz nicht.",
+    "toStart": "Zur Startseite",
+    "crashTitle": "Etwas ist schiefgelaufen",
+    "crashDescription": "Diese Seite konnte nicht angezeigt werden. Deine gespeicherten Daten bleiben erhalten. Lade die Seite neu.",
+    "chunkLoadFailed": "Ein Teil der App konnte nicht geladen werden, vermutlich wegen eines Updates. Lade die Seite neu.",
+    "reload": "Neu laden",
+    "discardChanges": "Ungespeicherte Eingaben verwerfen?"
   },
   "projects": {
     "newProject": "Neues Projekt",
@@ -350,7 +365,9 @@
     "showMore": "Weitere {{count}} anzeigen",
     "selectionLabel": "Auswahl",
     "selectNamed": "{{name}} auswählen",
-    "selectionMore": "+{{count}} weitere"
+    "selectionMore": "+{{count}} weitere",
+    "actionsFor": "Aktionen für {{name}}",
+    "removeFromGroupNamed": "{{name}} aus der Gruppe entfernen"
   },
   "import": {
     "imported": "{{count}} Schüler importiert",
@@ -384,7 +401,8 @@
       "unknownProject": "Prio {{priority}}: Unbekanntes Projekt \"{{name}}\"",
       "duplicateProject": "Prio {{priority}}: Doppeltes Projekt \"{{name}}\"",
       "deletedProject": "Prio {{priority}}: Projekt \"{{name}}\" wurde gelöscht",
-      "groupPrioritiesMismatch": "Gruppe \"{{group}}\": Prios weichen ab — übernommen von {{name}}"
+      "groupPrioritiesMismatch": "Gruppe \"{{group}}\": Prios weichen ab — übernommen von {{name}}",
+      "gradeMismatch": "Prio {{priority}}: Projekt \"{{name}}\" ist nicht für Jahrgang {{grade}} freigegeben und zählt bei der Optimierung nicht"
     },
     "warnings": {
       "heuristicColumn": "Die erwartete Spalte „{{expected}}\" wurde nicht exakt gefunden; anhand des Namens wird „{{actual}}\" verwendet."
@@ -500,13 +518,14 @@
       "capacity": "Plätze insgesamt"
     },
     "missingData": "Ergänze zuerst Projekte und Schüler. Danach kannst du die Verteilung berechnen.",
-    "capacityHint": "Es fehlen insgesamt {{count}} Plätze. Erhöhe die Kapazitäten, um mehr Schüler unterzubringen.",
     "savedSeparately": "Jede Berechnung wird als eigene Verteilung gespeichert. Anschließend kannst du das Ergebnis prüfen und anpassen.",
     "advanced": {
       "heading": "Weitere Einstellungen",
       "description": "Passe an, wie stark fehlende Plätze, Zuteilungen außerhalb der Wünsche und Belegungen über der Soll-Kapazität gewichtet werden."
     },
-    "prepareHeading": "Daten vervollständigen."
+    "prepareHeading": "Daten vervollständigen.",
+    "capacityHint_one": "Es fehlt insgesamt {{count}} Platz. Erhöhe die Kapazitäten, um mehr Schüler unterzubringen.",
+    "capacityHint_other": "Es fehlen insgesamt {{count}} Plätze. Erhöhe die Kapazitäten, um mehr Schüler unterzubringen."
   },
   "distribution": {
     "title": "Verteilung",
@@ -559,7 +578,15 @@
       "showAll": "Alle {{count}} Schüler anzeigen",
       "showLess": "Weniger anzeigen",
       "attentionOnly": "Nur Projekte mit Hinweisen",
-      "noMatches": "Keine Projekte passen zu dieser Auswahl."
+      "noMatches": "Keine Projekte passen zu dieser Auswahl.",
+      "dnd": {
+        "start": "{{name}} aufgenommen.",
+        "over": "{{name}} über {{target}}.",
+        "outside": "{{name}} ist über keinem Projekt.",
+        "dropped": "{{name}} auf {{target}} abgelegt.",
+        "cancelled": "Ziehen abgebrochen. {{name}} bleibt an der bisherigen Stelle.",
+        "instructions": "Mit Maus oder Finger (kurz gedrückt halten) auf ein anderes Projekt ziehen. Mit der Tastatur verschiebst du Schüler in der Tabelle."
+      }
     },
     "info": {
       "triggerTitle": "Parameter & Details anzeigen",
@@ -598,7 +625,8 @@
       "renamed": "Umbenannt",
       "defaultName": "Lauf {{n}}",
       "manualName": "Manuelle Verteilung",
-      "choose": "Verteilung auswählen"
+      "choose": "Verteilung auswählen",
+      "nameRequired": "Bitte gib einen Namen für die Verteilung ein."
     },
     "card": {
       "grades": "Jg. {{grades}}",
@@ -614,10 +642,8 @@
         "total": "Gesamt"
       },
       "allProjectsHeading": "Alle Projekte nach Score",
-      "interestedTooltip": "{{count}} Schüler haben dieses Projekt gewählt — klicken für Liste",
       "whoChose": "Wer hat „{{name}}\" gewählt?",
       "noOneChose": "Niemand hat dieses Projekt gewählt.",
-      "totalInterested": "{{count}} Schüler insgesamt",
       "inThisProject": "In diesem Projekt",
       "currentlyIn": "Aktuell in: {{name}}",
       "unassigned": "Unverteilt",
@@ -627,7 +653,11 @@
       "demand": "Nachfrage",
       "wishes": "Wünsche",
       "empty": "Noch keine Schüler zugeteilt.",
-      "overCapacity": "Maximale Kapazität überschritten"
+      "overCapacity": "Maximale Kapazität überschritten",
+      "interestedTooltip_one": "{{count}} Schüler hat dieses Projekt gewählt — klicken für Liste",
+      "interestedTooltip_other": "{{count}} Schüler haben dieses Projekt gewählt — klicken für Liste",
+      "totalInterested_one": "{{count}} Schüler insgesamt",
+      "totalInterested_other": "{{count}} Schüler insgesamt"
     },
     "stats": {
       "assignedLabel": "Verteilt",

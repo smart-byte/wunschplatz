@@ -10,11 +10,9 @@ export type BuildBlueprintResult =
 
 const GRADE_OPTIONS = ['5', '6', '7', '8', '9', '10', '11', '12', '13'];
 
-export function buildBlueprint(
-  projects: Project[],
-  generatedAt: string,
-  language = 'de',
-): BuildBlueprintResult {
+// Question titles are a data contract with the importer and German school forms, so they stay
+// German whatever the interface language is.
+export function buildBlueprint(projects: Project[], generatedAt: string): BuildBlueprintResult {
   if (projects.length < 2) {
     return {
       ok: false,
@@ -46,20 +44,12 @@ export function buildBlueprint(
     label: p.name,
   }));
 
-  const isEnglish = language.toLowerCase().startsWith('en');
-  const identity: BlueprintQuestion[] = isEnglish
-    ? [
-        { key: 'firstName', title: 'First Name', type: 'short_text', required: true },
-        { key: 'lastName', title: 'Last Name', type: 'short_text', required: true },
-        { key: 'className', title: 'Class', type: 'short_text', required: true },
-        { key: 'grade', title: 'Grade', type: 'choice', options: GRADE_OPTIONS, required: true },
-      ]
-    : [
-        { key: 'firstName', title: 'Vorname', type: 'short_text', required: true },
-        { key: 'lastName', title: 'Nachname', type: 'short_text', required: true },
-        { key: 'className', title: 'Klasse', type: 'short_text', required: true },
-        { key: 'grade', title: 'Jahrgang', type: 'choice', options: GRADE_OPTIONS, required: true },
-      ];
+  const identity: BlueprintQuestion[] = [
+    { key: 'firstName', title: 'Vorname', type: 'short_text', required: true },
+    { key: 'lastName', title: 'Nachname', type: 'short_text', required: true },
+    { key: 'className', title: 'Klasse', type: 'short_text', required: true },
+    { key: 'grade', title: 'Jahrgang', type: 'choice', options: GRADE_OPTIONS, required: true },
+  ];
 
   const prioritiesCount = Math.min(projects.length, 5);
   const priorities: BlueprintQuestion[] = Array.from(
@@ -67,7 +57,7 @@ export function buildBlueprint(
     (_, i) => i + 1,
   ).map((k) => ({
     key: `priority${k}` as BlueprintQuestion['key'],
-    title: isEnglish ? `Priority ${k}` : `${k}. Wahl`,
+    title: `${k}. Wahl`,
     type: 'dropdown',
     options: labels,
     required: true,

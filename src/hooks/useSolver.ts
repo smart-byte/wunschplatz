@@ -6,6 +6,7 @@ import { useSolverConfigStore } from '@/store/useSolverConfigStore';
 import { useRoundsStore } from '@/store/useRoundsStore';
 import { assertEditable, useSessionStore } from '@/store/session';
 import { solverInputSignature } from '@/lib/distribution';
+import { nextDefaultName } from '@/lib/utils';
 import type { SolveResponse, SolveRequest } from '@/solver/solver.worker';
 import { useTranslation } from 'react-i18next';
 
@@ -74,10 +75,10 @@ export function useSolver() {
       });
       if (!isCurrent()) return false;
       if (result.type === 'error') throw new Error(result.message);
-      const existing = useAssignmentsStore.getState().distributions;
-      let n = existing.length + 1;
-      while (existing.some((d) => d.name === t('distribution.selector.defaultName', { n }))) n++;
-      const name = t('distribution.selector.defaultName', { n });
+      const name = nextDefaultName(
+        useAssignmentsStore.getState().distributions.map((d) => d.name),
+        (n) => t('distribution.selector.defaultName', { n }),
+      );
       useAssignmentsStore.getState().createDistribution(name, result.payload.assignments, {
         ...result.payload.run,
         kind: 'solver',

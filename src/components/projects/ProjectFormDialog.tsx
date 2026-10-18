@@ -15,13 +15,23 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import type { Project } from '@/types';
-import { mergeChanges } from '@/store/mergeChanges';
+import { mergeChanges, sameValue } from '@/store/mergeChanges';
 
 type Props = {
   trigger: React.ReactNode;
   initial?: Project;
   onSave: (data: Omit<Project, 'id'>) => void;
 };
+
+function formFields(project?: Project) {
+  return {
+    name: project?.name ?? '',
+    description: project?.description ?? '',
+    gradesText: project?.grades.join(', ') ?? '',
+    maxCapacity: String(project?.maxCapacity ?? 20),
+    targetCapacity: String(project?.targetCapacity ?? 15),
+  };
+}
 
 export function ProjectFormDialog({ trigger, initial, onSave }: Props) {
   const { t } = useTranslation('app');
@@ -38,16 +48,25 @@ export function ProjectFormDialog({ trigger, initial, onSave }: Props) {
 
   function changeOpen(next: boolean) {
     if (next) {
+      const fields = formFields(initial);
       setBaseline(initial);
-      setName(initial?.name ?? '');
-      setDescription(initial?.description ?? '');
-      setGradesText(initial?.grades.join(', ') ?? '');
-      setMaxCapacity(String(initial?.maxCapacity ?? 20));
-      setTargetCapacity(String(initial?.targetCapacity ?? 15));
+      setName(fields.name);
+      setDescription(fields.description);
+      setGradesText(fields.gradesText);
+      setMaxCapacity(fields.maxCapacity);
+      setTargetCapacity(fields.targetCapacity);
       setError(null);
     }
     setOpen(next);
   }
+
+  const dirty = !sameValue(formFields(baseline), {
+    name,
+    description,
+    gradesText,
+    maxCapacity,
+    targetCapacity,
+  });
 
   function handleSave() {
     const grades = parseGrades(gradesText);
@@ -111,7 +130,7 @@ export function ProjectFormDialog({ trigger, initial, onSave }: Props) {
   return (
     <Dialog open={open} onOpenChange={changeOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent>
+      <DialogContent confirmDismiss={dirty ? t('common.discardChanges') : undefined}>
         <form
           className="grid gap-4"
           onSubmit={(e) => {

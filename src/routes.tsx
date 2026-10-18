@@ -1,6 +1,14 @@
 import { useTranslation } from 'react-i18next';
-import { Outlet, createBrowserRouter, useNavigation } from 'react-router-dom';
+import {
+  Link,
+  Outlet,
+  createBrowserRouter,
+  useNavigation,
+  useRouteError,
+  type RouteObject,
+} from 'react-router-dom';
 import LandingPage from '@/pages/LandingPage';
+import { isChunkLoadError } from '@/lib/chunkLoadError';
 
 const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined;
 
@@ -11,45 +19,51 @@ const prefetchApp = () => void loadApp().catch(() => {});
 if ('requestIdleCallback' in window) requestIdleCallback(prefetchApp);
 else setTimeout(prefetchApp, 1500);
 
-export const router = createBrowserRouter(
-  [
-    {
-      path: '/',
-      Component: Root,
-      HydrateFallback: RouteLoading,
-      ErrorBoundary: RouteError,
-      children: [
-        { index: true, element: <LandingPage /> },
-        {
-          lazy: async () => ({ Component: (await loadApp()).AppShell }),
-          children: [
-            {
-              path: 'projects',
-              lazy: async () => ({ Component: (await loadApp()).ProjectsPage }),
-            },
-            {
-              path: 'students',
-              lazy: async () => ({ Component: (await loadApp()).StudentsPage }),
-            },
-            {
-              path: 'optimize',
-              lazy: async () => ({ Component: (await loadApp()).OptimizePage }),
-            },
-            {
-              path: 'distribution',
-              lazy: async () => ({ Component: (await loadApp()).DistributionPage }),
-            },
-            {
-              path: 'wunschrunden',
-              lazy: async () => ({ Component: (await loadApp()).WunschrundenPage }),
-            },
-          ],
-        },
-      ],
-    },
-  ],
-  { basename },
-);
+export const routes: RouteObject[] = [
+  {
+    path: '/',
+    Component: Root,
+    HydrateFallback: RouteLoading,
+    ErrorBoundary: RouteError,
+    children: [
+      { index: true, element: <LandingPage /> },
+      {
+        lazy: async () => ({ Component: (await loadApp()).AppShell }),
+        // Page-level boundaries keep the navigation when a page crashes.
+        children: [
+          {
+            path: 'projects',
+            lazy: async () => ({ Component: (await loadApp()).ProjectsPage }),
+            ErrorBoundary: PageError,
+          },
+          {
+            path: 'students',
+            lazy: async () => ({ Component: (await loadApp()).StudentsPage }),
+            ErrorBoundary: PageError,
+          },
+          {
+            path: 'optimize',
+            lazy: async () => ({ Component: (await loadApp()).OptimizePage }),
+            ErrorBoundary: PageError,
+          },
+          {
+            path: 'distribution',
+            lazy: async () => ({ Component: (await loadApp()).DistributionPage }),
+            ErrorBoundary: PageError,
+          },
+          {
+            path: 'wunschrunden',
+            lazy: async () => ({ Component: (await loadApp()).WunschrundenPage }),
+            ErrorBoundary: PageError,
+          },
+        ],
+      },
+      { path: '*', Component: NotFound },
+    ],
+  },
+];
+
+export const router = createBrowserRouter(routes, { basename });
 
 function Root() {
   const { t } = useTranslation('app');
@@ -75,12 +89,44 @@ function RouteLoading() {
     </div>
   );
 }
-function RouteError() {
+const fullPage =
+  'mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 p-6 text-center';
+const linkClass = 'text-primary underline underline-offset-2 hover:text-primary/80';
+
+function NotFound() {
   const { t } = useTranslation('app');
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 p-6 text-center">
-      <h1 className="text-xl font-semibold">{t('common.loadFailedTitle')}</h1>
-      <p role="alert">{t('common.loadFailedDescription')}</p>
+    <main className={fullPage}>
+      <h1 className="text-xl font-semibold">{t('common.notFoundTitle')}</h1>
+      <p>{t('common.notFoundDescription')}</p>
+      <Link to="/" className={linkClass}>
+        {t('common.toStart')}
+      </Link>
+    </main>
+  );
+}
+
+export function RouteError() {
+  return <ErrorView error={useRouteError()} />;
+}
+
+export function PageError() {
+  return <ErrorView error={useRouteError()} inShell />;
+}
+
+function ErrorView({ error, inShell = false }: { error: unknown; inShell?: boolean }) {
+  const { t } = useTranslation('app');
+  // Only a failed download is fixed by checking the connection; anything else is a bug.
+  const prefix = isChunkLoadError(error) ? 'common.loadFailed' : 'common.crash';
+  const Frame = inShell ? 'div' : 'main';
+  return (
+    <Frame
+      className={
+        inShell ? 'mx-auto flex max-w-lg flex-col items-center gap-4 py-16 text-center' : fullPage
+      }
+    >
+      <h1 className="text-xl font-semibold">{t(`${prefix}Title`)}</h1>
+      <p role="alert">{t(`${prefix}Description`)}</p>
       <button
         type="button"
         className="rounded-md border px-4 py-2"
@@ -88,6 +134,11 @@ function RouteError() {
       >
         {t('gate.retry')}
       </button>
-    </main>
+      {!inShell && (
+        <Link to="/" className={linkClass}>
+          {t('common.toStart')}
+        </Link>
+      )}
+    </Frame>
   );
 }

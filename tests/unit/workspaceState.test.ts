@@ -3,7 +3,14 @@ import { useProjectsStore } from '@/store/useProjectsStore';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import { useSolverConfigStore } from '@/store/useSolverConfigStore';
-import { snapshotWorkingSet, applyWorkingSet, emptyRoundData } from '@/store/workspaceState';
+import {
+  snapshotWorkingSet,
+  applyWorkingSet,
+  applySavedRounds,
+  emptyRoundData,
+} from '@/store/workspaceState';
+import { useRoundsStore } from '@/store/useRoundsStore';
+import { notifySession, useSessionStore } from '@/store/session';
 import { defaultSolverConfig, type Project } from '@/types';
 
 const proj = (id: string): Project => ({
@@ -57,5 +64,31 @@ describe('snapshot/apply working set', () => {
     applyWorkingSet(snap);
 
     expect(snapshotWorkingSet()).toEqual(snap);
+  });
+});
+
+describe('applySavedRounds', () => {
+  it('names a round deleted in another tab, even when a conflict notice follows', () => {
+    const round = (id: string, name: string) => ({
+      id,
+      name,
+      createdAt: 'x',
+      data: emptyRoundData(),
+    });
+    useRoundsStore.setState({
+      rounds: [
+        { ...round('a', 'Herbst'), status: 'idle' },
+        { id: 'b', name: 'Winter', createdAt: 'x', status: 'active' },
+      ],
+      activeRoundId: 'b',
+    });
+    applySavedRounds([round('a', 'Herbst')]);
+    // Local edits to the deleted round also raise the generic conflict notice.
+    notifySession('conflict');
+    expect(useRoundsStore.getState().activeRoundId).toBe('a');
+    expect(useSessionStore.getState().notice).toEqual({
+      key: 'roundRemoved',
+      values: { name: 'Winter', current: 'Herbst' },
+    });
   });
 });

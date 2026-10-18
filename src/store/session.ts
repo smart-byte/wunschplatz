@@ -1,6 +1,9 @@
 import { create, type StateCreator, type StoreApi } from 'zustand';
 
-type SessionNotice = 'conflict' | 'roundRemoved';
+type SessionNotice = {
+  key: 'conflict' | 'roundRemoved' | 'saveBlocked';
+  values?: Record<string, string>;
+};
 type SessionState = {
   phase: 'loading' | 'ready' | 'switching' | 'error';
   error: 'storage' | null;
@@ -19,8 +22,11 @@ export function failSession(): void {
   useSessionStore.setState({ phase: 'error', error: 'storage' });
 }
 
-export function notifySession(notice: SessionNotice): void {
-  useSessionStore.setState({ notice });
+export function notifySession(key: SessionNotice['key'], values?: SessionNotice['values']): void {
+  // A deleted round explains the conflict its unsaved edits raise right after, so keep it.
+  useSessionStore.setState((s) =>
+    s.notice?.key === 'roundRemoved' && key === 'conflict' ? s : { notice: { key, values } },
+  );
 }
 
 let internalWriteDepth = 0;
@@ -35,9 +41,12 @@ export function applyStoreUpdate(update: () => void): void {
 }
 
 export function assertEditable(): void {
-  if (!internalWriteDepth && useSessionStore.getState().phase !== 'ready') {
-    throw new Error('Wait for the current storage operation to finish');
-  }
+  if (internalWriteDepth) return;
+  const { phase } = useSessionStore.getState();
+  if (phase === 'ready') return;
+  // After a storage failure the data stays readable, so explain why an edit did not stick.
+  if (phase === 'error') notifySession('saveBlocked');
+  throw new Error('Wait for the current storage operation to finish');
 }
 
 function guardSetter<T>(set: StoreApi<T>['setState']): StoreApi<T>['setState'] {

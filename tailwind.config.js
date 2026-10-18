@@ -13,7 +13,7 @@ export default {
         paper: '#fdfdfc',
         rule: '#e7e5e0',
         'rule-soft': '#f0eeea',
-        quiet: '#8a8578',
+        quiet: '#736e62',
         prose: '#3f4a5a',
         'prose-soft': '#5a6472',
         mark: '#4f5ef0',

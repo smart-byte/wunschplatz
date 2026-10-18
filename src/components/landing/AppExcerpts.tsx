@@ -122,7 +122,7 @@ export function AppFrame({ step, children }: { step: Step; children: React.React
 }
 
 export function FormExcerpt() {
-  const { t, i18n } = useTranslation(['landing', 'app']);
+  const { t } = useTranslation(['landing', 'app']);
   const names = t('how.sampleProjects', { returnObjects: true }) as string[];
   const result = buildBlueprint(
     names.map((name, i) => ({
@@ -133,7 +133,6 @@ export function FormExcerpt() {
       targetCapacity: 0,
     })),
     '',
-    i18n.resolvedLanguage,
   );
   if (!result.ok) return null;
   const { identity, priorities, projectOptions } = result.blueprint;

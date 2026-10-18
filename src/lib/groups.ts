@@ -217,12 +217,15 @@ export function isHex(value: string): boolean {
   return HEX_RE.test(value);
 }
 
+// Above this WCAG relative luminance black text contrasts more than white; the better of the two
+// always reaches 4.5:1.
 function isLightHex(hex: string): boolean {
   const n = parseInt(hex.slice(1), 16);
-  const r = (n >> 16) & 0xff;
-  const g = (n >> 8) & 0xff;
-  const b = n & 0xff;
-  return r * 0.299 + g * 0.587 + b * 0.114 > 160;
+  const [r, g, b] = [n >> 16, n >> 8, n].map((channel) => {
+    const c = (channel & 0xff) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.179;
 }
 
 export type GroupStyle =

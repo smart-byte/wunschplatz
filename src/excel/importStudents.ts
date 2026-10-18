@@ -2,11 +2,13 @@ import { v4 as uuid } from 'uuid';
 import { detectColumns, type ColumnRole } from './headerMatch';
 import type { Project, Student } from '@/types';
 import { normalizeLabel } from '@/forms/normalizeLabel';
+import { findTimestampColumn, keepLatestResponses, responseRows } from '@/forms/dedupeResponses';
 
 import {
   parseStudentIdentity,
   parsePriorities,
   studentImportError,
+  warnGradeMismatches,
   type ParseError,
 } from './studentValidation';
 export {
@@ -18,6 +20,7 @@ export type ParseResult = {
   students: Omit<Student, 'id'>[];
   errors: ParseError[];
   missingColumns: ColumnRole[];
+  duplicatesRemoved: number;
 };
 
 type Pending = {
@@ -65,21 +68,31 @@ export function parseStudentRows(rows: unknown[][], projects: Project[]): ParseR
       students: [],
       errors: [],
       missingColumns: ['firstName', 'lastName', 'className', 'grade', 'priorities'],
+      duplicatesRemoved: 0,
     };
   }
   const headers = rows[0].map((h) => String(h ?? ''));
   const cols = detectColumns(headers);
   const missingColumns = cols.missingRequired();
   if (missingColumns.length > 0) {
-    return { students: [], errors: [], missingColumns };
+    return { students: [], errors: [], missingColumns, duplicatesRemoved: 0 };
   }
 
   const errors: ParseError[] = [];
   const pending: Pending[] = [];
 
-  for (let r = 1; r < rows.length; r++) {
-    const row = rows[r];
-    if (!row || row.every((cell) => String(cell ?? '').trim() === '')) continue;
+  // A forms export (it has a timestamp) can hold several submissions per student.
+  const timestampColumn = findTimestampColumn(headers);
+  const { responses, duplicatesRemoved } =
+    timestampColumn === -1
+      ? { responses: responseRows(rows), duplicatesRemoved: 0 }
+      : keepLatestResponses(
+          responseRows(rows),
+          [cols.firstName, cols.lastName, cols.className, cols.grade],
+          timestampColumn,
+        );
+
+  for (const { cells: row, rowIndex: r } of responses) {
     const identity = parseStudentIdentity(
       [row[cols.firstName], row[cols.lastName], row[cols.className], row[cols.grade]],
       r,
@@ -93,6 +106,7 @@ export function parseStudentRows(rows: unknown[][], projects: Project[]): ParseR
       (name) => findProjectByName(name, projects),
     );
     if (!priorities) continue;
+    warnGradeMismatches(priorities, identity.grade, projects, r, errors);
 
     let groupKey: string | null = null;
     if (cols.group !== -1) {
@@ -148,5 +162,5 @@ export function parseStudentRows(rows: unknown[][], projects: Project[]): ParseR
     }
   }
 
-  return { students, errors, missingColumns: [] };
+  return { students, errors, missingColumns: [], duplicatesRemoved };
 }

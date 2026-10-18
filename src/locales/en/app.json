@@ -23,11 +23,13 @@
   "gate": {
     "loading": "Loading…",
     "storageTitle": "Storage could not be read or saved",
-    "storageDescription": "Editing has stopped to prevent further overwrites. Saved recovery data is retained. Check available storage, then reload the app. The last change may not have been saved.",
+    "storageDescription": "Your saved data could not be read. It stays unchanged. Check the available storage, then reload the app.",
     "retry": "Reload and retry",
     "switching": "Saving round…",
     "conflict": "Another tab edited the same data. The last saved edit is shown; deleted items stay deleted.",
-    "roundRemoved": "This round was deleted in another tab. Another round has been opened."
+    "roundRemoved": "\"{{name}}\" was deleted in another tab, along with any changes not yet saved here. \"{{current}}\" is open now.",
+    "saveFailedDescription": "Changes are no longer saved, and the last one may be missing. Data saved before is kept. Export what you need to Excel, check the free storage, then reload the app.",
+    "saveBlocked": "Not saved: saving has stopped, see the notice above."
   },
   "phase": {
     "planned": "Planned",
@@ -39,7 +41,7 @@
     "description": "Each round bundles projects, students and distribution. Switch via the navigation above.",
     "create": "New round",
     "defaultName": "Round {{n}}",
-    "created": "Round {{n}} created",
+    "created": "{{name}} created",
     "createFailed": "The round could not be created. Please try again.",
     "duplicated": "Round duplicated",
     "duplicateFailed": "The round could not be duplicated. Please try again.",
@@ -51,7 +53,6 @@
     "actions": "Actions",
     "duplicate": "Duplicate",
     "delete": "Delete",
-    "counts": "{{projectCount}} projects · {{studentCount}} students",
     "formCreated": " · Form created",
     "phaseLabel": "Phase of {{name}}",
     "rename": "Rename",
@@ -60,12 +61,16 @@
     "nameRequired": "Please enter a name for the round.",
     "renamed": "Round renamed",
     "renameFailed": "The round could not be renamed. Please try again.",
-    "renameConflict": "This round is now named “{{name}}”. Your draft is still here. Save again to replace that name."
+    "renameConflict": "This round is now named “{{name}}”. Your draft is still here. Save again to replace that name.",
+    "actionsFor": "Actions for {{name}}",
+    "projectCount_one": "{{count}} project",
+    "projectCount_other": "{{count}} projects",
+    "studentCount_one": "{{count}} student",
+    "studentCount_other": "{{count}} students"
   },
   "blueprint": {
     "created": "Form template created",
     "heading": "Form template",
-    "description": "Generate the questions for Google Forms or Microsoft Forms from your {{count}} projects.",
     "minimumProjects": "Create at least 2 projects to generate a form template (currently {{count}}).",
     "generate": "Create template",
     "regenerate": "Recreate",
@@ -107,7 +112,9 @@
       "text": "Short text"
     },
     "required": " · Required",
-    "regenerateConfirm": "Create a new form template? The previous template will be retained for older responses. You will need to select the version used when importing."
+    "regenerateConfirm": "Create a new form template? The previous template will be retained for older responses. You will need to select the version used when importing.",
+    "description_one": "Generate the questions for Google Forms or Microsoft Forms from your project.",
+    "description_other": "Generate the questions for Google Forms or Microsoft Forms from your {{count}} projects."
   },
   "common": {
     "save": "Save",
@@ -122,11 +129,19 @@
     "editNamed": "Edit {{name}}",
     "deleteNamed": "Delete {{name}}",
     "loadFailedTitle": "The app could not be loaded",
-    "loadFailedDescription": "Check your internet connection and reload the page.",
+    "loadFailedDescription": "There is probably a new version, or the connection dropped. Reload the page.",
     "editConflict": "These details changed in another tab. Your edits are still here. Please review them and save again.",
-    "exportFailed": "The export failed. Check your internet connection and try again.",
+    "exportFailed": "The export failed. Please try again.",
     "itemDeleted": "This item was deleted in another tab.",
-    "moreActions": "More actions"
+    "moreActions": "More actions",
+    "notFoundTitle": "Page not found",
+    "notFoundDescription": "This address does not exist in Wunschplatz.",
+    "toStart": "Go to the start page",
+    "crashTitle": "Something went wrong",
+    "crashDescription": "This page could not be shown. Your saved data is kept. Reload the page.",
+    "chunkLoadFailed": "Part of the app could not be loaded, probably because of an update. Reload the page.",
+    "reload": "Reload",
+    "discardChanges": "Discard unsaved input?"
   },
   "projects": {
     "newProject": "New project",
@@ -350,7 +365,9 @@
     "showMore": "Show {{count}} more",
     "selectionLabel": "Selection",
     "selectNamed": "Select {{name}}",
-    "selectionMore": "+{{count}} more"
+    "selectionMore": "+{{count}} more",
+    "actionsFor": "Actions for {{name}}",
+    "removeFromGroupNamed": "Remove {{name}} from group"
   },
   "import": {
     "imported": "{{count}} students imported",
@@ -384,7 +401,8 @@
       "unknownProject": "Priority {{priority}}: Unknown project \"{{name}}\"",
       "duplicateProject": "Priority {{priority}}: Duplicate project \"{{name}}\"",
       "deletedProject": "Priority {{priority}}: Project \"{{name}}\" was deleted",
-      "groupPrioritiesMismatch": "Group \"{{group}}\": choices differ — using those of {{name}}"
+      "groupPrioritiesMismatch": "Group \"{{group}}\": choices differ — using those of {{name}}",
+      "gradeMismatch": "Priority {{priority}}: Project \"{{name}}\" is not open to grade {{grade}}, so the optimization ignores this choice"
     },
     "warnings": {
       "heuristicColumn": "The expected column \"{{expected}}\" was not found exactly; using \"{{actual}}\" based on its name."
@@ -500,13 +518,14 @@
       "capacity": "Total places"
     },
     "missingData": "Add projects and students first. Then you can calculate an assignment.",
-    "capacityHint": "There are {{count}} fewer places than students. Increase capacities to accommodate more students.",
     "savedSeparately": "Each calculation is saved as a separate assignment. You can review and adjust the result afterwards.",
     "advanced": {
       "heading": "More settings",
       "description": "Adjust the penalties for leaving students unassigned, assigning outside their wishes, and exceeding target capacities."
     },
-    "prepareHeading": "Complete your data."
+    "prepareHeading": "Complete your data.",
+    "capacityHint_one": "There is {{count}} fewer place than students. Increase capacities to accommodate more students.",
+    "capacityHint_other": "There are {{count}} fewer places than students. Increase capacities to accommodate more students."
   },
   "distribution": {
     "title": "Distribution",
@@ -559,7 +578,15 @@
       "showAll": "Show all {{count}} students",
       "showLess": "Show fewer",
       "attentionOnly": "Only projects that need attention",
-      "noMatches": "No projects match this selection."
+      "noMatches": "No projects match this selection.",
+      "dnd": {
+        "start": "Picked up {{name}}.",
+        "over": "{{name}} is over {{target}}.",
+        "outside": "{{name}} is not over a project.",
+        "dropped": "Dropped {{name}} on {{target}}.",
+        "cancelled": "Dragging cancelled. {{name}} stays in place.",
+        "instructions": "Drag to another project with the mouse or a finger (press and hold briefly). With the keyboard, move students in the table."
+      }
     },
     "info": {
       "triggerTitle": "Show parameters & details",
@@ -598,7 +625,8 @@
       "renamed": "Renamed",
       "defaultName": "Run {{n}}",
       "manualName": "Manual distribution",
-      "choose": "Select an assignment"
+      "choose": "Select an assignment",
+      "nameRequired": "Please enter a name for the distribution."
     },
     "card": {
       "grades": "Gr. {{grades}}",
@@ -614,10 +642,8 @@
         "total": "Total"
       },
       "allProjectsHeading": "All projects by score",
-      "interestedTooltip": "{{count}} students chose this project — click for list",
       "whoChose": "Who chose “{{name}}”?",
       "noOneChose": "No one chose this project.",
-      "totalInterested": "{{count}} students total",
       "inThisProject": "In this project",
       "currentlyIn": "Currently in: {{name}}",
       "unassigned": "Unassigned",
@@ -627,7 +653,11 @@
       "demand": "Demand",
       "wishes": "Wishes",
       "empty": "No students assigned yet.",
-      "overCapacity": "Maximum capacity exceeded"
+      "overCapacity": "Maximum capacity exceeded",
+      "interestedTooltip_one": "{{count}} student chose this project — click for list",
+      "interestedTooltip_other": "{{count}} students chose this project — click for list",
+      "totalInterested_one": "{{count}} student total",
+      "totalInterested_other": "{{count}} students total"
     },
     "stats": {
       "assignedLabel": "Assigned",

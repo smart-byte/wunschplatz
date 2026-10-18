@@ -75,3 +75,60 @@ test('the distribution table loads long lists in pages', async ({ page }) => {
   await expect(rows.first()).toContainText(name);
   for (const row of await rows.all()) await expect(row).toContainText(last);
 });
+
+async function boardWithAdaInAlpha(page: Page) {
+  await page.goto('/projects');
+  await addProject(page, 'Alpha', 5);
+  await addProject(page, 'Beta', 5);
+  await page.getByRole('navigation').getByRole('link', { name: 'Schüler' }).click();
+  await addStudent(page, 'Ada', ['Alpha', 'Beta']);
+  await page.getByRole('navigation').getByRole('link', { name: 'Optimierung' }).click();
+  await page.getByRole('button', { name: 'Verteilung berechnen' }).click();
+  await expect(page).toHaveURL(/\/distribution/);
+  const card = (name: string) => page.getByRole('region', { name, exact: true });
+  await expect(card('Alpha')).toContainText('Beispiel, Ada');
+  // Pointer input only reaches what is inside the viewport.
+  await card('Beta').scrollIntoViewIfNeeded();
+  const centre = async (name: string) => {
+    const box = (await (
+      name === 'Ada' ? page.getByRole('button', { name: 'Ada Beispiel, 7a' }) : card(name)
+    ).boundingBox())!;
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  };
+  return { card, from: await centre('Ada'), to: await centre('Beta') };
+}
+
+test('a student can be dragged to another project with the mouse', async ({ page }) => {
+  const { card, from, to } = await boardWithAdaInAlpha(page);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 10, from.y + 10, { steps: 3 });
+  await page.mouse.move(to.x, to.y, { steps: 10 });
+  await page.mouse.up();
+  await expect(card('Beta')).toContainText('Beispiel, Ada');
+});
+
+test.describe('on a touch screen', () => {
+  test.use({ hasTouch: true });
+
+  test('a long press drags a student to another project', async ({ page }) => {
+    const { card, from, to } = await boardWithAdaInAlpha(page);
+    const cdp = await page.context().newCDPSession(page);
+    const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', x = 0, y = 0) =>
+      cdp.send('Input.dispatchTouchEvent', {
+        type,
+        touchPoints: type === 'touchEnd' ? [] : [{ x, y }],
+      });
+    await touch('touchStart', from.x, from.y);
+    // Hold past the long-press delay that tells a drag from a scroll.
+    await page.waitForTimeout(400);
+    for (let i = 1; i <= 10; i++)
+      await touch(
+        'touchMove',
+        from.x + ((to.x - from.x) * i) / 10,
+        from.y + ((to.y - from.y) * i) / 10,
+      );
+    await touch('touchEnd');
+    await expect(card('Beta')).toContainText('Beispiel, Ada');
+  });
+});
