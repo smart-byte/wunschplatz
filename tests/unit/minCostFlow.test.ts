@@ -52,6 +52,11 @@ describe('MinCostFlow', () => {
     expect(result.totalFlow).toBe(1);
   });
 
+  it('rejects non-integer costs', () => {
+    const mcf = new MinCostFlow(2);
+    expect(() => mcf.addEdge(0, 1, 1, 0.5)).toThrow(RangeError);
+  });
+
   it('returns zero flow when the sink is unreachable', () => {
     const mcf = new MinCostFlow(3);
     mcf.addEdge(0, 1, 1, 0);

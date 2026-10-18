@@ -29,6 +29,7 @@ export function buildAssignmentGraph(
   const projectToIdx = new Map<string, number>();
   students.forEach((s, i) => studentToIdx.set(s.id, studentBase + i));
   projects.forEach((p, i) => projectToIdx.set(p.id, projectBase + i));
+  const projectById = new Map(projects.map((p) => [p.id, p]));
 
   const mcf = new MinCostFlow(nodeCount);
 
@@ -42,7 +43,7 @@ export function buildAssignmentGraph(
 
     s.priorities.forEach((projId, k) => {
       if (k >= 5) return;
-      const project = projects.find((p) => p.id === projId);
+      const project = projectById.get(projId);
       if (!project) return;
       if (!project.grades.includes(s.grade)) return;
       priorityIds.add(projId);

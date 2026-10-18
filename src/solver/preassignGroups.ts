@@ -11,6 +11,17 @@ export type PreassignResult = {
   remainingStudents: Student[];
 };
 
+/**
+ * Greedy group pre-assignment. Groups are seated largest first, each as large a subgroup as
+ * possible at the highest wish that fits. A lower-ranked wish is taken only when the cohesion
+ * bonus outweighs its priority drop:
+ *
+ *   bonus × (subgroupSize − 1)  ≥  (maxWeight − weightAtRank) × subgroupSize
+ *
+ * Members that cannot be seated together stay in remainingStudents for the flow solver. Because
+ * the greedy order ignores its effect on other students, solveAssignments also solves without
+ * this step and keeps the better result.
+ */
 export function preassignGroups(
   students: Student[],
   projects: Project[],
@@ -41,6 +52,7 @@ export function preassignGroups(
         const subgroup = unplaced.slice(0, size);
         const subgroupGrades = subgroup.map((s) => s.grade);
         for (let k = 0; k < priorities.length; k++) {
+          if (k >= 5) break;
           const projId = priorities[k];
           const project = projects.find((p) => p.id === projId);
           if (!project) continue;

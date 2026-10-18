@@ -148,4 +148,20 @@ describe('preassignGroups', () => {
     expect(result.preassignments.size).toBe(0);
     expect(result.remainingStudents).toHaveLength(2);
   });
+
+  it('ignores wishes beyond the fifth', () => {
+    const projects = [
+      project('p1', [7], 0, 0),
+      project('p2', [7], 0, 0),
+      project('p3', [7], 0, 0),
+      project('p4', [7], 0, 0),
+      project('p5', [7], 0, 0),
+      project('p6', [7], 10, 8),
+    ];
+    const wishes = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
+    const students = [student('s1', 7, wishes, 'g1'), student('s2', 7, wishes, 'g1')];
+    const result = preassignGroups(students, projects, defaultSolverConfig);
+    expect(result.preassignments.size).toBe(0);
+    expect(result.remainingStudents).toHaveLength(2);
+  });
 });
