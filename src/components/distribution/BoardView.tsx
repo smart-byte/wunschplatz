@@ -1,10 +1,23 @@
-import { useMemo, useState } from 'react';
+import { Children, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Search, TriangleAlert } from 'lucide-react';
+import { needsAttention } from '@/lib/distribution';
+import { matchesStudent } from '@/lib/studentSearch';
 import {
-  DndContext, PointerSensor, useDroppable, useSensor, useSensors,
+  DndContext,
+  MouseSensor,
+  TouchSensor,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type Announcements,
   type DragEndEvent,
+  type UniqueIdentifier,
 } from '@dnd-kit/core';
+import { useTranslation } from 'react-i18next';
 import { useDistributionData } from '@/hooks/useDistributionData';
-import { useAssignmentsStore } from '@/store/useAssignmentsStore';
+import { useManualAssignment } from '@/hooks/useManualAssignment';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { ProjectCard } from './ProjectCard';
 import { StudentChip } from './StudentChip';
@@ -15,161 +28,260 @@ import type { BoardSortKey } from './boardSort';
 
 const UNASSIGNED_ID = '__unassigned__';
 
-function compareStr(a: string, b: string): number {
-  return a.localeCompare(b, 'de', { sensitivity: 'base', numeric: true });
+function compareStr(a: string, b: string, language: string): number {
+  return a.localeCompare(b, language, { sensitivity: 'base', numeric: true });
 }
 
 type Props = { sortKey: BoardSortKey };
 
 export function BoardView({ sortKey }: Props) {
+  const { t, i18n } = useTranslation('app');
   const { rows, projects } = useDistributionData();
-  const updateAssignment = useAssignmentsStore((s) => s.updateAssignment);
+  const move = useManualAssignment(rows, projects);
   const updateStudent = useStudentsStore((s) => s.updateStudent);
+  // `editing` outlives `editOpen` so the closing dialog keeps its title and content.
   const [editing, setEditing] = useState<Student | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
+  const edit = (student: Student) => {
+    setEditing(student);
+    setEditOpen(true);
+  };
+  const [query, setQuery] = useState('');
+  const [attentionOnly, setAttentionOnly] = useState(false);
 
-  // Distance constraint allows clicks (under 5px movement) without triggering drag.
+  // Leave room for clicks before starting a drag. On touch screens a drag starts after a short
+  // press, so swiping over the board still scrolls it.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
   );
+  const nameOf = (id: UniqueIdentifier) => {
+    const student = rows.find((r) => r.student.id === id)?.student;
+    return student ? `${student.firstName} ${student.lastName}` : '';
+  };
+  const targetOf = (id: UniqueIdentifier) =>
+    id === UNASSIGNED_ID
+      ? t('distribution.board.unassignedHeading')
+      : (projects.find((p) => p.id === id)?.name ?? '');
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => t('distribution.board.dnd.start', { name: nameOf(active.id) }),
+    onDragOver: ({ active, over }) =>
+      over
+        ? t('distribution.board.dnd.over', { name: nameOf(active.id), target: targetOf(over.id) })
+        : t('distribution.board.dnd.outside', { name: nameOf(active.id) }),
+    onDragEnd: ({ active, over }) =>
+      over
+        ? t('distribution.board.dnd.dropped', {
+            name: nameOf(active.id),
+            target: targetOf(over.id),
+          })
+        : t('distribution.board.dnd.cancelled', { name: nameOf(active.id) }),
+    onDragCancel: ({ active }) =>
+      t('distribution.board.dnd.cancelled', { name: nameOf(active.id) }),
+  };
 
   function handleDragEnd(e: DragEndEvent) {
     const studentId = e.active.id as string;
     const targetId = e.over?.id as string | undefined;
     if (!targetId) return;
-    const row = rows.find((r) => r.student.id === studentId);
-    if (!row) return;
-    const student = row.student;
-    const currentProjectId = row.assignment?.projectId ?? null;
-
-    if (targetId === UNASSIGNED_ID) {
-      if (currentProjectId === null) return; // already unassigned — no-op
-      updateAssignment(studentId, null, null);
-      toast.success('Schüler entfernt aus Projekt');
-      return;
-    }
-
-    if (targetId === currentProjectId) return; // dropped on same project — no-op
-
-    const target = projects.find((p) => p.id === targetId);
-    if (!target) return;
-    if (!target.grades.includes(student.grade)) {
-      toast.warning(`Jahrgang ${student.grade} passt nicht zu "${target.name}" (${target.grades.join(', ')})`);
-      return;
-    }
-    const currentLoad = rows.filter(
-      (r) => r.assignment?.projectId === targetId && r.student.id !== studentId,
-    ).length;
-    if (currentLoad >= target.maxCapacity) {
-      toast.warning(`"${target.name}" ist voll (${currentLoad}/${target.maxCapacity})`);
-      return;
-    }
-    const idx = student.priorities.indexOf(targetId);
-    const priorityRank = idx >= 0 && idx < 5 ? idx + 1 : null;
-    updateAssignment(studentId, targetId, priorityRank);
-    toast.success(`Verschoben zu "${target.name}"`);
+    move(studentId, targetId === UNASSIGNED_ID ? null : targetId);
   }
 
-  const byProject = new Map<string, typeof rows>();
-  for (const r of rows) {
-    if (!r.assignment?.projectId) continue;
-    const id = r.assignment.projectId;
-    if (!byProject.has(id)) byProject.set(id, []);
-    byProject.get(id)!.push(r);
-  }
-  const unassigned = rows.filter((r) => !r.assignment?.projectId);
-
-  // Popularity score per project (Prio 1 = 5, Prio 5 = 1).
-  const popularityById = useMemo(() => {
-    const out = new Map<string, number>();
-    for (const p of projects) out.set(p.id, 0);
-    for (const r of rows) {
-      r.student.priorities.forEach((pid, i) => {
-        if (i >= 5) return;
-        out.set(pid, (out.get(pid) ?? 0) + (5 - i));
-      });
+  const byProject = useMemo(() => {
+    const grouped = new Map<string, typeof rows>();
+    for (const row of rows) {
+      if (!row.assignment.projectId) continue;
+      const id = row.assignment.projectId;
+      if (!grouped.has(id)) grouped.set(id, []);
+      grouped.get(id)!.push(row);
     }
-    return out;
-  }, [projects, rows]);
+    return grouped;
+  }, [rows]);
+  const unassigned = rows.filter((r) => !r.assignment.projectId);
+
+  const popularityRanking = useMemo(
+    () =>
+      projects
+        .map((project) => ({
+          project,
+          score: rows.reduce((total, { student }) => {
+            const rank = student.priorities.indexOf(project.id);
+            return total + (rank >= 0 && rank < 5 ? 5 - rank : 0);
+          }, 0),
+        }))
+        .sort((a, b) => b.score - a.score),
+    [projects, rows],
+  );
 
   const sortedProjects = useMemo(() => {
     const copy = [...projects];
+    const popularityById = new Map(
+      popularityRanking.map(({ project, score }) => [project.id, score]),
+    );
     const loadOf = (p: Project) => byProject.get(p.id)?.length ?? 0;
+    const language = i18n.resolvedLanguage ?? i18n.language;
     copy.sort((a, b) => {
       switch (sortKey) {
         case 'popularity':
-          return (popularityById.get(b.id) ?? 0) - (popularityById.get(a.id) ?? 0) || compareStr(a.name, b.name);
+          return (
+            (popularityById.get(b.id) ?? 0) - (popularityById.get(a.id) ?? 0) ||
+            compareStr(a.name, b.name, language)
+          );
         case 'name':
-          return compareStr(a.name, b.name);
+          return compareStr(a.name, b.name, language);
         case 'load':
-          return loadOf(b) - loadOf(a) || compareStr(a.name, b.name);
+          return loadOf(b) - loadOf(a) || compareStr(a.name, b.name, language);
         case 'utilization': {
           const ua = a.maxCapacity > 0 ? loadOf(a) / a.maxCapacity : 0;
           const ub = b.maxCapacity > 0 ? loadOf(b) / b.maxCapacity : 0;
-          return ub - ua || compareStr(a.name, b.name);
+          return ub - ua || compareStr(a.name, b.name, language);
         }
         case 'grade': {
           const ga = Math.min(...a.grades);
           const gb = Math.min(...b.grades);
-          return ga - gb || compareStr(a.name, b.name);
+          return ga - gb || compareStr(a.name, b.name, language);
         }
       }
     });
     return copy;
-    // byProject not in deps because it's derived from rows; rows already triggers re-memo.
-  }, [projects, rows, sortKey, popularityById]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [projects, byProject, sortKey, popularityRanking, i18n.resolvedLanguage, i18n.language]);
+
+  const attention = useMemo(
+    () =>
+      new Set(
+        projects.filter((p) => needsAttention(p, byProject.get(p.id) ?? [])).map((p) => p.id),
+      ),
+    [projects, byProject],
+  );
+  // Cards keep their full counts; a search only narrows which students they list.
+  const cards = sortedProjects.flatMap((project) => {
+    const assigned = byProject.get(project.id) ?? [];
+    if (attentionOnly && !attention.has(project.id)) return [];
+    const listed = query ? assigned.filter((r) => matchesStudent(r.student, query)) : assigned;
+    return query && !listed.length ? [] : [{ project, assigned, listed }];
+  });
+  const unassignedListed = query
+    ? unassigned.filter((r) => matchesStudent(r.student, query))
+    : unassigned;
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-3">
-        {sortedProjects.map((p) => (
-          <ProjectCard
-            key={p.id}
-            project={p}
-            allProjects={projects}
-            allRows={rows}
-            students={(byProject.get(p.id) ?? [])
-              .filter((r) => r.assignment)
-              .map((r) => ({ student: r.student, assignment: r.assignment! }))}
-            onStudentClick={(s) => setEditing(s)}
+    <DndContext
+      sensors={sensors}
+      onDragEnd={handleDragEnd}
+      accessibility={{
+        announcements,
+        screenReaderInstructions: { draggable: t('distribution.board.dnd.instructions') },
+      }}
+    >
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div className="relative w-full sm:max-w-xs">
+          <Search
+            aria-hidden
+            className="pointer-events-none absolute left-3 top-3 size-4 text-prose-soft"
           />
-        ))}
+          <Input
+            type="search"
+            aria-label={t('students.search.label')}
+            placeholder={t('students.search.placeholder')}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="bg-white pl-9"
+          />
+        </div>
+        <Button
+          variant="outline"
+          aria-pressed={attentionOnly}
+          onClick={() => setAttentionOnly((on) => !on)}
+          className="aria-pressed:border-amber-400 aria-pressed:bg-amber-50 aria-pressed:text-amber-900"
+        >
+          <TriangleAlert />
+          {t('distribution.board.attentionOnly')}
+          <span className="tabular-nums text-prose-soft">{attention.size}</span>
+        </Button>
+        <p className="w-full text-xs leading-relaxed text-prose-soft">
+          {t('distribution.board.help')}
+        </p>
       </div>
-      <UnassignedDroppable>
-        {unassigned.map((r) => (
+      {/* Always rendered: it is the only drop target that unassigns a student. */}
+      <UnassignedDroppable total={unassigned.length}>
+        {unassignedListed.map((r) => (
           <StudentChip
             key={r.student.id}
             student={r.student}
             assignment={r.assignment}
             projects={projects}
-            onClick={() => setEditing(r.student)}
+            onClick={() => edit(r.student)}
           />
         ))}
       </UnassignedDroppable>
+      {cards.length === 0 && (
+        <p role="status" className="py-12 text-center text-sm text-prose-soft">
+          {t('distribution.board.noMatches')}
+        </p>
+      )}
+      <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-2 xl:grid-cols-3">
+        {cards.map(({ project, assigned, listed }) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            allProjects={projects}
+            allRows={rows}
+            popularityRanking={popularityRanking}
+            students={assigned}
+            listed={listed}
+            onStudentClick={edit}
+          />
+        ))}
+      </div>
 
       <StudentFormDialog
-        open={!!editing}
-        onOpenChange={(o) => !o && setEditing(null)}
+        open={editOpen}
+        onOpenChange={setEditOpen}
         initial={editing ?? undefined}
         onSave={(data) => {
           if (!editing) return;
           updateStudent(editing.id, data);
-          toast.success('Schüler aktualisiert');
-          setEditing(null);
+          toast.success(t('distribution.studentUpdated'));
         }}
       />
     </DndContext>
   );
 }
 
-function UnassignedDroppable({ children }: { children: React.ReactNode }) {
+/** `total` is everyone unassigned; children may be narrowed by a search. */
+function UnassignedDroppable({ children, total }: { children: React.ReactNode; total: number }) {
+  const { t } = useTranslation('app');
   const { setNodeRef, isOver } = useDroppable({ id: UNASSIGNED_ID });
+  const [expanded, setExpanded] = useState(false);
+  const items = Children.toArray(children);
   return (
     <div
       ref={setNodeRef}
-      className={`mt-4 border-2 border-dashed rounded-lg p-3 bg-muted/30 ${isOver ? 'border-primary' : 'border-muted'}`}
+      className={`mb-6 rounded-lg border border-dashed p-5 ${isOver ? 'border-mark bg-mark/[0.04]' : total ? 'border-amber-400 bg-amber-50/40' : 'border-rule bg-white'}`}
     >
-      <h3 className="text-sm font-medium mb-2">Unverteilt</h3>
-      <div className="flex flex-wrap gap-1 min-h-[40px]">{children}</div>
+      <h3 className="font-serif text-xl text-mark-ink">
+        {t('distribution.board.unassignedHeading')}{' '}
+        <span className="ml-2 font-sans text-sm tabular-nums text-prose-soft">{total}</span>
+      </h3>
+      <div className="mt-3 grid gap-x-6 sm:grid-cols-2 xl:grid-cols-3">
+        {expanded ? items : items.slice(0, 6)}
+      </div>
+      {items.length > 6 && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="mt-3 text-xs text-amber-800"
+          aria-expanded={expanded}
+          onClick={() => setExpanded(!expanded)}
+        >
+          {expanded
+            ? t('distribution.board.showLess')
+            : t('distribution.board.showAll', { count: items.length })}
+        </Button>
+      )}
+      {total === 0 && (
+        <p className="text-xs text-prose-soft">{t('distribution.board.allAssigned')}</p>
+      )}
     </div>
   );
 }

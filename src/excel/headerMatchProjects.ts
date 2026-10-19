@@ -1,4 +1,5 @@
-export type ProjectColumnRole = 'name' | 'description' | 'grades' | 'maxCapacity' | 'targetCapacity';
+export type ProjectColumnRole =
+  'name' | 'description' | 'grades' | 'maxCapacity' | 'targetCapacity';
 
 export type ProjectColumnMap = {
   name: number;
@@ -10,16 +11,27 @@ export type ProjectColumnMap = {
 };
 
 const patterns: Record<ProjectColumnRole, RegExp[]> = {
-  name: [/^name$/i, /^projekt(name)?$/i, /^project(\s*name)?$/i, /^titel$/i, /^title$/i, /^bezeichnung$/i],
+  name: [
+    /^name$/i,
+    /^projekt(name)?$/i,
+    /^project(\s*name)?$/i,
+    /^titel$/i,
+    /^title$/i,
+    /^bezeichnung$/i,
+  ],
   description: [/^beschreibung$/i, /^description$/i, /^info$/i, /^details$/i, /^desc$/i],
   grades: [/^jahrgänge$/i, /^jahrgang$/i, /^jahrgangsstufen?$/i, /^grades?$/i, /^stufen?$/i],
   maxCapacity: [
-    /^max$/i, /^maximum$/i, /^obergrenze$/i,
+    /^max$/i,
+    /^maximum$/i,
+    /^obergrenze$/i,
     /^max[-\s.]?(kapazität|capacity|kap)$/i,
     /^kapazität[-\s.]?max$/i,
   ],
   targetCapacity: [
-    /^soll$/i, /^ziel$/i, /^target$/i,
+    /^soll$/i,
+    /^ziel$/i,
+    /^target$/i,
     /^soll[-\s.]?(kapazität|capacity|kap)$/i,
     /^ziel[-\s.]?(kapazität|capacity)$/i,
     /^target[-\s.]?capacity$/i,

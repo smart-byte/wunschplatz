@@ -1,0 +1,53 @@
+{
+  "header": {
+    "github": "GitHub"
+  },
+  "hero": {
+    "kicker": "Für Projektwochen an Schulen",
+    "title": "Faire Projektverteilung für deine Schule.",
+    "lede": "Wunschplatz importiert die Projektwünsche deiner Schüler und hilft bei einer fairen Verteilung – <b>direkt im Browser, ohne Wunschplatz-Konto.</b> Kein Zettelchaos, keine Excel-Formeln.",
+    "cta": "App starten",
+    "ctaHint": "Kostenlos · Kein Konto nötig · Open Source"
+  },
+  "how": {
+    "title": "So funktioniert’s",
+    "step1Title": "Formular erstellen",
+    "step1Text": "Fertige Vorlage für Google Forms oder Microsoft Forms.",
+    "step2Title": "Antworten importieren",
+    "step2Text": "CSV hochladen – Spalten werden erkannt.",
+    "step3Title": "Optimal verteilen",
+    "step3Text": "Faire Zuteilung, anpassen, als Excel exportieren.",
+    "kicker": "In drei Schritten",
+    "hint": "Schritt wählen für einen Blick in die App",
+    "caption": "Ausschnitte aus der App mit Beispieldaten.",
+    "sampleFile": "Antworten.csv",
+    "sampleProjects": [
+      "Schulchor",
+      "Kerzen und Seife selber machen",
+      "Internationale Frühstücke",
+      "Magie und Zauberkunst",
+      "Bouldern für Einsteiger",
+      "Origami-Werkstatt",
+      "Aquarellmalerei",
+      "Geologie und Steine"
+    ]
+  },
+  "facts": {
+    "title": "Gut zu wissen",
+    "localTitle": "Daten bleiben im Browser",
+    "localText": "Importierte Daten werden nicht hochgeladen.",
+    "accountTitle": "Kein Konto, kein Tracking",
+    "accountText": "Öffnen und loslegen.",
+    "roundsTitle": "Wunschrunden",
+    "roundsText": "Mehrere Verteilungsrunden pro Jahr, jede mit eigenem Ergebnis.",
+    "openSourceTitle": "Open Source",
+    "openSourceText": "Kostenlos, Code öffentlich.",
+    "github": "Auf GitHub ansehen",
+    "note": "Für Google Forms und Microsoft Forms gelten Speicherung und Datenschutzeinstellungen des jeweiligen Anbieters."
+  },
+  "footer": {
+    "ctaTitle": "Bereit für die nächste Projektwoche?",
+    "cta": "Jetzt starten",
+    "ctaHint": "Kostenlos · läuft im Browser"
+  }
+}

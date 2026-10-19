@@ -1,9 +1,15 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useStudentsStore } from '@/store/useStudentsStore';
@@ -24,8 +30,18 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-export function SampleDataDialog() {
-  const [open, setOpen] = useState(false);
+type Props = {
+  /** Controlled mode renders no trigger; the caller opens the dialog (e.g. from a menu). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+export function SampleDataDialog({ open: controlledOpen, onOpenChange }: Props) {
+  const { t, i18n } = useTranslation('app');
+  const [internalOpen, setInternalOpen] = useState(false);
+  const controlled = controlledOpen !== undefined;
+  const open = controlled ? controlledOpen : internalOpen;
+  const setOpen = (next: boolean) => (controlled ? onOpenChange?.(next) : setInternalOpen(next));
   const [projectCount, setProjectCount] = useState('10');
   const [studentCount, setStudentCount] = useState('200');
   const setProjects = useProjectsStore((s) => s.setProjects);
@@ -45,12 +61,17 @@ export function SampleDataDialog() {
   function handleGenerate() {
     const pCount = parseClamped(projectCount, MIN_PROJECTS, MAX_SAMPLE_PROJECTS, 10);
     const sCount = parseClamped(studentCount, MIN_STUDENTS, MAX_STUDENTS, 200);
-    const projects = generateSampleProjects(pCount);
+    const projects = generateSampleProjects(pCount, i18n.resolvedLanguage ?? i18n.language);
     const students = generateSampleStudents(sCount, projects);
     setProjects(projects);
     setStudents(students);
     clearAssignments();
-    toast.success(`${projects.length} Projekte und ${students.length} Schüler generiert`);
+    toast.success(
+      t('projects.sample.generated', {
+        projectCount: projects.length,
+        studentCount: students.length,
+      }),
+    );
     setOpen(false);
   }
 
@@ -66,24 +87,23 @@ export function SampleDataDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <Sparkles className="size-4 mr-2" />
-          Beispieldaten
-        </Button>
-      </DialogTrigger>
+      {!controlled && (
+        <DialogTrigger asChild>
+          <Button variant="outline">
+            <Sparkles className="size-4 mr-2" />
+            {t('projects.sample.trigger')}
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Beispieldaten generieren</DialogTitle>
+          <DialogTitle>{t('projects.sample.title')}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4">
-          <p className="text-sm text-muted-foreground">
-            Erstellt zufällige Projekte mit realistischen Namen, Jahrgangsstufen und Beschreibungen,
-            sowie Schüler mit zufälligen, jahrgangs-passenden Prioritäten — schnell zum Ausprobieren.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('projects.sample.description')}</p>
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-1.5">
-              <Label htmlFor="projectCount">Anzahl Projekte</Label>
+              <Label htmlFor="projectCount">{t('projects.sample.projectCountLabel')}</Label>
               <Input
                 id="projectCount"
                 type="number"
@@ -93,10 +113,12 @@ export function SampleDataDialog() {
                 onChange={(e) => setProjectCount(e.target.value)}
                 onBlur={commitProjectCount}
               />
-              <p className="text-xs text-muted-foreground">Max. {MAX_SAMPLE_PROJECTS}</p>
+              <p className="text-xs text-muted-foreground">
+                {t('projects.sample.maxHint', { max: MAX_SAMPLE_PROJECTS })}
+              </p>
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="studentCount">Anzahl Schüler</Label>
+              <Label htmlFor="studentCount">{t('projects.sample.studentCountLabel')}</Label>
               <Input
                 id="studentCount"
                 type="number"
@@ -110,13 +132,18 @@ export function SampleDataDialog() {
           </div>
           {willReplace && (
             <div className="text-sm border border-amber-400 bg-amber-50 text-amber-900 rounded p-2">
-              ⚠ Ersetzt alle bisherigen Projekte ({existingProjects}) und Schüler ({existingStudents}) und setzt die Verteilung zurück.
+              {t('projects.sample.replaceWarning', {
+                projectCount: existingProjects,
+                studentCount: existingStudents,
+              })}
             </div>
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Abbrechen</Button>
-          <Button onClick={handleGenerate}>Generieren</Button>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            {t('common.cancel')}
+          </Button>
+          <Button onClick={handleGenerate}>{t('projects.sample.generate')}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

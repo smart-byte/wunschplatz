@@ -14,7 +14,14 @@ function roundtripWorkbook(wb: ReturnType<typeof buildProjectsWorkbook>) {
 describe('Projects export → import roundtrip', () => {
   it('preserves all fields', () => {
     const projects: Project[] = [
-      { id: 'a', name: 'Schach', description: 'Eröffnungen', grades: [5, 6, 7], maxCapacity: 20, targetCapacity: 16 },
+      {
+        id: 'a',
+        name: 'Schach',
+        description: 'Eröffnungen',
+        grades: [5, 6, 7],
+        maxCapacity: 20,
+        targetCapacity: 16,
+      },
       { id: 'b', name: 'Theater', grades: [7, 8, 9], maxCapacity: 18, targetCapacity: 14 },
     ];
     const wb = buildProjectsWorkbook(projects);
@@ -43,9 +50,32 @@ describe('Students export → import roundtrip', () => {
       { id: 'b', name: 'Beta', grades: [7], maxCapacity: 10, targetCapacity: 8 },
     ];
     const students: Student[] = [
-      { id: 's1', firstName: 'Anna', lastName: 'Müller', className: '7a', grade: 7, priorities: ['a', 'b'], groupId: 'g1' },
-      { id: 's2', firstName: 'Ben', lastName: 'Schmidt', className: '7b', grade: 7, priorities: ['a', 'b'], groupId: 'g1' },
-      { id: 's3', firstName: 'Carla', lastName: 'Weber', className: '7a', grade: 7, priorities: ['b'] },
+      {
+        id: 's1',
+        firstName: 'Anna',
+        lastName: 'Müller',
+        className: '7a',
+        grade: 7,
+        priorities: ['a', 'b'],
+        groupId: 'g1',
+      },
+      {
+        id: 's2',
+        firstName: 'Ben',
+        lastName: 'Schmidt',
+        className: '7b',
+        grade: 7,
+        priorities: ['a', 'b'],
+        groupId: 'g1',
+      },
+      {
+        id: 's3',
+        firstName: 'Carla',
+        lastName: 'Weber',
+        className: '7a',
+        grade: 7,
+        priorities: ['b'],
+      },
     ];
     const wb = buildStudentsWorkbook(students, projects);
     const out = roundtripWorkbook(wb);
@@ -55,7 +85,6 @@ describe('Students export → import roundtrip', () => {
     expect(parsed.missingColumns).toHaveLength(0);
     expect(parsed.errors).toHaveLength(0);
     expect(parsed.students).toHaveLength(3);
-    // Anna + Ben share a group, Carla is alone.
     expect(parsed.students[0].groupId).toBeDefined();
     expect(parsed.students[0].groupId).toBe(parsed.students[1].groupId);
     expect(parsed.students[2].groupId).toBeUndefined();

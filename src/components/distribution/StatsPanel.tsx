@@ -1,53 +1,89 @@
-import { useActiveDistribution } from '@/store/useAssignmentsStore';
-import { useProjectsStore } from '@/store/useProjectsStore';
-import { useStudentsStore } from '@/store/useStudentsStore';
-import { DistributionInfoPopover } from './DistributionInfoPopover';
+import { useTranslation } from 'react-i18next';
+import { useDistributionData } from '@/hooks/useDistributionData';
+import { distributionStats } from '@/lib/distribution';
+import { cn } from '@/lib/utils';
+
+const rankColors = ['bg-mark', 'bg-mark-2', 'bg-[#78b9cd]', 'bg-[#a8ced9]', 'bg-[#d0e3e9]'];
 
 export function StatsPanel() {
-  const activeDist = useActiveDistribution();
-  const assignments = activeDist?.assignments ?? [];
-  const lastRun = activeDist?.run ?? null;
-  const studentCount = useStudentsStore((s) => s.students.length);
-  const projects = useProjectsStore((s) => s.projects);
-
-  const byPrio = [0, 0, 0, 0, 0];
-  let notInTop5 = 0;
-  let unassigned = 0;
-  for (const a of assignments) {
-    if (a.projectId === null) unassigned++;
-    else if (a.priorityRank === null) notInTop5++;
-    else byPrio[a.priorityRank - 1]++;
-  }
-  const assignedTotal = studentCount - unassigned;
-  const manualCount = assignments.filter((a) => a.manuallyEdited).length;
+  const { t, i18n } = useTranslation('app');
+  const { rows } = useDistributionData();
+  const { totalStudents, assignedByPriority, notInTop5, unassigned } = distributionStats(
+    rows.map((row) => row.assignment),
+  );
+  const assigned = totalStudents - unassigned;
+  const wished = assigned - notInTop5;
+  const firstWish = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language, {
+    style: 'percent',
+    maximumFractionDigits: 0,
+  }).format(totalStudents ? assignedByPriority[0] / totalStudents : 0);
+  const segments = [
+    ...assignedByPriority.map((count, i) => ({
+      label: t('distribution.prioLabel', { n: i + 1 }),
+      count,
+      color: rankColors[i],
+    })),
+    { label: t('distribution.badge.outsideLabel'), count: notInTop5, color: 'bg-stone-300' },
+    { label: t('distribution.board.unassignedHeading'), count: unassigned, color: 'bg-amber-400' },
+  ];
 
   return (
-    <div className="border rounded-lg p-4 bg-card">
-      <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-        <div><strong>Verteilt:</strong> {assignedTotal}/{studentCount}</div>
-        <div className="text-destructive"><strong>Unverteilt:</strong> {unassigned}</div>
+    <section
+      aria-label={t('distribution.stats.heading')}
+      className="border-y border-rule py-6 sm:py-7"
+    >
+      <dl className="grid grid-cols-2 gap-x-6 gap-y-6 lg:grid-cols-4 lg:gap-8">
         <div>
-          <strong>Prio:</strong>{' '}
-          {byPrio.map((c, i) => (
-            <span key={i} className="ml-1">P{i + 1}: {c}</span>
-          ))}
-          <span className="ml-1 text-muted-foreground">außerhalb: {notInTop5}</span>
+          <dt className="text-xs text-prose-soft">{t('distribution.stats.assignedLabel')}</dt>
+          <dd className="mt-2 font-serif text-3xl tabular-nums text-mark-ink sm:text-4xl">
+            {assigned}
+            <span className="text-xl text-prose-soft">/{totalStudents}</span>
+          </dd>
         </div>
-        {manualCount > 0 && <div className="text-muted-foreground"><strong>Manuell:</strong> {manualCount}</div>}
-        {projects.length > 0 && (
-          <div className="text-muted-foreground">
-            <strong>Projekte:</strong> {projects.length}
-          </div>
-        )}
-        {lastRun && activeDist && (
-          <div className="text-muted-foreground ml-auto inline-flex items-center gap-1.5">
-            <span>Score: {lastRun.score}</span>
-            <DistributionInfoPopover distribution={activeDist} />
-            <span>·</span>
-            <span>{new Date(lastRun.timestamp).toLocaleString('de-DE')}</span>
-          </div>
-        )}
+        <div>
+          <dt className="text-xs text-prose-soft">{t('distribution.stats.firstWish')}</dt>
+          <dd className="mt-2 font-serif text-3xl tabular-nums text-mark sm:text-4xl">
+            {firstWish}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs text-prose-soft">{t('distribution.stats.wished')}</dt>
+          <dd className="mt-2 font-serif text-3xl tabular-nums text-mark-ink sm:text-4xl">
+            {wished}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs text-prose-soft">{t('distribution.stats.unassignedLabel')}</dt>
+          <dd
+            className={cn(
+              'mt-2 font-serif text-3xl tabular-nums sm:text-4xl',
+              unassigned ? 'text-amber-800' : 'text-mark-ink',
+            )}
+          >
+            {unassigned}
+          </dd>
+        </div>
+      </dl>
+      <div aria-hidden className="mt-7 flex h-1.5 overflow-hidden rounded-full bg-muted">
+        {segments.map(({ label, count, color }) => (
+          <div
+            key={label}
+            className={color}
+            style={{ width: `${totalStudents ? (count / totalStudents) * 100 : 0}%` }}
+          />
+        ))}
       </div>
-    </div>
+      <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-prose-soft">
+        {segments
+          .filter((segment, index) => index < 5 || segment.count > 0)
+          .map(({ label, count, color }) => (
+            <li key={label} className="inline-flex items-center gap-1.5">
+              <span aria-hidden className={cn('size-1.5 rounded-full', color)} />
+              {label}
+              <span className="ml-0.5 font-medium tabular-nums text-prose">{count}</span>
+            </li>
+          ))}
+      </ul>
+    </section>
   );
 }

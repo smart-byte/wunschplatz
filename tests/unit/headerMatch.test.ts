@@ -3,7 +3,17 @@ import { detectColumns, type ColumnRole } from '@/excel/headerMatch';
 
 describe('detectColumns', () => {
   it('matches German headers in order', () => {
-    const headers = ['Vorname', 'Nachname', 'Klasse', 'Jahrgang', 'Prio1', 'Prio2', 'Prio3', 'Prio4', 'Prio5'];
+    const headers = [
+      'Vorname',
+      'Nachname',
+      'Klasse',
+      'Jahrgang',
+      'Prio1',
+      'Prio2',
+      'Prio3',
+      'Prio4',
+      'Prio5',
+    ];
     const result = detectColumns(headers);
     expect(result.firstName).toBe(0);
     expect(result.lastName).toBe(1);
@@ -13,7 +23,17 @@ describe('detectColumns', () => {
   });
 
   it('matches case-insensitive and with whitespace', () => {
-    const headers = [' VORNAME ', 'nachname', 'Klasse', 'jahrgang', 'PRIO1', 'prio2', 'PRIO 3', 'priorität 4', 'Priorität 5'];
+    const headers = [
+      ' VORNAME ',
+      'nachname',
+      'Klasse',
+      'jahrgang',
+      'PRIO1',
+      'prio2',
+      'PRIO 3',
+      'priorität 4',
+      'Priorität 5',
+    ];
     const result = detectColumns(headers);
     expect(result.firstName).toBe(0);
     expect(result.priorities[2]).toBe(6);
@@ -21,7 +41,17 @@ describe('detectColumns', () => {
   });
 
   it('matches English headers', () => {
-    const headers = ['first name', 'last name', 'class', 'grade', 'priority 1', 'priority 2', 'priority 3', 'priority 4', 'priority 5'];
+    const headers = [
+      'first name',
+      'last name',
+      'class',
+      'grade',
+      'priority 1',
+      'priority 2',
+      'priority 3',
+      'priority 4',
+      'priority 5',
+    ];
     const result = detectColumns(headers);
     expect(result.firstName).toBe(0);
     expect(result.priorities).toEqual([4, 5, 6, 7, 8]);
@@ -41,5 +71,42 @@ describe('detectColumns', () => {
     expect(missing).toContain('className');
     expect(missing).toContain('grade');
     expect(missing).toContain('priorities');
+  });
+
+  it('recognizes "1. Wahl" … "5. Wahl" as priorities', () => {
+    const cols = detectColumns([
+      'Vorname',
+      'Nachname',
+      'Klasse',
+      'Jahrgang',
+      '1. Wahl',
+      '2. Wahl',
+      '3. Wahl',
+      '4. Wahl',
+      '5. Wahl',
+    ]);
+    expect(cols.priorities).toEqual([4, 5, 6, 7, 8]);
+    expect(cols.missingRequired()).toEqual([]);
+  });
+  it('still recognizes existing Prio/Priority patterns', () => {
+    const cols = detectColumns([
+      'Vorname',
+      'Nachname',
+      'Klasse',
+      'Jahrgang',
+      'Prio1',
+      'Priority 2',
+    ]);
+    expect(cols.priorities[0]).toBe(4);
+    expect(cols.priorities[1]).toBe(5);
+  });
+  it('prefers Nachname over the account Name column of an MS Forms export', () => {
+    const cols = detectColumns(
+      'ID,Startzeit,Abschlusszeit,E-Mail,Name,Vorname,Nachname,Klasse,Jahrgang,1. Wahl'.split(','),
+    );
+    expect(cols.lastName).toBe(6);
+  });
+  it('reads a bare Name column as the last name when there is no Nachname', () => {
+    expect(detectColumns(['Name', 'Vorname', 'Klasse', 'Jahrgang', 'Prio1']).lastName).toBe(0);
   });
 });

@@ -1,64 +1,73 @@
+import { cn } from '@/lib/utils';
+import { priorityRank } from '@/lib/distribution';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
-import {
-  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Assignment, Project, Student } from '@/types';
 
 type Props = {
   student: Student;
-  assignment: Assignment | null;
+  assignment: Assignment;
   projects: Project[];
   size?: 'sm' | 'xs';
-  /** When true, the tooltip is suppressed (used while parent is dragging). */
   disableTooltip?: boolean;
+  /** Boards stay quiet for the common case and only badge the exceptions. */
+  hideFirstChoice?: boolean;
 };
 
 export function AssignmentBadge({
-  student, assignment, projects, size = 'sm', disableTooltip = false,
+  student,
+  assignment,
+  projects,
+  size = 'sm',
+  disableTooltip = false,
+  hideFirstChoice = false,
 }: Props) {
+  const { t } = useTranslation('app');
+  const project = projects.find((p) => p.id === assignment.projectId);
+  if (!project) return null;
+  const rank = priorityRank(student, project);
+  if (hideFirstChoice && rank === 1) return null;
+  const badge = (
+    <Badge
+      variant={rank !== null ? 'secondary' : 'outline'}
+      className={cn(
+        'shrink-0 rounded-sm border-0 font-medium',
+        rank === 1
+          ? 'bg-mark/[0.08] text-mark'
+          : rank !== null
+            ? 'bg-mark-2/[0.08] text-[#18758f]'
+            : 'bg-amber-50 text-amber-800',
+        size === 'xs' && 'px-1.5 py-0.5 text-[10px]',
+      )}
+    >
+      {rank !== null
+        ? t('distribution.prioLabel', { n: rank })
+        : t('distribution.badge.outsideLabel')}
+    </Badge>
+  );
+  if (disableTooltip) return badge;
+
   const projectName = (id: string) => projects.find((p) => p.id === id)?.name ?? '?';
-  const prios = student.priorities;
-
-  const prioList = prios.length === 0
-    ? '(keine Prioritäten gesetzt)'
-    : prios.map((id, i) => `${i + 1}. ${projectName(id)}`).join('\n');
-
-  // Hide badge entirely when student is unassigned — badge is only meaningful
-  // to reveal which priority rank the assigned project had.
-  if (!assignment || assignment.projectId === null) {
-    return null;
-  }
-
-  let label: string;
-  let variant: 'secondary' | 'outline' | 'destructive' = 'outline';
-  let status: string;
-
-  if (assignment.priorityRank !== null) {
-    label = `Prio ${assignment.priorityRank}`;
-    variant = 'secondary';
-    status = `Schüler hat Wunsch Nr. ${assignment.priorityRank} erhalten.`;
-  } else {
-    label = 'außerhalb';
-    variant = 'outline';
-    status = 'Schüler wurde einem Projekt außerhalb seiner Top-5 zugewiesen.';
-  }
-
-  const sizeClass = size === 'xs' ? 'text-[10px] py-0 px-1' : '';
-
-  if (disableTooltip) {
-    return <Badge variant={variant} className={sizeClass}>{label}</Badge>;
-  }
+  const prioList =
+    student.priorities.length === 0
+      ? t('distribution.badge.noPriorities')
+      : student.priorities.map((id, i) => `${i + 1}. ${projectName(id)}`).join('\n');
 
   return (
     <TooltipProvider delayDuration={150}>
-      <Tooltip open={disableTooltip ? false : undefined}>
-        <TooltipTrigger asChild>
-          <Badge variant={variant} className={sizeClass}>{label}</Badge>
-        </TooltipTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>{badge}</TooltipTrigger>
         <TooltipContent className="max-w-xs">
-          <p className="text-xs font-medium">{status}</p>
+          <p className="text-xs font-medium">
+            {rank !== null
+              ? t('distribution.badge.prioStatus', { n: rank })
+              : t('distribution.badge.outsideStatus')}
+          </p>
           <p className="text-xs mt-2 opacity-80 whitespace-pre-line">
-            <span className="font-medium">Prio-Wünsche:</span>{'\n'}{prioList}
+            <span className="font-medium">{t('distribution.badge.prioWishes')}</span>
+            {'\n'}
+            {prioList}
           </p>
         </TooltipContent>
       </Tooltip>

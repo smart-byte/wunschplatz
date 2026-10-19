@@ -22,10 +22,11 @@ function normalize(s: string): string {
   return s.trim();
 }
 
+// Patterns are tried in order, so "Nachname" wins over a bare "Name" in any column.
 function findColumn(headers: string[], regexes: RegExp[]): number {
-  for (let i = 0; i < headers.length; i++) {
-    const h = normalize(headers[i]);
-    if (regexes.some((r) => r.test(h))) return i;
+  for (const r of regexes) {
+    const i = headers.findIndex((h) => r.test(normalize(h)));
+    if (i !== -1) return i;
   }
   return -1;
 }
@@ -36,6 +37,7 @@ function findPriority(headers: string[], k: number): number {
     new RegExp(`^priority\\s*${k}$`, 'i'),
     new RegExp(`^prioritat\\s*${k}$`, 'i'),
     new RegExp(`^priorität\\s*${k}$`, 'i'),
+    new RegExp(`^${k}\\.?\\s*wahl$`, 'i'),
   ];
   return findColumn(headers, regs);
 }

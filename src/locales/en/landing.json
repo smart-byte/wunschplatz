@@ -1,0 +1,53 @@
+{
+  "header": {
+    "github": "GitHub"
+  },
+  "hero": {
+    "kicker": "For project weeks at schools",
+    "title": "Fair project assignment for your school.",
+    "lede": "Wunschplatz imports your students’ project wishes and helps assign them fairly – <b>right in the browser, with no Wunschplatz account.</b> No paper chaos, no spreadsheet formulas.",
+    "cta": "Open the app",
+    "ctaHint": "Free · No account needed · Open source"
+  },
+  "how": {
+    "title": "How it works",
+    "step1Title": "Create the form",
+    "step1Text": "Ready-made template for Google Forms or Microsoft Forms.",
+    "step2Title": "Import responses",
+    "step2Text": "Upload the CSV – columns are detected.",
+    "step3Title": "Assign optimally",
+    "step3Text": "Fair assignment, adjust, export to Excel.",
+    "kicker": "In three steps",
+    "hint": "Pick a step for a look inside the app",
+    "caption": "Excerpts from the app with sample data.",
+    "sampleFile": "responses.csv",
+    "sampleProjects": [
+      "School Choir",
+      "Make Candles and Soap",
+      "International Breakfasts",
+      "Magic and Illusions",
+      "Bouldering for Beginners",
+      "Origami Workshop",
+      "Watercolor Painting",
+      "Geology and Rocks"
+    ]
+  },
+  "facts": {
+    "title": "Good to know",
+    "localTitle": "Data stays in your browser",
+    "localText": "Imported data is not uploaded.",
+    "accountTitle": "No account, no tracking",
+    "accountText": "Just open it and start.",
+    "roundsTitle": "Wish rounds",
+    "roundsText": "Multiple assignment rounds per year, each with its own result.",
+    "openSourceTitle": "Open source",
+    "openSourceText": "Free, with public code.",
+    "github": "View on GitHub",
+    "note": "Responses collected with Google Forms or Microsoft Forms are subject to that provider’s storage and privacy settings."
+  },
+  "footer": {
+    "ctaTitle": "Ready for the next project week?",
+    "cta": "Get started",
+    "ctaHint": "Free · runs in your browser"
+  }
+}

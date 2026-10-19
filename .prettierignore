@@ -1,0 +1,8 @@
+node_modules/
+dist/
+design-explorations/
+test-results/
+playwright-report/
+package-lock.json
+.agents/
+.codex/

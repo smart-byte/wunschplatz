@@ -8,7 +8,14 @@ const projects: Project[] = [
   { id: 'b', name: 'Beta', grades: [7], maxCapacity: 5, targetCapacity: 3 },
 ];
 const students: Student[] = [
-  { id: 's1', firstName: 'Anna', lastName: 'Müller', className: '7a', grade: 7, priorities: ['a', 'b'] },
+  {
+    id: 's1',
+    firstName: 'Anna',
+    lastName: 'Müller',
+    className: '7a',
+    grade: 7,
+    priorities: ['a', 'b'],
+  },
 ];
 const assignments: Assignment[] = [
   { studentId: 's1', projectId: 'a', priorityRank: 1, manuallyEdited: false },

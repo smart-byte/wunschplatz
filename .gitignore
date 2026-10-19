@@ -10,3 +10,14 @@ coverage
 playwright-report
 test-results
 docs/
+design-explorations/
+.agents/
+.claude/
+.codex/
+.superpowers/
+.env
+.env.*
+!.env.example
+# Asset notes stay local; the README documents the committed images.
+src/assets/*.md
+!src/assets/README.md

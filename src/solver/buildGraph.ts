@@ -29,22 +29,21 @@ export function buildAssignmentGraph(
   const projectToIdx = new Map<string, number>();
   students.forEach((s, i) => studentToIdx.set(s.id, studentBase + i));
   projects.forEach((p, i) => projectToIdx.set(p.id, projectBase + i));
+  const projectById = new Map(projects.map((p) => [p.id, p]));
 
   const mcf = new MinCostFlow(nodeCount);
 
-  // Source → Student
   for (const s of students) {
     mcf.addEdge(sourceIdx, studentToIdx.get(s.id)!, 1, 0);
   }
 
-  // Student → Project edges
   for (const s of students) {
     const sIdx = studentToIdx.get(s.id)!;
     const priorityIds = new Set<string>();
 
     s.priorities.forEach((projId, k) => {
       if (k >= 5) return;
-      const project = projects.find((p) => p.id === projId);
+      const project = projectById.get(projId);
       if (!project) return;
       if (!project.grades.includes(s.grade)) return;
       priorityIds.add(projId);
@@ -62,7 +61,6 @@ export function buildAssignmentGraph(
     mcf.addEdge(sIdx, sinkIdx, 1, config.unmatchedPenalty);
   }
 
-  // Project → Sink (tiered)
   for (const p of projects) {
     const pIdx = projectToIdx.get(p.id)!;
     const tier1 = Math.min(p.targetCapacity, p.maxCapacity);

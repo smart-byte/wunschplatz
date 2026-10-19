@@ -1,13 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 
-/**
- * Listen for file drag-and-drop on the whole document. Calls `onFile` with the
- * first dropped file matching the accepted extensions. Returns `isDragging`
- * which flips to true while a file is being dragged over the page.
- */
+const DEFAULT_EXTENSIONS = ['.xlsx', '.xls', '.csv'];
+
 export function usePageFileDrop(
   onFile: (file: File) => void,
-  accept: string[] = ['.xlsx', '.xls', '.csv'],
+  accept: string[] = DEFAULT_EXTENSIONS,
 ) {
   const [isDragging, setIsDragging] = useState(false);
   const dragCounter = useRef(0);
