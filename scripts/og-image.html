@@ -1,0 +1,193 @@
+<!doctype html>
+<!--
+  Source of public/og.png, the link preview image. Render it on macOS (the handwriting uses Noteworthy):
+  npx playwright screenshot --viewport-size "1200, 630" scripts/og-image.html public/og.png
+-->
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        --paper: #fdfdfc;
+        --rule: #e7e5e0;
+        --quiet: #736e62;
+        --prose: #3f4a5a;
+        --ink: #151a33;
+        --mark: #4f5ef0;
+        --mark-2: #1f9ec2;
+        --serif: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+        --sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+        --hand: 'Noteworthy', 'Bradley Hand', cursive;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+      }
+      body {
+        position: relative;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      .rail {
+        position: absolute;
+        left: 64px;
+        top: 64px;
+        bottom: 64px;
+        width: 5px;
+        border-radius: 3px;
+        background: linear-gradient(var(--mark), var(--mark-2));
+      }
+      .left {
+        position: absolute;
+        left: 104px;
+        top: 64px;
+        bottom: 60px;
+        width: 600px;
+        display: flex;
+        flex-direction: column;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 24px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+      .brand img {
+        width: 44px;
+        height: 44px;
+      }
+      h1 {
+        margin-top: auto;
+        font-family: var(--serif);
+        font-size: 72px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        line-height: 1.04;
+      }
+      .lede {
+        margin-top: 24px;
+        font-size: 25px;
+        line-height: 1.45;
+        color: var(--prose);
+      }
+      .url {
+        margin-top: auto;
+        font-size: 20px;
+        color: var(--quiet);
+      }
+      .stack {
+        position: absolute;
+        right: 84px;
+        top: 66px;
+        width: 400px;
+        height: 498px;
+      }
+      .slip {
+        position: absolute;
+        inset: 0;
+        padding: 32px 34px;
+        background: #fff;
+        border: 1px solid var(--rule);
+        border-radius: 8px;
+        box-shadow:
+          0 1px 2px rgba(21, 26, 51, 0.06),
+          0 18px 40px -14px rgba(21, 26, 51, 0.25);
+      }
+      .slip.under {
+        transform: rotate(5deg) translate(16px, 8px);
+      }
+      .slip.top {
+        transform: rotate(-2.5deg);
+      }
+      .slip h2 {
+        font-size: 20px;
+        font-weight: 650;
+      }
+      .hint {
+        margin-top: 4px;
+        font-size: 14px;
+        color: var(--quiet);
+      }
+      .field {
+        display: grid;
+        grid-template-columns: 104px 1fr;
+        align-items: end;
+        margin-top: 24px;
+      }
+      .label {
+        padding-bottom: 7px;
+        font-size: 15px;
+        color: var(--quiet);
+      }
+      .value {
+        padding: 0 4px 5px;
+        border-bottom: 1.5px solid #dcd9d2;
+        font: 31px/1 var(--hand);
+        color: #2a3590;
+      }
+      .stamp {
+        position: absolute;
+        right: 30px;
+        bottom: 30px;
+        padding: 10px 18px 9px;
+        border: 4px solid var(--mark);
+        border-radius: 10px;
+        color: var(--mark);
+        text-align: center;
+        transform: rotate(-7deg);
+        mix-blend-mode: multiply;
+        opacity: 0.9;
+      }
+      .stamp b {
+        display: block;
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+      .stamp span {
+        display: block;
+        margin-top: 2px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="rail"></div>
+    <div class="left">
+      <div class="brand"><img src="../public/wunschplatz-icon.png" alt="" />Wunschplatz</div>
+      <h1>Schüler wählen.<br />Wunschplatz verteilt.</h1>
+      <p class="lede">Faire Projektverteilung für Schulen.<br />Kostenlos, im Browser, ohne Konto.</p>
+      <div class="url">wunschplatz.app</div>
+    </div>
+    <div class="stack">
+      <div class="slip under"></div>
+      <div class="slip top">
+        <h2>Wahlzettel Projektwoche</h2>
+        <p class="hint">Bitte drei Wünsche eintragen</p>
+        <div class="field"><span class="label">Name</span><span class="value">Lena K.</span></div>
+        <div class="field"><span class="label">Klasse</span><span class="value">7b</span></div>
+        <div class="field">
+          <span class="label">1. Wunsch</span><span class="value">Theater-AG</span>
+        </div>
+        <div class="field">
+          <span class="label">2. Wunsch</span><span class="value">Robotik</span>
+        </div>
+        <div class="field">
+          <span class="label">3. Wunsch</span><span class="value">Schulgarten</span>
+        </div>
+        <div class="stamp"><b>✓ ZUGETEILT</b><span>1. Wunsch: Theater-AG</span></div>
+      </div>
+    </div>
+  </body>
+</html>
