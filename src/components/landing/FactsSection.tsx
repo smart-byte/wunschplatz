@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { GITHUB_URL } from './constants';
 
 const facts = ['local', 'account', 'rounds', 'openSource'] as const;
@@ -22,6 +23,18 @@ export function FactsSection() {
             <h3 className="font-serif text-[15.5px] font-medium">{t(`facts.${key}Title`)}</h3>
             <p className="text-[13px]/[1.5] text-prose-soft">
               {t(`facts.${key}Text`)}
+              {key === 'account' && (
+                <>
+                  {' '}
+                  <Link
+                    to="/datenschutz"
+                    className="whitespace-nowrap font-semibold text-mark hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {t('facts.privacy')}
+                    <span aria-hidden> →</span>
+                  </Link>
+                </>
+              )}
               {key === 'openSource' && (
                 <>
                   {' '}

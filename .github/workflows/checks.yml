@@ -24,6 +24,8 @@ jobs:
       - run: npm run format:check
       - run: npm test
       - run: npm run build
+      - name: Count visits on wunschplatz.app only
+        run: grep -q 'data-domains="wunschplatz.app"' dist/index.html
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4

@@ -2,6 +2,8 @@
 
 Wunschplatz hilft Schulen, Schüler anhand ihrer Projektwünsche, Jahrgänge und verfügbarer Plätze zu verteilen. Die App ist auf Deutsch und Englisch verfügbar. Importierte Daten und Berechnungen bleiben im Browser.
 
+Online nutzbar unter [wunschplatz.app](https://wunschplatz.app).
+
 ## Lokal starten
 
 Voraussetzung: Node.js 22.13 oder neuer innerhalb der 22er-Reihe, oder Node.js 24+.
@@ -31,7 +33,7 @@ Beim Ersetzen von Projekten bleiben IDs bei eindeutig gleichem Namen erhalten. W
 
 ## Speicherung und Datenschutz
 
-Wunschplatz speichert Daten in IndexedDB auf diesem Gerät und überträgt importierte Schülerdaten nicht an einen Server. Es gibt kein Wunschplatz-Konto und kein Tracking. Google Forms und Microsoft Forms sind eigenständige externe Dienste: Dort erhobene Antworten werden beim jeweiligen Anbieter gespeichert und verarbeitet.
+Wunschplatz speichert Daten in IndexedDB auf diesem Gerät und überträgt importierte Schülerdaten nicht an einen Server. Es gibt kein Wunschplatz-Konto und keine Cookies. Auf wunschplatz.app zählt eine eigene Umami-Instanz Seitenaufrufe ohne Cookies; Daten zu Runden, Projekten oder Schülern sind darin nicht enthalten. Details stehen in der [Datenschutzerklärung](https://wunschplatz.app/datenschutz). Google Forms und Microsoft Forms sind eigenständige externe Dienste: Dort erhobene Antworten werden beim jeweiligen Anbieter gespeichert und verarbeitet.
 
 Mehrere Tabs und Fenster desselben Browserprofils können gleichzeitig arbeiten. Jeder Tab behält seine eigene ausgewählte Wunschrunde; gespeicherte Änderungen erscheinen auch in den anderen Tabs. Änderungen an verschiedenen Einträgen und Feldern werden zusammengeführt. Bei gleichzeitigen Änderungen desselben Feldes gilt die zuletzt gespeicherte Änderung; ein Hinweis macht auf den Konflikt aufmerksam. Gelöschte Einträge werden durch veraltete Tabs nicht wiederhergestellt. Offene Bearbeitungsformulare behalten ihre Eingaben und verlangen bei einem Konflikt eine erneute Prüfung.
 

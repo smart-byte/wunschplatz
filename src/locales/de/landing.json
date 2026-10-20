@@ -36,14 +36,15 @@
     "title": "Gut zu wissen",
     "localTitle": "Daten bleiben im Browser",
     "localText": "Importierte Daten werden nicht hochgeladen.",
-    "accountTitle": "Kein Konto, kein Tracking",
-    "accountText": "Öffnen und loslegen.",
+    "accountTitle": "Kein Konto, keine Cookies",
+    "accountText": "Öffnen und loslegen. Besuche zählen wir ohne Cookies.",
     "roundsTitle": "Wunschrunden",
     "roundsText": "Mehrere Verteilungsrunden pro Jahr, jede mit eigenem Ergebnis.",
     "openSourceTitle": "Open Source",
     "openSourceText": "Kostenlos, Code öffentlich.",
     "github": "Auf GitHub ansehen",
-    "note": "Für Google Forms und Microsoft Forms gelten Speicherung und Datenschutzeinstellungen des jeweiligen Anbieters."
+    "note": "Für Google Forms und Microsoft Forms gelten Speicherung und Datenschutzeinstellungen des jeweiligen Anbieters.",
+    "privacy": "Datenschutz"
   },
   "footer": {
     "ctaTitle": "Bereit für die nächste Projektwoche?",

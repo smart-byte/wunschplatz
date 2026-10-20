@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import {
   Link,
   Outlet,
+  ScrollRestoration,
   createBrowserRouter,
   useNavigation,
   useRouteError,
@@ -58,6 +59,14 @@ export const routes: RouteObject[] = [
           },
         ],
       },
+      {
+        path: 'impressum',
+        lazy: async () => ({ Component: (await import('@/pages/legal')).ImpressumPage }),
+      },
+      {
+        path: 'datenschutz',
+        lazy: async () => ({ Component: (await import('@/pages/legal')).PrivacyPage }),
+      },
       { path: '*', Component: NotFound },
     ],
   },
@@ -74,6 +83,8 @@ function Root() {
         <div role="progressbar" aria-label={t('gate.loading')} className="nav-progress" />
       )}
       <Outlet />
+      {/* New pages open at the top; Back returns to the previous position. */}
+      <ScrollRestoration />
     </>
   );
 }

@@ -54,6 +54,10 @@ jobs:
         # lets the client-side router handle deep links on refresh.
         run: cp dist/index.html dist/404.html
 
+      - name: Serve the legal pages with status 200
+        # Legal pages should not answer with the 404 status of the fallback.
+        run: for page in impressum datenschutz; do mkdir -p "dist/$page" && cp dist/index.html "dist/$page/"; done
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
