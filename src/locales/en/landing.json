@@ -36,14 +36,15 @@
     "title": "Good to know",
     "localTitle": "Data stays in your browser",
     "localText": "Imported data is not uploaded.",
-    "accountTitle": "No account, no tracking",
-    "accountText": "Just open it and start.",
+    "accountTitle": "No account, no cookies",
+    "accountText": "Open it and start. Visits are counted without cookies.",
     "roundsTitle": "Wish rounds",
     "roundsText": "Multiple assignment rounds per year, each with its own result.",
     "openSourceTitle": "Open source",
     "openSourceText": "Free, with public code.",
     "github": "View on GitHub",
-    "note": "Responses collected with Google Forms or Microsoft Forms are subject to that provider’s storage and privacy settings."
+    "note": "Responses collected with Google Forms or Microsoft Forms are subject to that provider’s storage and privacy settings.",
+    "privacy": "Privacy policy"
   },
   "footer": {
     "ctaTitle": "Ready for the next project week?",

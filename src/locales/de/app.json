@@ -690,5 +690,12 @@
       "noResults": "Keine Schüler passen zu dieser Suche oder diesem Filter."
     },
     "description": "Prüfe die Zuteilungen, passe einzelne Plätze an und exportiere die fertige Verteilung."
+  },
+  "legal": {
+    "impressum": "Impressum",
+    "privacy": "Datenschutz",
+    "impressumTitle": "Impressum",
+    "privacyTitle": "Datenschutzerklärung",
+    "counting": "Besuche aus diesem Browser zählen"
   }
 }

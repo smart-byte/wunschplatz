@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { LegalLinks } from '@/components/legal/LegalLinks';
 
 export function LandingFooter() {
   const { t } = useTranslation('landing');
@@ -28,6 +29,7 @@ export function LandingFooter() {
           </Link>
         </Button>
       </div>
+      <LegalLinks className="mt-6 px-0.5" />
     </footer>
   );
 }

@@ -4,6 +4,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Nav } from './Nav';
 import { Toaster } from '@/components/ui/sonner';
 import { RoundsGate } from '@/components/RoundsGate';
+import { LegalLinks } from '@/components/legal/LegalLinks';
 
 export function AppShell() {
   const { pathname } = useLocation();
@@ -19,6 +20,9 @@ export function AppShell() {
           <Outlet />
         </div>
       </main>
+      <footer className="px-4 pb-6 sm:px-8">
+        <LegalLinks className="mx-auto max-w-screen-2xl border-t border-rule pt-4" />
+      </footer>
       <Toaster />
     </RoundsGate>
   );

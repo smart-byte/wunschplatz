@@ -690,5 +690,12 @@
       "noResults": "No students match this search or filter."
     },
     "description": "Review the assignments, adjust individual places, and export the finished result."
+  },
+  "legal": {
+    "impressum": "Legal notice",
+    "privacy": "Privacy",
+    "impressumTitle": "Legal notice",
+    "privacyTitle": "Privacy policy",
+    "counting": "Count visits from this browser"
   }
 }
