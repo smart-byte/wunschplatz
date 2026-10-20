@@ -13,6 +13,7 @@ test('round switch via nav dropdown retains each round’s data', async ({ page 
   await page.getByRole('button', { name: 'Neue Wunschrunde' }).click();
   await expect(page.getByText('Wunschrunde 2 angelegt')).toBeVisible();
   await page.getByRole('link', { name: 'Projekte', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Noch keine Projekte' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'Runde1-Projekt', exact: true })).toHaveCount(0);
 
   await page.getByRole('button', { name: /Wunschrunde 2/ }).click();
