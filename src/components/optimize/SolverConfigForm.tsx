@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ChevronDown, Info, RotateCcw } from 'lucide-react';
+import { useState } from 'react';
+import { parseInteger } from '@/lib/validation';
 
 type InfoBadgeProps = { children: React.ReactNode };
 
@@ -26,6 +28,53 @@ function InfoBadge({ children }: InfoBadgeProps) {
         {children}
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+// Penalties are whole numbers from 0: a negative one would reward the outcome it should prevent.
+// Invalid text stays visible and marked instead of being truncated into another number.
+function PenaltyInput({
+  id,
+  value,
+  onChange,
+}: {
+  id: string;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const { t } = useTranslation('app');
+  const [draft, setDraft] = useState(String(value));
+  const [shown, setShown] = useState(value);
+  if (value !== shown) {
+    // Follow outside changes, such as a reset.
+    setShown(value);
+    setDraft(String(value));
+  }
+  const invalid = parseInteger(draft) === null;
+  return (
+    <>
+      <Input
+        id={id}
+        type="number"
+        min={0}
+        step={1}
+        value={draft}
+        aria-invalid={invalid}
+        aria-describedby={invalid ? `${id}-error` : undefined}
+        className={invalid ? 'border-destructive' : undefined}
+        onChange={(e) => {
+          setDraft(e.target.value);
+          const next = parseInteger(e.target.value);
+          if (next !== null) onChange(next);
+        }}
+        onBlur={() => setDraft(String(value))}
+      />
+      {invalid && (
+        <p id={`${id}-error`} className="text-xs text-destructive">
+          {t('optimize.penalty.invalid')}
+        </p>
+      )}
+    </>
   );
 }
 
@@ -163,13 +212,10 @@ export function SolverConfigForm({ disabled = false }: { disabled?: boolean }) {
                   {t('optimize.penalty.unmatched.infoPost')}
                 </InfoBadge>
               </div>
-              <Input
+              <PenaltyInput
                 id="unmatched"
-                type="number"
                 value={config.unmatchedPenalty}
-                onChange={(e) =>
-                  setConfig({ ...config, unmatchedPenalty: parseInt(e.target.value, 10) || 0 })
-                }
+                onChange={(value) => setConfig({ ...config, unmatchedPenalty: value })}
               />
             </div>
             <div className="grid gap-1.5">
@@ -181,13 +227,10 @@ export function SolverConfigForm({ disabled = false }: { disabled?: boolean }) {
                   {t('optimize.penalty.overTarget.infoPost')}
                 </InfoBadge>
               </div>
-              <Input
+              <PenaltyInput
                 id="overTarget"
-                type="number"
                 value={config.overTargetPenalty}
-                onChange={(e) =>
-                  setConfig({ ...config, overTargetPenalty: parseInt(e.target.value, 10) || 0 })
-                }
+                onChange={(value) => setConfig({ ...config, overTargetPenalty: value })}
               />
             </div>
             <div className="grid gap-1.5">
@@ -199,13 +242,10 @@ export function SolverConfigForm({ disabled = false }: { disabled?: boolean }) {
                   {t('optimize.penalty.notInTop5.infoPost')}
                 </InfoBadge>
               </div>
-              <Input
+              <PenaltyInput
                 id="notInTop5"
-                type="number"
                 value={config.notInTop5Penalty}
-                onChange={(e) =>
-                  setConfig({ ...config, notInTop5Penalty: parseInt(e.target.value, 10) || 0 })
-                }
+                onChange={(value) => setConfig({ ...config, notInTop5Penalty: value })}
               />
             </div>
           </div>

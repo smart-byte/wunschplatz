@@ -466,6 +466,7 @@
       "info5": "Points for the 5th choice. Should stay ≥ 0, otherwise priority 5 becomes worse than no assignment at all."
     },
     "penalty": {
+      "invalid": "Enter a whole number of 0 or more.",
       "unmatched": {
         "label": "Without a project",
         "infoPre": "Penalty points when a student is",
