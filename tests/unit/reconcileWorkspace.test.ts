@@ -136,3 +136,24 @@ it('preserves a surviving round when two tabs delete each other’s selected rou
   expect(result.value.map((r) => r.id)).toEqual(['second']);
   expect(result.conflict).toBe(true);
 });
+
+it('keeps one roster when two tabs import replacement students at the same time', () => {
+  const base = rounds();
+  const local = structuredClone(base);
+  const remote = structuredClone(base);
+  local[0].data.students = [student('l1'), student('l2')];
+  remote[0].data.students = [student('r1'), student('r2')];
+  const result = reconcileWorkspace(base, local, remote);
+  expect(result.value[0].data.students.map((s) => s.id)).toEqual(['l1', 'l2']);
+  expect(result.conflict).toBe(true);
+});
+
+it('reports a project name that two tabs added at the same time', () => {
+  const base = rounds();
+  const local = structuredClone(base);
+  const remote = structuredClone(base);
+  const project = { name: 'Schülerzeitung', grades: [7], maxCapacity: 20, targetCapacity: 15 };
+  local[0].data.projects.push({ ...project, id: 'local' });
+  remote[0].data.projects.push({ ...project, id: 'remote', name: ' schülerzeitung ' });
+  expect(reconcileWorkspace(base, local, remote).conflict).toBe(true);
+});
