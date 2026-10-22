@@ -277,7 +277,9 @@ export function ProjectCard({
                               </button>
                               <Badge
                                 variant={isHere ? 'secondary' : 'outline'}
-                                className="text-[10px] shrink-0"
+                                // Long project names truncate (full name in the title) so the
+                                // student name beside them keeps its width.
+                                className="text-[10px] min-w-0 max-w-[50%]"
                                 title={
                                   isHere
                                     ? t('distribution.card.inThisProject')
@@ -288,11 +290,13 @@ export function ProjectCard({
                                       : t('distribution.card.unassigned')
                                 }
                               >
-                                {isHere
-                                  ? t('distribution.card.hereMark')
-                                  : assignedProj
-                                    ? assignedProj.name
-                                    : '—'}
+                                <span className="truncate">
+                                  {isHere
+                                    ? t('distribution.card.hereMark')
+                                    : assignedProj
+                                      ? assignedProj.name
+                                      : '—'}
+                                </span>
                               </Badge>
                             </li>
                           );
