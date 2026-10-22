@@ -20,7 +20,7 @@ test('steps switch the app excerpt', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('img', { name: 'Projekte → Formular-Vorlage' })).toBeVisible();
   await expect(page.getByText('Fragen (9)')).toBeVisible();
-  await page.getByRole('tab', { name: /Optimal verteilen/ }).click();
+  await page.getByRole('tab', { name: /Fair verteilen/ }).click();
   await expect(page.getByRole('img', { name: 'Optimierung → Verteilung' })).toBeVisible();
   await expect(page.getByText('Erstwunsch erfüllt')).toBeVisible();
 });
