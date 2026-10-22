@@ -1,5 +1,10 @@
 import type { SavedRound } from './persist';
 import { mergeChanges, sameValue } from './mergeChanges';
+import { normalizeLabel } from '@/forms/normalizeLabel';
+
+function duplicateNames(projects: { name: string }[] = []) {
+  return new Set(projects.map((p) => normalizeLabel(p.name))).size < projects.length;
+}
 
 export function reconcileWorkspace(base: SavedRound[], local: SavedRound[], remote: SavedRound[]) {
   const result = mergeChanges(base, local, remote, ['blueprint', 'run']);
@@ -8,11 +13,35 @@ export function reconcileWorkspace(base: SavedRound[], local: SavedRound[], remo
     result.conflict = true;
   }
   result.value = result.value.map((round) => {
-    const data = round.data;
-    const projectIds = new Set(data.projects.map((p) => p.id));
-    const studentIds = new Set(data.students.map((s) => s.id));
+    let data = round.data;
     const before = base.find((r) => r.id === round.id)?.data;
     const edited = local.find((r) => r.id === round.id)?.data;
+    const latest = remote.find((r) => r.id === round.id)?.data;
+    // An import replaces every student with fresh IDs. Merging two concurrent imports by ID
+    // would keep both rosters, so the local import wins and the other one is reported.
+    // Without saved students an import looks like manual additions, so those still merge.
+    const baseIds = new Set(before?.students.map((s) => s.id));
+    const replaced = (list?: { id: string }[]) =>
+      baseIds.size > 0 && !!list?.length && list.every((s) => !baseIds.has(s.id));
+    const localIds = new Set(edited?.students.map((s) => s.id));
+    if (
+      replaced(edited?.students) &&
+      replaced(latest?.students) &&
+      latest!.students.every((s) => !localIds.has(s.id))
+    ) {
+      data = { ...data, students: edited!.students };
+      result.conflict = true;
+    }
+    // The project form only checks names in its own tab; report duplicates the merge creates.
+    if (
+      duplicateNames(data.projects) &&
+      !duplicateNames(edited?.projects) &&
+      !duplicateNames(latest?.projects)
+    ) {
+      result.conflict = true;
+    }
+    const projectIds = new Set(data.projects.map((p) => p.id));
+    const studentIds = new Set(data.students.map((s) => s.id));
     const projects = data.projects.map((project) => {
       if (project.targetCapacity <= project.maxCapacity) return project;
       const source = edited?.projects.find((p) => p.id === project.id);
