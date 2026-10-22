@@ -31,17 +31,19 @@ export function responseRows(rows: unknown[][]): Response[] {
 
 /**
  * Keeps one response per student (same name, class and grade): the latest by timestamp, or
- * the last row when a timestamp is missing. The result stays in sheet order.
+ * the last row when a timestamp is missing. The result stays in sheet order; `undatedRows`
+ * lists kept rows that were chosen by row order, so the import can ask for a check.
  */
 export function keepLatestResponses(
   responses: Response[],
   identityColumns: number[],
   timestampColumn: number,
-): { responses: Response[]; duplicatesRemoved: number } {
+): { responses: Response[]; duplicatesRemoved: number; undatedRows: number[] } {
   type Entry = Response & { ts: number | null };
   const keyOf = (cells: unknown[]) =>
     identityColumns.map((i) => normalizeLabel(String(cells[i] ?? ''))).join('\u0000');
   const kept = new Map<string, Entry>();
+  const undated = new Set<string>();
   let duplicatesRemoved = 0;
   for (const response of responses) {
     const entry: Entry = {
@@ -55,6 +57,7 @@ export function keepLatestResponses(
       continue;
     }
     duplicatesRemoved++;
+    if (prev.ts === null || entry.ts === null) undated.add(key);
     kept.set(key, pickLatest(prev, entry));
   }
   return {
@@ -62,6 +65,7 @@ export function keepLatestResponses(
       .sort((a, b) => a.rowIndex - b.rowIndex)
       .map(({ cells, rowIndex }) => ({ cells, rowIndex })),
     duplicatesRemoved,
+    undatedRows: [...undated].map((key) => kept.get(key)!.rowIndex),
   };
 }
 

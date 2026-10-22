@@ -17,9 +17,18 @@ describe('parseTimestamp', () => {
     expect(parseTimestamp(d)).toBe(d.getTime());
     expect(parseTimestamp(1717000000000)).toBe(1717000000000);
   });
-  it('converts Excel serial date values from XLSX workbooks', () => {
-    expect(parseTimestamp(46023)).toBe(Date.UTC(2026, 0, 1));
-    expect(parseTimestamp(46023.5)).toBe(Date.UTC(2026, 0, 1, 12));
+  it('reads Excel serial dates as local wall-clock time, like German text dates', () => {
+    expect(parseTimestamp(46023)).toBe(new Date(2026, 0, 1).getTime());
+    expect(parseTimestamp(46023.5)).toBe(new Date(2026, 0, 1, 12).getTime());
+    // 20.10.2026 09:30 as a serial is older than the same day's 10:30 as text.
+    expect(parseTimestamp(46315 + 9.5 / 24)!).toBeLessThan(parseTimestamp('20.10.2026 10:30:00')!);
+  });
+  it('parses US Microsoft Forms timestamps with AM/PM', () => {
+    expect(parseTimestamp('10/20/2026 9:30:00 AM')).toBe(new Date(2026, 9, 20, 9, 30).getTime());
+    expect(parseTimestamp('10/20/2026 12:05 PM')).toBe(new Date(2026, 9, 20, 12, 5).getTime());
+    expect(parseTimestamp('10/20/2026 12:05 AM')).toBe(new Date(2026, 9, 20, 0, 5).getTime());
+    expect(parseTimestamp('10/11/2026 9:30')).toBeNull();
+    expect(parseTimestamp('20/10/2026 9:30 AM')).toBeNull();
   });
   it('returns null for empty/unparseable', () => {
     expect(parseTimestamp('')).toBeNull();

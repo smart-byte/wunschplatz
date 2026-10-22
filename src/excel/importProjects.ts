@@ -2,10 +2,16 @@ import { parseGrades, parseInteger } from '@/lib/validation';
 export { parseGrades } from '@/lib/validation';
 import { normalizeLabel } from '@/forms/normalizeLabel';
 import { detectProjectColumns, type ProjectColumnRole } from './headerMatchProjects';
+import { duplicateHeadings } from './headerMatch';
 import type { Project } from '@/types';
 
 export type ProjectImportErrorCode =
-  'nameMissing' | 'duplicateName' | 'invalidGrades' | 'invalidMax' | 'invalidTarget';
+  | 'nameMissing'
+  | 'duplicateName'
+  | 'invalidGrades'
+  | 'invalidMax'
+  | 'invalidTarget'
+  | 'duplicateColumn';
 
 export type ProjectParseError = {
   rowIndex: number;
@@ -40,6 +46,21 @@ export function parseProjectRows(rows: unknown[][]): ProjectParseResult {
   if (missingColumns.length > 0) {
     return { projects: [], errors: [], missingColumns };
   }
+  const { name: nameColumn, description, grades, maxCapacity, targetCapacity } = cols;
+  const duplicates = duplicateHeadings(headers, [
+    nameColumn,
+    description,
+    grades,
+    maxCapacity,
+    targetCapacity,
+  ]);
+  if (duplicates.length > 0) {
+    return {
+      projects: [],
+      errors: duplicates.map((column) => projectImportError(0, 'duplicateColumn', { column })),
+      missingColumns: [],
+    };
+  }
 
   const projects: Omit<Project, 'id'>[] = [];
   const errors: ProjectParseError[] = [];
@@ -48,7 +69,10 @@ export function parseProjectRows(rows: unknown[][]): ProjectParseResult {
   for (let r = 1; r < rows.length; r++) {
     const row = rows[r];
     if (!row || row.every((cell) => String(cell ?? '').trim() === '')) continue;
-    const name = String(row[cols.name] ?? '').trim();
+    // A line break in a cell would split the name in the copied form options.
+    const name = String(row[cols.name] ?? '')
+      .replace(/\s+/g, ' ')
+      .trim();
     if (!name) {
       errors.push(projectImportError(r, 'nameMissing'));
       continue;

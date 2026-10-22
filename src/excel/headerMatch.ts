@@ -22,6 +22,15 @@ function normalize(s: string): string {
   return s.trim();
 }
 
+/** Headings of read columns that also head another column, so the intended one is unclear. */
+export function duplicateHeadings(headers: string[], used: number[]): string[] {
+  const key = (i: number) => normalize(headers[i]).toLocaleLowerCase('de');
+  const duplicated = used.filter(
+    (i) => i !== -1 && headers.some((_, j) => j !== i && key(j) === key(i)),
+  );
+  return [...new Set(duplicated.map((i) => normalize(headers[i])))];
+}
+
 // Patterns are tried in order, so "Nachname" wins over a bare "Name" in any column.
 function findColumn(headers: string[], regexes: RegExp[]): number {
   for (const r of regexes) {

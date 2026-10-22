@@ -84,6 +84,26 @@ describe('parseProjectRows', () => {
     expect(result.projects).toHaveLength(0);
   });
 
+  it('rejects a file whose read column heading appears twice', () => {
+    const rows = [
+      ['Name', 'Jahrgänge', 'Max', 'Soll', 'max'],
+      ['Theater', '5-7', 30, 10, 12],
+    ];
+    expect(parseProjectRows(rows)).toEqual({
+      projects: [],
+      errors: [{ rowIndex: 0, code: 'duplicateColumn', values: { column: 'Max' } }],
+      missingColumns: [],
+    });
+  });
+
+  it('joins a project name that spans several lines in its cell', () => {
+    const rows = [
+      ['Name', 'Jahrgänge', 'Max', 'Soll'],
+      ['Foto\nWerkstatt', '5-7', 20, 10],
+    ];
+    expect(parseProjectRows(rows).projects[0].name).toBe('Foto Werkstatt');
+  });
+
   it('rejects rows without name', () => {
     const rows = [
       ['Name', 'Jahrgänge', 'Max', 'Soll'],

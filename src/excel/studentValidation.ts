@@ -11,7 +11,9 @@ export type StudentImportErrorCode =
   | 'duplicateProject'
   | 'deletedProject'
   | 'groupPrioritiesMismatch'
-  | 'gradeMismatch';
+  | 'gradeMismatch'
+  | 'undatedDuplicate'
+  | 'duplicateColumn';
 export type ParseError = {
   rowIndex: number;
   code: StudentImportErrorCode;
@@ -27,7 +29,9 @@ export function studentImportError(
     rowIndex,
     code,
     values,
-    severity: code === 'groupPrioritiesMismatch' || code === 'gradeMismatch' ? 'warning' : 'error',
+    severity: ['groupPrioritiesMismatch', 'gradeMismatch', 'undatedDuplicate'].includes(code)
+      ? 'warning'
+      : 'error',
   };
 }
 
