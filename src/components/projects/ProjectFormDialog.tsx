@@ -1,7 +1,7 @@
 import { parseGrades, parseInteger } from '@/lib/validation';
 import { normalizeLabel } from '@/forms/normalizeLabel';
 import { useProjectsStore } from '@/store/useProjectsStore';
-import { useId, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,9 +18,11 @@ import type { Project } from '@/types';
 import { mergeChanges, sameValue } from '@/store/mergeChanges';
 
 type Props = {
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
   initial?: Project;
   onSave: (data: Omit<Project, 'id'>) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 function formFields(project?: Project) {
@@ -33,11 +35,23 @@ function formFields(project?: Project) {
   };
 }
 
-export function ProjectFormDialog({ trigger, initial, onSave }: Props) {
+export function ProjectFormDialog({
+  trigger,
+  initial,
+  onSave,
+  open: externalOpen,
+  onOpenChange,
+}: Props) {
   const { t } = useTranslation('app');
   const id = useId();
   const projects = useProjectsStore((s) => s.projects);
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = externalOpen !== undefined;
+  const open = isControlled ? externalOpen : internalOpen;
+  const setOpen = (v: boolean) => {
+    if (isControlled) onOpenChange?.(v);
+    else setInternalOpen(v);
+  };
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [gradesText, setGradesText] = useState('');
@@ -45,20 +59,21 @@ export function ProjectFormDialog({ trigger, initial, onSave }: Props) {
   const [targetCapacity, setTargetCapacity] = useState('15');
   const [error, setError] = useState<string | null>(null);
   const [baseline, setBaseline] = useState<Project | undefined>();
+  const wasOpen = useRef(false);
 
-  function changeOpen(next: boolean) {
-    if (next) {
-      const fields = formFields(initial);
-      setBaseline(initial);
-      setName(fields.name);
-      setDescription(fields.description);
-      setGradesText(fields.gradesText);
-      setMaxCapacity(fields.maxCapacity);
-      setTargetCapacity(fields.targetCapacity);
-      setError(null);
-    }
-    setOpen(next);
-  }
+  useLayoutEffect(() => {
+    const opening = open && !wasOpen.current;
+    wasOpen.current = open;
+    if (!opening) return;
+    const fields = formFields(initial);
+    setBaseline(initial);
+    setName(fields.name);
+    setDescription(fields.description);
+    setGradesText(fields.gradesText);
+    setMaxCapacity(fields.maxCapacity);
+    setTargetCapacity(fields.targetCapacity);
+    setError(null);
+  }, [open, initial]);
 
   const dirty = !sameValue(formFields(baseline), {
     name,
@@ -128,8 +143,8 @@ export function ProjectFormDialog({ trigger, initial, onSave }: Props) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={changeOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+    <Dialog open={open} onOpenChange={setOpen}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent confirmDismiss={dirty ? t('common.discardChanges') : undefined}>
         <form
           className="grid gap-4"
