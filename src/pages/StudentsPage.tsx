@@ -47,6 +47,7 @@ export default function StudentsPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importMode, setImportMode] = useState<ImportMode>('excel');
+  const [createOpen, setCreateOpen] = useState(false);
   const { isDragging } = usePageFileDrop((file) => {
     setImportMode('excel');
     setImportFile(file);
@@ -98,19 +99,24 @@ export default function StudentsPage() {
     </div>
   );
 
-  const addStudentTrigger = (
+  // Both branches render this in the same slot, so a draft survives another tab adding the
+  // first student and switching the page from empty to filled.
+  const createDialog = (
     <StudentFormDialog
-      trigger={
-        <Button>
-          <Plus className="size-4 mr-2" />
-          {t('students.newStudent')}
-        </Button>
-      }
+      open={createOpen}
+      onOpenChange={setCreateOpen}
       onSave={(data) => {
         addStudent(data);
         toast.success(t('students.created', { name: `${data.firstName} ${data.lastName}` }));
       }}
     />
+  );
+
+  const addStudentTrigger = (
+    <Button onClick={() => setCreateOpen(true)}>
+      <Plus className="size-4 mr-2" />
+      {t('students.newStudent')}
+    </Button>
   );
 
   if (students.length === 0) {
@@ -119,6 +125,7 @@ export default function StudentsPage() {
         <WorkspaceBackdrop page="students" state="empty" />
         {dragOverlay}
         {importDialog}
+        {createDialog}
         <div className="max-w-xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center gap-6">
           <Users className="size-10 text-mark/60" />
           <div className="space-y-1">
@@ -146,6 +153,7 @@ export default function StudentsPage() {
       <WorkspaceBackdrop page="students" state="filled" />
       {dragOverlay}
       {importDialog}
+      {createDialog}
       <PageHeader
         title={t('students.title', { count: students.length })}
         description={t('students.description')}

@@ -31,6 +31,7 @@ export default function ProjectsPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
   const [sampleOpen, setSampleOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const { isDragging } = usePageFileDrop((file) => {
     setImportFile(file);
     setImportOpen(true);
@@ -73,19 +74,24 @@ export default function ProjectsPage() {
     </div>
   );
 
-  const addProjectTrigger = (
+  // Both branches render this in the same slot, so a draft survives another tab adding the
+  // first project and switching the page from empty to filled.
+  const createDialog = (
     <ProjectFormDialog
-      trigger={
-        <Button>
-          <Plus className="size-4 mr-2" />
-          {t('projects.newProject')}
-        </Button>
-      }
+      open={createOpen}
+      onOpenChange={setCreateOpen}
       onSave={(data) => {
         addProject(data);
         toast.success(t('projects.created', { name: data.name }));
       }}
     />
+  );
+
+  const addProjectTrigger = (
+    <Button onClick={() => setCreateOpen(true)}>
+      <Plus className="size-4 mr-2" />
+      {t('projects.newProject')}
+    </Button>
   );
 
   if (projects.length === 0) {
@@ -94,6 +100,7 @@ export default function ProjectsPage() {
         <WorkspaceBackdrop page="projects" state="empty" />
         {dragOverlay}
         {importDialog}
+        {createDialog}
         <div className="max-w-xl mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center gap-6">
           <FolderPlus className="size-10 text-mark/60" />
           <div className="space-y-1">
@@ -118,6 +125,7 @@ export default function ProjectsPage() {
       <WorkspaceBackdrop page="projects" state="filled" />
       {dragOverlay}
       {importDialog}
+      {createDialog}
       <SampleDataDialog open={sampleOpen} onOpenChange={setSampleOpen} />
       <PageHeader
         title={t('projects.title', { count: projects.length })}
