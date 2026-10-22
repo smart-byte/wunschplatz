@@ -466,6 +466,7 @@
       "info5": "Punkte für 5. Wunsch. Sollte ≥ 0 bleiben, sonst wird Prio 5 schlechter als gar keine Zuweisung."
     },
     "penalty": {
+      "invalid": "Bitte eine ganze Zahl ab 0 eingeben.",
       "unmatched": {
         "label": "Ohne Projekt",
         "infoPre": "Straf-Punkte, wenn ein Schüler",
