@@ -218,6 +218,63 @@ describe('solveAssignments with groups', () => {
     expect(assignments.every((a) => a.priorityRank !== null)).toBe(true);
   });
 
+  // Cases where the greedy group step and the plain flow both missed the best seating, which
+  // was found by enumerating every valid one. Projects: id:grades:max:target. Students:
+  // grade, group (- for none), wishes.
+  it.each([
+    {
+      bonus: 8,
+      best: 51,
+      projects: 'R:78:2:2 T:5678:2:0 S:5678:2:1 K:5678:2:0',
+      students: '5A:ST 7A:ST 5B:KTR 7B:KTR 5-:SKRT 7-:TRK 5-:RSTK 7-:SKT',
+    },
+    {
+      bonus: 8,
+      best: -1946,
+      projects: 'R:78:1:0 T:5678:2:2 S:5678:1:1 K:5678:2:0',
+      students: '5A:KTSR 7A:KTSR 5B:KST 7B:KST 5-:KRTS 7-:STR 5-:TRSK 7-:KSTR',
+    },
+    {
+      bonus: 8,
+      best: -940,
+      projects: 'R:5678:4:2 T:5678:1:0 S:5678:1:1 K:5678:1:1',
+      students: '5A:SRKT 7A:SRKT 5B:TR 7B:TR 5-:KT 7-:RSK 5-:KS 7-:RTS',
+    },
+    {
+      bonus: 30,
+      best: 124,
+      projects: 'R:5678:3:2 T:5678:1:0 S:5678:4:1 K:5678:1:1',
+      students: '5A:RSK 7A:RSK 5B:RTSK 7B:RTSK 5-:RTSK 7-:SKT 5-:KRST 7-:SKTR',
+    },
+  ])('finds the best seating worth $best', ({ bonus, best, projects, students }) => {
+    const { run } = solveAssignments(
+      students.split(' ').map((spec, i): Student => {
+        const [grade, group, wishes] = [Number(spec[0]), spec[1], spec.slice(3)];
+        return {
+          id: `s${i}`,
+          firstName: `S${i}`,
+          lastName: 'X',
+          className: `${grade}a`,
+          grade,
+          priorities: [...wishes],
+          groupId: group === '-' ? undefined : group,
+        };
+      }),
+      projects.split(' ').map((spec): Project => {
+        const [id, grades, max, target] = spec.split(':');
+        return {
+          id,
+          name: id,
+          grades: [...grades].map(Number),
+          maxCapacity: Number(max),
+          targetCapacity: Number(target),
+        };
+      }),
+      { ...defaultSolverConfig, groupCohesionBonus: bonus },
+    );
+    expect(run.score).toBe(best);
+  });
+
   it('keeps a group together when the cohesion bonus outweighs the flow optimum', () => {
     // Splitting the group is 3 points better for the flow, but keeping it together is worth 8.
     const projects: Project[] = [

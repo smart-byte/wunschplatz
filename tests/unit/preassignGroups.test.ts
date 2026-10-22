@@ -26,36 +26,31 @@ describe('preassignGroups', () => {
     const projects = [project('a', [7], 10)];
     const students = [student('s1', 7, ['a'])];
     const result = preassignGroups(students, projects, defaultSolverConfig);
-    expect(result.preassignments.size).toBe(0);
-    expect(result.remainingStudents).toEqual(students);
-    expect(result.consumedCapacity.size).toBe(0);
+    expect(result.size).toBe(0);
   });
 
   it('assigns 2-member group to shared prio1 when project has room', () => {
     const projects = [project('a', [7], 10), project('b', [7], 10)];
     const students = [student('s1', 7, ['a', 'b'], 'g1'), student('s2', 7, ['a', 'b'], 'g1')];
     const result = preassignGroups(students, projects, defaultSolverConfig);
-    expect(result.preassignments.get('s1')).toEqual({ projectId: 'a', priorityRank: 1 });
-    expect(result.preassignments.get('s2')).toEqual({ projectId: 'a', priorityRank: 1 });
-    expect(result.consumedCapacity.get('a')).toBe(2);
-    expect(result.remainingStudents).toHaveLength(0);
+    expect(result.get('s1')).toEqual({ projectId: 'a', priorityRank: 1 });
+    expect(result.get('s2')).toEqual({ projectId: 'a', priorityRank: 1 });
   });
 
   it('falls back to prio2 if prio1 cannot fit whole group', () => {
     const projects = [project('a', [7], 1), project('b', [7], 10)];
     const students = [student('s1', 7, ['a', 'b'], 'g1'), student('s2', 7, ['a', 'b'], 'g1')];
     const result = preassignGroups(students, projects, defaultSolverConfig);
-    expect(result.preassignments.get('s1')?.projectId).toBe('b');
-    expect(result.preassignments.get('s1')?.priorityRank).toBe(2);
-    expect(result.consumedCapacity.get('b')).toBe(2);
+    expect(result.get('s1')?.projectId).toBe('b');
+    expect(result.get('s1')?.priorityRank).toBe(2);
+    expect(result.get('s2')?.projectId).toBe('b');
   });
 
-  it('leaves group in remainingStudents when no priority fits whole group', () => {
+  it('leaves group unplaced when no priority fits whole group', () => {
     const projects = [project('a', [7], 1), project('b', [7], 1)];
     const students = [student('s1', 7, ['a', 'b'], 'g1'), student('s2', 7, ['a', 'b'], 'g1')];
     const result = preassignGroups(students, projects, defaultSolverConfig);
-    expect(result.preassignments.size).toBe(0);
-    expect(result.remainingStudents).toHaveLength(2);
+    expect(result.size).toBe(0);
   });
 
   it('processes larger groups before smaller ones (capacity contention)', () => {
@@ -68,44 +63,41 @@ describe('preassignGroups', () => {
       student('s5', 7, ['a'], 'g2'),
     ];
     const result = preassignGroups(students, projects, defaultSolverConfig);
-    expect(result.consumedCapacity.get('a')).toBe(3);
-    expect(result.preassignments.get('s3')?.projectId).toBe('a');
-    expect(result.preassignments.get('s4')?.projectId).toBe('a');
-    expect(result.preassignments.get('s5')?.projectId).toBe('a');
-    expect(result.preassignments.has('s1')).toBe(false);
-    expect(result.remainingStudents.map((s) => s.id).sort()).toEqual(['s1', 's2']);
+    expect(result.get('s3')?.projectId).toBe('a');
+    expect(result.get('s4')?.projectId).toBe('a');
+    expect(result.get('s5')?.projectId).toBe('a');
+    expect(result.has('s1')).toBe(false);
+    expect(result.has('s2')).toBe(false);
   });
 
   it('respects grade compatibility', () => {
     const projects = [project('a', [5], 10), project('b', [7], 10)];
     const students = [student('s1', 7, ['a', 'b'], 'g1'), student('s2', 7, ['a', 'b'], 'g1')];
     const result = preassignGroups(students, projects, defaultSolverConfig);
-    expect(result.preassignments.get('s1')?.projectId).toBe('b');
+    expect(result.get('s1')?.projectId).toBe('b');
   });
 
   it('singletons are not preassigned (singleton group has no co-assignment benefit)', () => {
     const projects = [project('a', [7], 10)];
     const students = [student('s1', 7, ['a'])];
     const result = preassignGroups(students, projects, defaultSolverConfig);
-    expect(result.preassignments.size).toBe(0);
-    expect(result.remainingStudents).toEqual(students);
+    expect(result.size).toBe(0);
   });
 
   it('group with mixed grades only fits projects accepting all members grades', () => {
     const projects = [project('p1', [6], 10), project('p2', [6, 7], 10)];
     const students = [student('s1', 6, ['p1', 'p2'], 'g1'), student('s2', 7, ['p1', 'p2'], 'g1')];
     const result = preassignGroups(students, projects, defaultSolverConfig);
-    expect(result.preassignments.get('s1')?.projectId).toBe('p2');
-    expect(result.preassignments.get('s2')?.projectId).toBe('p2');
-    expect(result.preassignments.get('s1')?.priorityRank).toBe(2);
+    expect(result.get('s1')?.projectId).toBe('p2');
+    expect(result.get('s2')?.projectId).toBe('p2');
+    expect(result.get('s1')?.priorityRank).toBe(2);
   });
 
   it('mixed-grade group falls back to remaining when no project covers all grades', () => {
     const projects = [project('p1', [6], 10), project('p2', [7], 10)];
     const students = [student('s1', 6, ['p1', 'p2'], 'g1'), student('s2', 7, ['p1', 'p2'], 'g1')];
     const result = preassignGroups(students, projects, defaultSolverConfig);
-    expect(result.preassignments.size).toBe(0);
-    expect(result.remainingStudents).toHaveLength(2);
+    expect(result.size).toBe(0);
   });
 
   it('splits a 4-member group into 2+2 when no single project fits all four', () => {
@@ -117,9 +109,7 @@ describe('preassignGroups', () => {
       student('s4', 7, ['a', 'b'], 'g1'),
     ];
     const result = preassignGroups(students, projects, defaultSolverConfig);
-    expect(result.consumedCapacity.get('a')).toBe(2);
-    expect(result.consumedCapacity.get('b')).toBe(2);
-    expect(result.preassignments.size).toBe(4);
+    expect([...result.values()].map((a) => a.projectId).sort()).toEqual(['a', 'a', 'b', 'b']);
   });
 
   it('skips preassignment when bonus = 0 (groups ignored)', () => {
@@ -130,7 +120,7 @@ describe('preassignGroups', () => {
       groupCohesionBonus: 0,
     });
     // bonus * (2-1) = 0; prioCost = (10-10)*2 = 0; 0 >= 0 → still accepts at prio 1
-    expect(result.preassignments.size).toBe(2);
+    expect(result.size).toBe(2);
   });
 
   it('rejects deep prio drop when bonus is small', () => {
@@ -145,8 +135,7 @@ describe('preassignGroups', () => {
       ...defaultSolverConfig,
       groupCohesionBonus: 1,
     });
-    expect(result.preassignments.size).toBe(0);
-    expect(result.remainingStudents).toHaveLength(2);
+    expect(result.size).toBe(0);
   });
 
   it('ignores wishes beyond the fifth', () => {
@@ -161,7 +150,6 @@ describe('preassignGroups', () => {
     const wishes = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
     const students = [student('s1', 7, wishes, 'g1'), student('s2', 7, wishes, 'g1')];
     const result = preassignGroups(students, projects, defaultSolverConfig);
-    expect(result.preassignments.size).toBe(0);
-    expect(result.remainingStudents).toHaveLength(2);
+    expect(result.size).toBe(0);
   });
 });

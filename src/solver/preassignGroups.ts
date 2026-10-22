@@ -5,12 +5,6 @@ export type GroupPreassignment = {
   priorityRank: number;
 };
 
-export type PreassignResult = {
-  preassignments: Map<string, GroupPreassignment>; // studentId → assignment
-  consumedCapacity: Map<string, number>; // projectId → seats taken by groups
-  remainingStudents: Student[];
-};
-
 /**
  * Greedy group pre-assignment. Groups are seated largest first, each as large a subgroup as
  * possible at the highest wish that fits. A lower-ranked wish is taken only when the cohesion
@@ -18,15 +12,15 @@ export type PreassignResult = {
  *
  *   bonus × (subgroupSize − 1)  ≥  (maxWeight − weightAtRank) × subgroupSize
  *
- * Members that cannot be seated together stay in remainingStudents for the flow solver. Because
- * the greedy order ignores its effect on other students, solveAssignments also solves without
- * this step and keeps the better result.
+ * Returns the placed members by student ID; the flow solver seats everyone else. Because the
+ * greedy order ignores its effect on other students, solveAssignments also solves without this
+ * step and searches group placements from the better result.
  */
 export function preassignGroups(
   students: Student[],
   projects: Project[],
   config: SolverConfig,
-): PreassignResult {
+): Map<string, GroupPreassignment> {
   const preassignments = new Map<string, GroupPreassignment>();
   const consumedCapacity = new Map<string, number>();
 
@@ -76,6 +70,5 @@ export function preassignGroups(
     }
   }
 
-  const remainingStudents = students.filter((s) => !preassignments.has(s.id));
-  return { preassignments, consumedCapacity, remainingStudents };
+  return preassignments;
 }
