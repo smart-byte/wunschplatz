@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { detectColumns, type ColumnRole } from './headerMatch';
+import { detectColumns, duplicateHeadings, type ColumnRole } from './headerMatch';
 import type { Project, Student } from '@/types';
 import { normalizeLabel } from '@/forms/normalizeLabel';
 import { findTimestampColumn, keepLatestResponses, responseRows } from '@/forms/dedupeResponses';
@@ -77,20 +77,37 @@ export function parseStudentRows(rows: unknown[][], projects: Project[]): ParseR
   if (missingColumns.length > 0) {
     return { students: [], errors: [], missingColumns, duplicatesRemoved: 0 };
   }
+  const { firstName, lastName, className, grade, group, priorities } = cols;
+  const duplicates = duplicateHeadings(headers, [
+    firstName,
+    lastName,
+    className,
+    grade,
+    group,
+    ...priorities,
+  ]);
+  if (duplicates.length > 0) {
+    return {
+      students: [],
+      errors: duplicates.map((column) => studentImportError(0, 'duplicateColumn', { column })),
+      missingColumns: [],
+      duplicatesRemoved: 0,
+    };
+  }
 
-  const errors: ParseError[] = [];
   const pending: Pending[] = [];
 
   // A forms export (it has a timestamp) can hold several submissions per student.
   const timestampColumn = findTimestampColumn(headers);
-  const { responses, duplicatesRemoved } =
+  const { responses, duplicatesRemoved, undatedRows } =
     timestampColumn === -1
-      ? { responses: responseRows(rows), duplicatesRemoved: 0 }
+      ? { responses: responseRows(rows), duplicatesRemoved: 0, undatedRows: [] }
       : keepLatestResponses(
           responseRows(rows),
           [cols.firstName, cols.lastName, cols.className, cols.grade],
           timestampColumn,
         );
+  const errors = undatedRows.map((r) => studentImportError(r, 'undatedDuplicate'));
 
   for (const { cells: row, rowIndex: r } of responses) {
     const identity = parseStudentIdentity(

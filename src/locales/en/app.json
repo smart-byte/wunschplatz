@@ -210,7 +210,8 @@
         "invalidGrades": "Grades are invalid or empty (\"{{value}}\") — expected, for example, \"5-7\" or \"5,6,7\"",
         "invalidMax": "Maximum capacity is invalid ({{value}})",
         "invalidTarget": "Target capacity is invalid ({{value}}) — it must be between 0 and {{max}}",
-        "duplicateName": "The project name “{{name}}” appears more than once. Project names must be unique."
+        "duplicateName": "The project name “{{name}}” appears more than once. Project names must be unique.",
+        "duplicateColumn": "The column \"{{column}}\" appears more than once. Remove or rename the duplicate column."
       },
       "modeLabel": "Import mode",
       "modeAppend": "Add — existing projects remain",
@@ -402,7 +403,9 @@
       "duplicateProject": "Priority {{priority}}: Duplicate project \"{{name}}\"",
       "deletedProject": "Priority {{priority}}: Project \"{{name}}\" was deleted",
       "groupPrioritiesMismatch": "Group \"{{group}}\": choices differ — using those of {{name}}",
-      "gradeMismatch": "Priority {{priority}}: Project \"{{name}}\" is not open to grade {{grade}}, so the optimization ignores this choice"
+      "gradeMismatch": "Priority {{priority}}: Project \"{{name}}\" is not open to grade {{grade}}, so the optimization ignores this choice",
+      "undatedDuplicate": "Several submissions without a readable timestamp: the last row was kept. Check that it is the most recent one.",
+      "duplicateColumn": "The column \"{{column}}\" appears more than once. Remove or rename the duplicate column."
     },
     "warnings": {
       "heuristicColumn": "The expected column \"{{expected}}\" was not found exactly; using \"{{actual}}\" based on its name."

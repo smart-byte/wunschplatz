@@ -210,7 +210,8 @@
         "invalidGrades": "Jahrgänge ungültig oder leer (\"{{value}}\") — erwartet z.B. \"5-7\" oder \"5,6,7\"",
         "invalidMax": "Max-Kapazität ungültig ({{value}})",
         "invalidTarget": "Soll-Kapazität ungültig ({{value}}) — muss zwischen 0 und {{max}} liegen",
-        "duplicateName": "Der Projektname „{{name}}“ ist mehrfach vorhanden. Projektnamen müssen eindeutig sein."
+        "duplicateName": "Der Projektname „{{name}}“ ist mehrfach vorhanden. Projektnamen müssen eindeutig sein.",
+        "duplicateColumn": "Die Spalte „{{column}}“ kommt mehrfach vor. Bitte die doppelte Spalte entfernen oder umbenennen."
       },
       "modeLabel": "Import-Modus",
       "modeAppend": "Hinzufügen — bestehende Projekte bleiben",
@@ -402,7 +403,9 @@
       "duplicateProject": "Prio {{priority}}: Doppeltes Projekt \"{{name}}\"",
       "deletedProject": "Prio {{priority}}: Projekt \"{{name}}\" wurde gelöscht",
       "groupPrioritiesMismatch": "Gruppe \"{{group}}\": Prios weichen ab — übernommen von {{name}}",
-      "gradeMismatch": "Prio {{priority}}: Projekt \"{{name}}\" ist nicht für Jahrgang {{grade}} freigegeben und zählt bei der Optimierung nicht"
+      "gradeMismatch": "Prio {{priority}}: Projekt \"{{name}}\" ist nicht für Jahrgang {{grade}} freigegeben und zählt bei der Optimierung nicht",
+      "undatedDuplicate": "Mehrere Einreichungen ohne lesbaren Zeitstempel: Die letzte Zeile wurde behalten. Bitte prüfen, ob sie die neueste ist.",
+      "duplicateColumn": "Die Spalte „{{column}}“ kommt mehrfach vor. Bitte die doppelte Spalte entfernen oder umbenennen."
     },
     "warnings": {
       "heuristicColumn": "Die erwartete Spalte „{{expected}}\" wurde nicht exakt gefunden; anhand des Namens wird „{{actual}}\" verwendet."

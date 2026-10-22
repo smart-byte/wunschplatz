@@ -1,12 +1,14 @@
 import type { Project, Student, FormBlueprint } from '@/types';
-import type { ParseResult, ParseError } from '@/excel/importStudents';
+import type { ParseResult } from '@/excel/importStudents';
 import { findProjectByName } from '@/excel/importStudents';
 import {
   parseStudentIdentity,
   parsePriorities,
+  studentImportError,
   warnGradeMismatches,
 } from '@/excel/studentValidation';
 import { resolveFormColumns } from './resolveFormColumns';
+import { duplicateHeadings } from '@/excel/headerMatch';
 import { findTimestampColumn, keepLatestResponses, responseRows } from './dedupeResponses';
 import { normalizeLabel } from './normalizeLabel';
 
@@ -40,6 +42,22 @@ export function parseFormResponses(
       duplicatesRemoved: 0,
     };
   }
+  const duplicates = duplicateHeadings(headers, [
+    cols.firstName,
+    cols.lastName,
+    cols.className,
+    cols.grade,
+    ...cols.priorities,
+  ]);
+  if (duplicates.length > 0) {
+    return {
+      students: [],
+      errors: duplicates.map((column) => studentImportError(0, 'duplicateColumn', { column })),
+      missingColumns: [],
+      warnings: cols.warnings,
+      duplicatesRemoved: 0,
+    };
+  }
 
   // Blueprint IDs preserve choices across project renames and name collisions.
   const idByLabel = new Map<string, string>();
@@ -47,14 +65,14 @@ export function parseFormResponses(
   const existingIds = new Set(projects.map((p) => p.id));
 
   // Discard superseded responses before validation, including their errors.
-  const { responses, duplicatesRemoved } = keepLatestResponses(
+  const { responses, duplicatesRemoved, undatedRows } = keepLatestResponses(
     responseRows(rows),
     [cols.firstName, cols.lastName, cols.className, cols.grade],
     findTimestampColumn(headers),
   );
 
   const students: Omit<Student, 'id'>[] = [];
-  const errors: ParseError[] = [];
+  const errors = undatedRows.map((r) => studentImportError(r, 'undatedDuplicate'));
 
   for (const { cells: c, rowIndex } of responses) {
     const identity = parseStudentIdentity(

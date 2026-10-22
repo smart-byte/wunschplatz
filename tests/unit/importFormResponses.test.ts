@@ -265,6 +265,38 @@ describe('parseFormResponses', () => {
     expect(res.students[0].priorities[0]).toBe('p4');
   });
 
+  it('rejects responses with two columns for the same wish', () => {
+    const rows = [
+      [...HEADERS, '1. Wahl'],
+      ['01.06.2026 09:00', 'Anna', 'Müller', '7a', '7', 'Schach', 'Yoga', '', '', '', 'Kochen'],
+    ];
+    const res = parseFormResponses(rows, projects, bp);
+    expect(res.students).toEqual([]);
+    expect(res.errors).toEqual([
+      expect.objectContaining({ code: 'duplicateColumn', values: { column: '1. Wahl' } }),
+    ]);
+  });
+
+  it('keeps the newer US-format submission even when it is listed first', () => {
+    const anna = ['Anna', 'Müller', '7a', '7'];
+    const rows = [
+      HEADERS,
+      ['10/20/2026 9:30:00 AM', ...anna, 'Kochen', 'Yoga'],
+      ['10/20/2026 8:30:00 AM', ...anna, 'Schach', 'Yoga'],
+    ];
+    const res = parseFormResponses(rows, projects, bp);
+    expect(res.students[0].priorities[0]).toBe('p4');
+    expect(res.errors).toEqual([]);
+  });
+
+  it('warns when a duplicate is resolved by row order because a timestamp is unreadable', () => {
+    const anna = ['Anna', 'Müller', '7a', '7'];
+    const rows = [HEADERS, ['gestern', ...anna, 'Kochen'], ['heute', ...anna, 'Schach']];
+    const res = parseFormResponses(rows, projects, bp);
+    expect(res.students[0].priorities).toEqual(['p0']);
+    expect(res.errors).toEqual([{ rowIndex: 2, code: 'undatedDuplicate', severity: 'warning' }]);
+  });
+
   it('does not merge two same-named students in different Jahrgang', () => {
     const rows = [
       HEADERS,
