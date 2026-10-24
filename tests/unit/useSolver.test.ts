@@ -11,11 +11,11 @@ import { renameRound } from '@/store/roundsTransaction';
 import { defaultSolverConfig } from '@/types';
 import { solverInputSignature } from '@/lib/distribution';
 import { solveAssignments } from '@/solver/solve';
-import type { SolveRequest, SolveResponse } from '@/solver/solver.worker';
+import type { SolveProgress, SolveRequest, SolveResponse } from '@/solver/solver.worker';
 vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 class ControlledWorker {
   static latest: ControlledWorker;
-  onmessage: ((event: MessageEvent<SolveResponse>) => void) | null = null;
+  onmessage: ((event: MessageEvent<SolveResponse | SolveProgress>) => void) | null = null;
   onerror: ((event: ErrorEvent) => void) | null = null;
   request!: SolveRequest;
   terminate = vi.fn();
@@ -24,6 +24,9 @@ class ControlledWorker {
   }
   postMessage(request: SolveRequest) {
     this.request = request;
+  }
+  report(percent: number) {
+    this.onmessage?.({ data: { type: 'progress', percent } } as MessageEvent<SolveProgress>);
   }
   finish() {
     const { students, projects, config } = this.request;
@@ -69,6 +72,20 @@ describe('solver lifecycle', () => {
       solverInputSignature(students, projects, config),
     );
     expect(ControlledWorker.latest.terminate).toHaveBeenCalled();
+  });
+  it('shows worker progress and keeps waiting for the result', async () => {
+    const { result } = renderHook(useSolver);
+    let done!: Promise<boolean>;
+    act(() => {
+      done = result.current.run();
+    });
+    act(() => ControlledWorker.latest.report(40));
+    expect(result.current).toMatchObject({ running: true, progress: 40 });
+    await act(async () => {
+      ControlledWorker.latest.finish();
+      expect(await done).toBe(true);
+    });
+    expect(useAssignmentsStore.getState().distributions).toHaveLength(1);
   });
   it.each(['round', 'students', 'projects', 'config', 'unmount'])(
     'cancels on %s and ignores a late worker result',

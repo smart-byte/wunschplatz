@@ -454,6 +454,7 @@
     "title": "Optimization",
     "run": "Calculate distribution",
     "running": "Calculating…",
+    "progress": "Improving the assignment: {{percent}} %",
     "computed": "Distribution calculated",
     "solveFailed": "The distribution could not be calculated. Please try again.",
     "infoLabel": "Info",

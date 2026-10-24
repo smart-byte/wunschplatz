@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 export default function OptimizePage() {
   const { t } = useTranslation('app');
   const navigate = useNavigate();
-  const { running, error, run } = useSolver();
+  const { running, progress, error, run } = useSolver();
   const studentCount = useStudentsStore((s) => s.students.length);
   const projects = useProjectsStore((s) => s.projects);
   const capacity = projects.reduce((sum, project) => sum + project.maxCapacity, 0);
@@ -83,6 +83,21 @@ export default function OptimizePage() {
               {running ? t('optimize.running') : t('optimize.run')}
               {!running && <ArrowRight />}
             </Button>
+            {running && (
+              <div className="mt-4">
+                <div
+                  role="progressbar"
+                  aria-label={t('optimize.running')}
+                  aria-valuenow={progress}
+                  className="h-1.5 overflow-hidden rounded-full bg-rule-soft"
+                >
+                  <div className="h-full bg-mark" style={{ width: `${progress}%` }} />
+                </div>
+                <p className="mt-2 text-xs tabular-nums text-prose-soft">
+                  {t('optimize.progress', { percent: progress })}
+                </p>
+              </div>
+            )}
             <p className="mt-4 text-xs leading-relaxed text-prose-soft">
               {t('optimize.savedSeparately')}
             </p>

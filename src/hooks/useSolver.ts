@@ -7,12 +7,13 @@ import { useRoundsStore } from '@/store/useRoundsStore';
 import { assertEditable, useSessionStore } from '@/store/session';
 import { solverInputSignature } from '@/lib/distribution';
 import { nextDefaultName } from '@/lib/utils';
-import type { SolveResponse, SolveRequest } from '@/solver/solver.worker';
+import type { SolveProgress, SolveResponse, SolveRequest } from '@/solver/solver.worker';
 import { useTranslation } from 'react-i18next';
 
 export function useSolver() {
   const { t } = useTranslation('app');
   const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const cancel = useRef<(() => void) | null>(null);
   const mounted = useRef(false);
@@ -27,6 +28,7 @@ export function useSolver() {
   const run = useCallback(async (): Promise<boolean> => {
     if (cancel.current) return false;
     setRunning(true);
+    setProgress(0);
     setError(null);
     let worker: Worker | undefined;
     const unsubscribe: (() => void)[] = [];
@@ -68,7 +70,10 @@ export function useSolver() {
           useRoundsStore.subscribe(check),
           useSessionStore.subscribe(check),
         );
-        activeWorker.onmessage = (e: MessageEvent<SolveResponse>) => resolve(e.data);
+        activeWorker.onmessage = (e: MessageEvent<SolveResponse | SolveProgress>) => {
+          if (e.data.type !== 'progress') resolve(e.data);
+          else if (mounted.current) setProgress(e.data.percent);
+        };
         activeWorker.onerror = (e) => reject(new Error(e.message));
         const req: SolveRequest = { type: 'solve', students, projects, config };
         activeWorker.postMessage(req);
@@ -103,5 +108,5 @@ export function useSolver() {
     }
   }, [t]);
 
-  return { running, error, run };
+  return { running, progress, error, run };
 }

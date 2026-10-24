@@ -13,6 +13,7 @@ export function solveAssignments(
   students: Student[],
   projects: Project[],
   config: SolverConfig,
+  onProgress?: (done: number) => void,
 ): SolveResult {
   const preassignments = preassignGroups(students, projects, config);
   let seats = flowAround(
@@ -33,7 +34,7 @@ export function solveAssignments(
       score = withoutScore;
     }
   }
-  ({ seats, score } = searchGroups(students, projects, config, seats, score));
+  ({ seats, score } = searchGroups(students, projects, config, seats, score, onProgress));
 
   const projectById = new Map(projects.map((project) => [project.id, project]));
   const assignments = students.map((student): Assignment => {
@@ -71,6 +72,7 @@ function searchGroups(
   config: SolverConfig,
   start: Map<string, string>,
   startScore: number,
+  onProgress?: (done: number) => void,
 ): { seats: Map<string, string>; score: number } {
   const projectById = new Map(projects.map((project) => [project.id, project]));
   const groups = new Map<string, Student[]>();
@@ -103,8 +105,10 @@ function searchGroups(
   const apart = ({ members }: (typeof moves)[number]) => members.some((m) => !pins.has(m.id));
   moves.sort((a, b) => Number(apart(b)) - Number(apart(a)));
   // Every move re-runs the flow, whose cost grows with students × projects. The budget keeps a
-  // whole school at about two seconds and still searches a single grade to the end.
-  let budget = Math.ceil(3_000_000 / (students.length * projects.length));
+  // whole school at a few seconds and still searches a single grade to the end. Progress is the
+  // share of the budget used, since the search may stop early at a local optimum.
+  const budget = Math.ceil(6_000_000 / (students.length * projects.length));
+  let used = 0;
   // Seats a group on the target, or releases it when the target is undefined. When the target
   // has no room, the groups pinned there are released as well and returned.
   const place = (from: Map<string, string>, members: Student[], target?: string) => {
@@ -141,9 +145,10 @@ function searchGroups(
           }
         }
         for (const next of options) {
-          if (budget-- === 0) break search;
+          if (used++ === budget) break search;
           const nextSeats = flowAround(students, projects, config, next);
           const nextScore = scoreSeats(students, projects, config, nextSeats);
+          onProgress?.(used / budget);
           if (nextScore > score)
             [pins, seats, score, improved] = [next, nextSeats, nextScore, true];
         }
