@@ -451,6 +451,7 @@
     "title": "Optimierung",
     "run": "Verteilung berechnen",
     "running": "Berechne…",
+    "progress": "Verteilung wird verbessert: {{percent}} %",
     "computed": "Verteilung berechnet",
     "solveFailed": "Die Verteilung konnte nicht berechnet werden. Bitte versuche es erneut.",
     "infoLabel": "Info",
