@@ -21,7 +21,7 @@
   "description": "Browser-based project assignment for schools, with wish rounds and local data storage.",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.60.0",
+    "@playwright/test": "^1.64.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^22.20.1",
