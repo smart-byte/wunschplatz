@@ -6,16 +6,11 @@ import { MoreHorizontal } from 'lucide-react';
 import { useRoundsStore } from '@/store/useRoundsStore';
 import { useProjectsStore } from '@/store/useProjectsStore';
 import { useStudentsStore } from '@/store/useStudentsStore';
-import {
-  createRound,
-  setRoundPhase,
-  duplicateRound,
-  deleteRound,
-  switchRound,
-} from '@/store/roundsTransaction';
+import { createRound, setRoundPhase, duplicateRound, switchRound } from '@/store/roundsTransaction';
 import { PHASES } from '@/lib/roundPhase';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { DeleteRoundDialog } from '@/components/rounds/DeleteRoundDialog';
 import { RenameRoundDialog } from '@/components/rounds/RenameRoundDialog';
 import {
   Select,
@@ -40,6 +35,7 @@ export default function WunschrundenPage() {
   const liveStudentCount = useStudentsStore((s) => s.students.length);
   const [busy, setBusy] = useState(false);
   const [renaming, setRenaming] = useState<Pick<Round, 'id' | 'name'> | null>(null);
+  const [deleting, setDeleting] = useState<Pick<Round, 'id' | 'name'> | null>(null);
 
   async function run(action: () => Promise<void>, ok: string, err: string) {
     setBusy(true);
@@ -81,11 +77,6 @@ export default function WunschrundenPage() {
       t('rounds.duplicated'),
       t('rounds.duplicateFailed'),
     );
-  }
-
-  function onDelete(id: string, name: string) {
-    if (!confirm(t('rounds.confirmDelete', { name }))) return;
-    void run(() => deleteRound(id), t('rounds.deleted'), t('rounds.deleteFailed'));
   }
 
   return (
@@ -173,9 +164,9 @@ export default function WunschrundenPage() {
                       {t('rounds.duplicate')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      disabled={busy || isSelected}
+                      disabled={busy}
                       className="text-destructive focus:text-destructive"
-                      onSelect={() => onDelete(r.id, r.name)}
+                      onSelect={() => setDeleting({ id: r.id, name: r.name })}
                     >
                       {t('rounds.delete')}
                     </DropdownMenuItem>
@@ -187,6 +178,7 @@ export default function WunschrundenPage() {
         })}
       </ul>
       {renaming && <RenameRoundDialog round={renaming} onClose={() => setRenaming(null)} />}
+      {deleting && <DeleteRoundDialog round={deleting} onClose={() => setDeleting(null)} />}
     </>
   );
 }

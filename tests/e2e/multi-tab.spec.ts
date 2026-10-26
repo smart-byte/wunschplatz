@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { deleteRoundByName } from './workspace';
 
 async function draftProject(page: Page, name: string) {
   await page.getByRole('button', { name: 'Neues Projekt', exact: true }).click();
@@ -135,7 +136,6 @@ test('deleting a round in another tab selects a surviving round without restorin
   page,
   context,
 }) => {
-  page.on('dialog', (dialog) => dialog.accept());
   await page.goto('/wunschrunden');
   const second = await context.newPage();
   await second.goto('/projects');
@@ -144,12 +144,7 @@ test('deleting a round in another tab selects a surviving round without restorin
   ).toBeVisible();
   await page.getByRole('button', { name: 'Neue Wunschrunde', exact: true }).click();
   await expect(page.getByText('Wunschrunde 2 angelegt')).toBeVisible();
-  await page
-    .getByRole('listitem')
-    .filter({ has: page.getByRole('button', { name: 'Wunschrunde 1', exact: true }) })
-    .getByTitle('Aktionen')
-    .click();
-  await page.getByRole('menuitem', { name: 'Löschen', exact: true }).click();
+  await deleteRoundByName(page, 'Wunschrunde 1');
   await expect(
     second.getByRole('navigation').getByRole('button', { name: /Wunschrunde 2/ }),
   ).toBeVisible();

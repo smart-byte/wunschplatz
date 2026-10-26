@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { readWorkspace } from './workspace';
+import { deleteRoundByName, readWorkspace } from './workspace';
 
 const roundButton = (page: Page, name: string) =>
   page.getByRole('button', { name, exact: true, includeHidden: true });
@@ -91,13 +91,7 @@ test('open rename drafts require review after remote renames and cannot restore 
   await expect(roundButton(page, 'Wunschrunde 2')).toBeDisabled();
   const stale = await openRename(page, 'Mein Entwurf');
   await stale.getByLabel('Name', { exact: true }).fill('Nicht wiederherstellen');
-  second.once('dialog', (dialog) => dialog.accept());
-  await second
-    .getByRole('listitem')
-    .filter({ has: roundButton(second, 'Mein Entwurf') })
-    .getByTitle('Aktionen')
-    .click();
-  await second.getByRole('menuitem', { name: 'Löschen', exact: true }).click();
+  await deleteRoundByName(second, 'Mein Entwurf');
   await expect(roundButton(page, 'Mein Entwurf')).toHaveCount(0);
   await stale.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(stale.getByRole('alert')).toContainText('gelöscht');

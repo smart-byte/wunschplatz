@@ -23,3 +23,17 @@ export function readWorkspace(page: Page): Promise<Workspace> {
       }),
   );
 }
+
+/** Deletes a round from the rounds page through its typed confirmation. */
+export async function deleteRoundByName(page: Page, name: string): Promise<void> {
+  await page
+    .getByRole('listitem')
+    .filter({ has: page.getByRole('button', { name, exact: true }) })
+    .getByTitle('Aktionen')
+    .click();
+  await page.getByRole('menuitem', { name: 'Löschen', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel(/bestätigen/).fill('bestätigen');
+  await dialog.getByRole('button', { name: 'Löschen', exact: true }).click();
+  await dialog.waitFor({ state: 'hidden' });
+}
