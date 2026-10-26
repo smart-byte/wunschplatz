@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { readWorkspace } from './workspace';
+import { deleteRoundByName, readWorkspace } from './workspace';
 
 test('round switch via nav dropdown retains each round’s data', async ({ page }) => {
   await page.goto('/projects');
@@ -41,7 +41,6 @@ test('phase picker completes and reactivates a round, survives reload', async ({
 });
 
 test('row menu duplicates and deletes rounds, survives reload', async ({ page }) => {
-  page.on('dialog', (d) => d.accept());
   await page.goto('/wunschrunden');
 
   await page.getByTitle('Aktionen').first().click();
@@ -51,16 +50,28 @@ test('row menu duplicates and deletes rounds, survives reload', async ({ page })
   await page.reload();
   await expect(page.getByText('Wunschrunde 1 (Kopie)')).toBeVisible();
 
+  // The selected round can be deleted once the word is typed; the copy takes its place.
   await page.getByTitle('Aktionen').first().click();
-  await expect(page.getByRole('menuitem', { name: 'Löschen' })).toBeDisabled();
-  await page.keyboard.press('Escape');
-
-  await page.getByRole('listitem').filter({ hasText: '(Kopie)' }).getByTitle('Aktionen').click();
   await page.getByRole('menuitem', { name: 'Löschen' }).click();
+  const dialog = page.getByRole('dialog');
+  const confirm = dialog.getByRole('button', { name: 'Löschen', exact: true });
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel(/bestätigen/).fill('ja');
+  await expect(confirm).toBeDisabled();
+  await dialog.getByLabel(/bestätigen/).fill('Bestätigen');
+  await confirm.click();
   await expect(page.getByText('Wunschrunde gelöscht')).toBeVisible();
-  await expect(page.getByText('Wunschrunde 1 (Kopie)')).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Wunschrunde 1 (Kopie)', exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Wunschrunde 1', exact: true })).toHaveCount(0);
+
+  // Deleting the last round leaves a new empty one.
+  await deleteRoundByName(page, 'Wunschrunde 1 (Kopie)');
+  await expect(page.getByRole('button', { name: 'Wunschrunde 1', exact: true })).toBeDisabled();
   await page.reload();
-  await expect(page.getByText('Wunschrunde 1 (Kopie)')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Wunschrunde 1', exact: true })).toBeDisabled();
+  expect((await readWorkspace(page)).rounds.map((round) => round.name)).toEqual(['Wunschrunde 1']);
 });
 
 test('clicking a round title selects it', async ({ page }) => {

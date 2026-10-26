@@ -119,14 +119,22 @@ export function duplicateRound(id: string, createdAt: string, copyName?: string)
   });
 }
 
-export function deleteRound(id: string): Promise<void> {
+/** Deleting the selected round selects the first one left, or a new empty round named emptyName. */
+export function deleteRound(id: string, emptyName: string, createdAt: string): Promise<void> {
   return withLock(async () => {
-    const s = useRoundsStore.getState();
-    if (id === s.activeRoundId) throw new Error('Cannot delete the active round');
-    if (!s.rounds.some((r) => r.id === id)) throw new Error(`Round ${id} not found`);
-    applyStoreUpdate(() =>
-      useRoundsStore.setState((st) => ({ rounds: st.rounds.filter((r) => r.id !== id) })),
-    );
+    const rounds = snapshotRounds();
+    if (!rounds.some((r) => r.id === id)) throw new Error(`Round ${id} not found`);
+    const rest = rounds.filter((r) => r.id !== id);
+    if (rest.length === 0)
+      rest.push({
+        id: uuid(),
+        name: emptyName,
+        createdAt,
+        phase: 'planned',
+        data: emptyRoundData(),
+      });
+    const { activeRoundId } = useRoundsStore.getState();
+    applySavedRounds(rest, activeRoundId === id ? rest[0].id : activeRoundId);
     await flushWorkspace();
   });
 }
