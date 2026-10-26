@@ -1552,9 +1552,11 @@ export function generateSampleProjects(count: number, language = 'de'): Project[
 }
 
 export function generateSampleStudents(count: number, projects: Project[]): Student[] {
+  // Only grades some project takes, so every student can get a seat.
+  const grades = GRADE_DISTRIBUTION.filter((g) => projects.some((p) => p.grades.includes(g)));
   const students: Student[] = [];
   for (let i = 0; i < count; i++) {
-    const grade = pick(GRADE_DISTRIBUTION);
+    const grade = pick(grades);
     const compatible = projects.filter((p) => p.grades.includes(grade));
     const priorities = shuffle(compatible)
       .slice(0, Math.min(5, compatible.length))
@@ -1569,4 +1571,23 @@ export function generateSampleStudents(count: number, projects: Project[]): Stud
     });
   }
   return students;
+}
+
+/**
+ * Spreads the students over the projects that take their grade, each to the emptiest one, then
+ * grows every project to its share plus 10 %. So the sample seats everyone within target sizes.
+ */
+export function fitSampleCapacity(projects: Project[], students: Student[]): Project[] {
+  const load = new Map(projects.map((p) => [p.id, 0]));
+  const fill = (p: Project) => load.get(p.id)! / p.targetCapacity;
+  for (const s of students) {
+    const emptiest = projects
+      .filter((p) => p.grades.includes(s.grade))
+      .reduce((a, b) => (fill(b) < fill(a) ? b : a));
+    load.set(emptiest.id, load.get(emptiest.id)! + 1);
+  }
+  return projects.map((p) => {
+    const targetCapacity = Math.max(p.targetCapacity, Math.ceil(load.get(p.id)! * 1.1));
+    return { ...p, targetCapacity, maxCapacity: p.maxCapacity + targetCapacity - p.targetCapacity };
+  });
 }

@@ -15,6 +15,7 @@ import { useProjectsStore } from '@/store/useProjectsStore';
 import { useStudentsStore } from '@/store/useStudentsStore';
 import { useAssignmentsStore } from '@/store/useAssignmentsStore';
 import {
+  fitSampleCapacity,
   generateSampleProjects,
   generateSampleStudents,
   MAX_SAMPLE_PROJECTS,
@@ -25,6 +26,8 @@ import { Sparkles } from 'lucide-react';
 const MIN_PROJECTS = 1;
 const MIN_STUDENTS = 1;
 const MAX_STUDENTS = 5000;
+const DEFAULT_PROJECTS = 15;
+const DEFAULT_STUDENTS = 120;
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
@@ -42,8 +45,8 @@ export function SampleDataDialog({ open: controlledOpen, onOpenChange }: Props) 
   const controlled = controlledOpen !== undefined;
   const open = controlled ? controlledOpen : internalOpen;
   const setOpen = (next: boolean) => (controlled ? onOpenChange?.(next) : setInternalOpen(next));
-  const [projectCount, setProjectCount] = useState('10');
-  const [studentCount, setStudentCount] = useState('200');
+  const [projectCount, setProjectCount] = useState(String(DEFAULT_PROJECTS));
+  const [studentCount, setStudentCount] = useState(String(DEFAULT_STUDENTS));
   const setProjects = useProjectsStore((s) => s.setProjects);
   const setStudents = useStudentsStore((s) => s.setStudents);
   const clearAssignments = useAssignmentsStore((s) => s.clear);
@@ -59,11 +62,11 @@ export function SampleDataDialog({ open: controlledOpen, onOpenChange }: Props) 
   }
 
   function handleGenerate() {
-    const pCount = parseClamped(projectCount, MIN_PROJECTS, MAX_SAMPLE_PROJECTS, 10);
-    const sCount = parseClamped(studentCount, MIN_STUDENTS, MAX_STUDENTS, 200);
+    const pCount = parseClamped(projectCount, MIN_PROJECTS, MAX_SAMPLE_PROJECTS, DEFAULT_PROJECTS);
+    const sCount = parseClamped(studentCount, MIN_STUDENTS, MAX_STUDENTS, DEFAULT_STUDENTS);
     const projects = generateSampleProjects(pCount, i18n.resolvedLanguage ?? i18n.language);
     const students = generateSampleStudents(sCount, projects);
-    setProjects(projects);
+    setProjects(fitSampleCapacity(projects, students));
     setStudents(students);
     clearAssignments();
     toast.success(
@@ -76,12 +79,12 @@ export function SampleDataDialog({ open: controlledOpen, onOpenChange }: Props) 
   }
 
   function commitProjectCount() {
-    const n = parseClamped(projectCount, MIN_PROJECTS, MAX_SAMPLE_PROJECTS, 10);
+    const n = parseClamped(projectCount, MIN_PROJECTS, MAX_SAMPLE_PROJECTS, DEFAULT_PROJECTS);
     setProjectCount(String(n));
   }
 
   function commitStudentCount() {
-    const n = parseClamped(studentCount, MIN_STUDENTS, MAX_STUDENTS, 200);
+    const n = parseClamped(studentCount, MIN_STUDENTS, MAX_STUDENTS, DEFAULT_STUDENTS);
     setStudentCount(String(n));
   }
 
